@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+    container_name: server_app
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_HOST=$MYSQL_HOST
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DB=$MYSQL_DB
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./client
+    container_name: client_app
+    ports:
+      - "3001:5173"
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8
+    container_name: mysql_app
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DB
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

@@ -1,0 +1,37 @@
+{
+  "name": "smart-park-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidvrz/smart-park-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/davidvrz/smart-park-system/issues"
+  },
+  "homepage": "https://github.com/davidvrz/smart-park-system#readme",
+  "dependencies": {
+    "bcryptjs": "3.0.2",
+    "cors": "2.8.5",
+    "dotenv": "16.4.7",
+    "express": "4.21.2",
+    "jsonwebtoken": "9.0.2",
+    "morgan": "^1.10.0",
+    "mysql2": "3.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.9",
+    "standard": "17.1.2"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/standard/eslintrc.json"
+  }
+}

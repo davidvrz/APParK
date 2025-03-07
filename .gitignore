@@ -1,0 +1,18 @@
+# Node.js global
+node_modules/
+.env
+
+# Docker files
+.docker/
+docker-compose.override.yml
+*.log
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db

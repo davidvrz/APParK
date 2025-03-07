@@ -1,0 +1,9 @@
+# Node.js
+node_modules/
+.env
+npm-debug.log
+
+# Editor de código
+.vscode/
+.idea/
+.DS_Store
