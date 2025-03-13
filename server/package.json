@@ -20,14 +20,19 @@
   "homepage": "https://github.com/davidvrz/smart-park-system#readme",
   "dependencies": {
     "bcryptjs": "3.0.2",
+    "cookie-parser": "1.4.7",
     "cors": "2.8.5",
     "dotenv": "16.4.7",
     "express": "4.21.2",
+    "helmet": "8.0.0",
     "jsonwebtoken": "9.0.2",
-    "morgan": "^1.10.0",
-    "mysql2": "3.13.0"
+    "morgan": "1.10.0",
+    "mysql2": "3.13.0",
+    "sequelize": "6.37.6",
+    "zod": "3.24.2"
   },
   "devDependencies": {
+    "express-list-routes": "1.2.4",
     "nodemon": "3.1.9",
     "standard": "17.1.2"
   },

@@ -12,12 +12,16 @@ services:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASSWORD=$MYSQL_PASSWORD
       - MYSQL_DB=$MYSQL_DB
+    depends_on:
+      mysql:
+        condition: service_healthy
     ports:
       - "3000:3000"
-    depends_on:
-      - mysql
     networks:
       - app-network
+    volumes:
+      - ./server:/usr/src/app # 👈 Volumen para el código backend
+      - /usr/src/app/node_modules # 👈 Ignora node_modules para evitar conflictos
 
   client:
     build:
@@ -29,6 +33,9 @@ services:
       - server
     networks:
       - app-network
+    volumes:
+      - ./client:/usr/src/app # 👈 Volumen para el código frontend
+      - /usr/src/app/node_modules # 👈 Ignora node_modules para evitar conflictos
 
   mysql:
     image: mysql:8
@@ -44,6 +51,11 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      retries: 5
+      timeout: 3s
 
 networks:
   app-network:

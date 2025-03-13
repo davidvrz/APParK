@@ -4,17 +4,17 @@ FROM node:18
 # Definimos el directorio de trabajo dentro del contenedor
 WORKDIR /usr/src/app
 
-# Copiamos los archivos de package.json y package-lock.json
+# Copiamos los archivos package.json y package-lock.json para instalar dependencias
 COPY package*.json ./
 
-# Instalamos las dependencias del backend
-RUN npm install
+# Instalamos las dependencias (directamente en el contenedor)
+RUN npm ci
 
-# Copiamos todo el código del backend
+# Copiamos el resto del código (excluye archivos en .dockerignore)
 COPY . .
 
-# Exponemos el puerto en el que el backend va a correr
+# Exponemos el puerto donde correrá Express
 EXPOSE 3000
 
-# Comando para iniciar el backend
+# Comando para iniciar el servidor
 CMD ["npm", "start"]
