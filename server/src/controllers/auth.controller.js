@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import User from '../models/user.model.js'
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../libs/jwt.js'
+import pick from 'lodash/pick.js'
 
 export const register = async (req, res) => {
   try {
@@ -43,9 +44,12 @@ export const register = async (req, res) => {
       path: '/api/auth/refresh' // La cookie solo se enviará a esta ruta
     })
 
+    const createdUser = pick(newUser.get(), ['id', 'email', 'nombreCompleto', 'telefono', 'rol'])
+
     // Responder con el access token
     res.status(201).json({
       message: 'Usuario registrado correctamente',
+      user: createdUser,
       accessToken: {
         token: accessToken,
         expiresIn: accessTokenExpiresIn
@@ -91,8 +95,11 @@ export const login = async (req, res) => {
       path: '/api/auth/refresh'
     })
 
+    const loggedUser = pick(user.get(), ['id', 'email', 'nombreCompleto', 'telefono', 'rol'])
+
     res.status(200).json({
       message: 'Inicio de sesión exitoso',
+      user: loggedUser,
       accessToken: {
         token: accessToken,
         expiresIn: accessTokenExpiresIn

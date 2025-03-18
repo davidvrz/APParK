@@ -4,7 +4,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 
-import userRoutes from './routes/user.routes.js'
+import authRoutes from './routes/auth.routes.js'
+import profileRoutes from './routes/profile.routes.js'
 
 const app = express()
 
@@ -28,7 +29,8 @@ app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
 
 // 👉 Aquí definimos las rutas principales
-app.use('/api/auth', userRoutes)
+app.use('/api/auth', authRoutes)
+app.use('/api/profile', profileRoutes)
 
 // 🔥 👇 Esto debe ir al final
 // Middleware para rutas no encontradas

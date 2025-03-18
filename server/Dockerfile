@@ -10,11 +10,8 @@ COPY package*.json ./
 # Instalamos las dependencias (directamente en el contenedor)
 RUN npm ci
 
-# Copiamos el resto del código (excluye archivos en .dockerignore)
-COPY . .
-
 # Exponemos el puerto donde correrá Express
 EXPOSE 3000
 
 # Comando para iniciar el servidor
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

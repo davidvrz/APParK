@@ -8,10 +8,13 @@ services:
     env_file:
       - ./.env
     environment:
-      - MYSQL_HOST=$MYSQL_HOST
-      - MYSQL_USER=$MYSQL_USER
-      - MYSQL_PASSWORD=$MYSQL_PASSWORD
-      - MYSQL_DB=$MYSQL_DB
+      - MYSQL_HOST=${DB_HOST}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DB=${DB_NAME}
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+      - NODE_ENV=development
     depends_on:
       mysql:
         condition: service_healthy
@@ -20,13 +23,18 @@ services:
     networks:
       - app-network
     volumes:
-      - ./server:/usr/src/app # 👈 Volumen para el código backend
-      - /usr/src/app/node_modules # 👈 Ignora node_modules para evitar conflictos
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
 
   client:
     build:
       context: ./client
     container_name: client_app
+    environment:
+      - name=value
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+      - NODE_ENV=development
     ports:
       - "3001:5173"
     depends_on:
@@ -34,8 +42,8 @@ services:
     networks:
       - app-network
     volumes:
-      - ./client:/usr/src/app # 👈 Volumen para el código frontend
-      - /usr/src/app/node_modules # 👈 Ignora node_modules para evitar conflictos
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
 
   mysql:
     image: mysql:8
@@ -43,8 +51,8 @@ services:
     env_file:
       - ./.env
     environment:
-      - MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
-      - MYSQL_DATABASE=$MYSQL_DB
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
     ports:
       - "3306:3306"
     volumes:

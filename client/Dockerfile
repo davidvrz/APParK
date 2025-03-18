@@ -10,9 +10,6 @@ COPY package*.json ./
 # Instalamos las dependencias de manera consistente
 RUN npm ci
 
-# Copiamos el resto del código del frontend (excluye archivos en .dockerignore)
-COPY . .
-
 # Exponemos el puerto en el que corre Vite
 EXPOSE 5173
 

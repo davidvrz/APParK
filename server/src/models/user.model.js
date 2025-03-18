@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize'
 import { sequelize } from '../database/db.js'
+import Vehicle from './vehicle.model.js'
 
 const User = sequelize.define('User', {
   email: {
@@ -29,7 +30,12 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Usuario',
-  timestamps: false // 👈 Desactiva los timestamps automáticos de Sequelize
+  timestamps: true, // Sequelize gestionará automáticamente createdAt y updatedAt
+  createdAt: 'created_at', // Sequelize lo mapeará a created_at en la BD
+  updatedAt: 'updated_at' // Sequelize lo mapeará a updated_at en la BD
 })
+
+User.hasMany(Vehicle, { foreignKey: 'usuario_id', as: 'vehicles' }) // Un usuario puede tener varios vehículos
+Vehicle.belongsTo(User, { foreignKey: 'usuario_id', as: 'owner' }) // Un vehículo pertenece a un usuario
 
 export default User
