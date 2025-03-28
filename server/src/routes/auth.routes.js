@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { register, login, refreshAccessToken, logout } from '../controllers/auth.controller.js'
-import { accessMiddleware, refreshMiddleware } from '../middlewares/auth.middleware.js'
+import { authenticate, refreshToken } from '../middlewares/auth.middleware.js'
 import validateSchema from '../middlewares/validator.middleware.js'
 import { registerSchema, loginSchema } from '../schemas/auth.schema.js'
 
@@ -13,9 +13,9 @@ router.post('/register', validateSchema(registerSchema), register)
 router.post('/login', validateSchema(loginSchema), login)
 
 // Renovación de token
-router.post('/refresh', refreshMiddleware, refreshAccessToken)
+router.post('/refresh', refreshToken, refreshAccessToken)
 
 // Cerrar sesión
-router.post('/logout', accessMiddleware, logout)
+router.post('/logout', authenticate, logout)
 
 export default router

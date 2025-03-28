@@ -1,7 +1,7 @@
 import { verifyToken } from '../libs/jwt.js'
 
 // Middleware para validar el access token desde el header
-export const accessMiddleware = (req, res, next) => {
+export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -22,7 +22,7 @@ export const accessMiddleware = (req, res, next) => {
 }
 
 // Middleware para validar el refresh token desde la cookie
-export const refreshMiddleware = (req, res, next) => {
+export const refreshToken = (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken
 
   if (!refreshToken) {

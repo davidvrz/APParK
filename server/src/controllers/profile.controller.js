@@ -3,7 +3,6 @@ import Vehicle from '../models/vehicle.model.js'
 import bcrypt from 'bcryptjs'
 import pick from 'lodash/pick.js'
 
-// ✅ Obtener datos de perfil
 export const getProfile = async (req, res) => {
   try {
     const { id: userId } = req.user
@@ -26,7 +25,6 @@ export const getProfile = async (req, res) => {
   }
 }
 
-// ✅ Actualizar perfil de usuario
 export const updateProfile = async (req, res) => {
   try {
     const { id: userId } = req.user
@@ -41,12 +39,12 @@ export const updateProfile = async (req, res) => {
     user.telefono = telefono ?? user.telefono
 
     if (currentPassword && newPassword) {
-      const isMatch = await bcrypt.compare(currentPassword, user.password_hash)
+      const isMatch = await bcrypt.compare(currentPassword, user.hashedPassword)
       if (!isMatch) {
         return res.status(401).json({ error: 'Contraseña actual incorrecta' })
       }
 
-      user.password_hash = await bcrypt.hash(newPassword, 10)
+      user.hashedPassword = await bcrypt.hash(newPassword, 10)
     }
 
     await user.save()
@@ -59,7 +57,6 @@ export const updateProfile = async (req, res) => {
   }
 }
 
-// ✅ Añadir vehículo
 export const addVehicle = async (req, res) => {
   try {
     const { matricula, tipo } = req.body
@@ -79,7 +76,6 @@ export const addVehicle = async (req, res) => {
   }
 }
 
-// ✅ Actualizar vehículo
 export const updateVehicle = async (req, res) => {
   try {
     const { id } = req.params
@@ -107,7 +103,6 @@ export const updateVehicle = async (req, res) => {
   }
 }
 
-// ✅ Eliminar vehículo
 export const deleteVehicle = async (req, res) => {
   try {
     const { id } = req.params

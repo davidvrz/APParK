@@ -19,7 +19,7 @@ export const register = async (req, res) => {
     // Crear el usuario
     const newUser = await User.create({
       email,
-      password_hash: hashedPassword,
+      hashedPassword,
       nombreCompleto,
       telefono,
       rol
@@ -71,7 +71,8 @@ export const login = async (req, res) => {
     }
 
     // Verificar la contraseña
-    const isMatch = await bcrypt.compare(password, user.password_hash)
+    const isMatch = await bcrypt.compare(password, user.hashedPassword)
+    console.log(user.hashedPassword)
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales incorrectas' })
     }

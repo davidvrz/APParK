@@ -11,9 +11,10 @@ const User = sequelize.define('User', {
       isEmail: true
     }
   },
-  password_hash: {
+  hashedPassword: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    field: 'password_hash'
   },
   nombreCompleto: {
     type: DataTypes.STRING,

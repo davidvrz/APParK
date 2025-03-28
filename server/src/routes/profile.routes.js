@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { accessMiddleware } from '../middlewares/auth.middleware.js'
+import { authenticate } from '../middlewares/auth.middleware.js'
 import validateSchema from '../middlewares/validator.middleware.js'
 import { vehicleSchema } from '../schemas/vehicle.schema.js'
 import { getProfile, updateProfile, addVehicle, updateVehicle, deleteVehicle, deleteAccount } from '../controllers/profile.controller.js'
@@ -7,21 +7,21 @@ import { getProfile, updateProfile, addVehicle, updateVehicle, deleteVehicle, de
 const router = Router()
 
 // ✅ Obtener perfil de usuario
-router.get('/', accessMiddleware, getProfile)
+router.get('/', authenticate, getProfile)
 
 // ✅ Actualizar perfil
-router.put('/', accessMiddleware, updateProfile)
+router.put('/', authenticate, updateProfile)
 
 // ✅ Añadir vehículo
-router.post('/vehicle', accessMiddleware, validateSchema(vehicleSchema), addVehicle)
+router.post('/vehicle', authenticate, validateSchema(vehicleSchema), addVehicle)
 
 // ✅ Actualizar vehículo
-router.put('/vehicle/:id', accessMiddleware, validateSchema(vehicleSchema), updateVehicle)
+router.put('/vehicle/:id', authenticate, validateSchema(vehicleSchema), updateVehicle)
 
 // ✅ Eliminar vehículo
-router.delete('/vehicle/:id', accessMiddleware, deleteVehicle)
+router.delete('/vehicle/:id', authenticate, deleteVehicle)
 
 // ✅ Eliminar cuenta de usuario
-router.delete('/', accessMiddleware, deleteAccount)
+router.delete('/', authenticate, deleteAccount)
 
 export default router
