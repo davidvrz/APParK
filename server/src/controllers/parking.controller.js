@@ -3,6 +3,7 @@ import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
 import pick from 'lodash/pick.js'
 import { sequelize } from '../database/db.js'
+import { generateParkingToken } from '../libs/jwt.js'
 
 export const getAllParkings = async (req, res) => {
   try {
@@ -135,7 +136,7 @@ export const createParking = async (req, res) => {
   try {
     const { nombre, ubicacion, capacidad, estado, plantas } = req.body
 
-    // ✅ 1. Crear el parking
+    // Crear el parking
     const parking = await Parking.create(
       { nombre, ubicacion, capacidad, estado },
       { transaction }
@@ -143,7 +144,7 @@ export const createParking = async (req, res) => {
 
     let createdParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'capacidad', 'estado'])
 
-    // ✅ 2. Si hay plantas definidas, las creamos junto con las plazas
+    // Si hay plantas definidas, las creamos junto con las plazas
     if (plantas && plantas.length > 0) {
       const createdPlantas = await Promise.all(
         plantas.map(async (planta) => {
@@ -155,7 +156,7 @@ export const createParking = async (req, res) => {
             { transaction }
           )
 
-          // ✅ Si hay plazas definidas en la planta, las creamos
+          // Si hay plazas definidas en la planta, las creamos
           if (planta.plazas && planta.plazas.length > 0) {
             await Promise.all(
               planta.plazas.map(async (plaza) => {
@@ -183,19 +184,27 @@ export const createParking = async (req, res) => {
         })
       )
 
-      // ✅ Agregamos las plantas creadas al objeto de respuesta
+      // Agregamos las plantas creadas al objeto de respuesta
       createdParking = {
         ...createdParking,
         plantas: createdPlantas
       }
     }
 
-    // 🔥 Si todo está correcto → Confirmamos la transacción
+    const parkingToken = generateParkingToken({
+      parkingId: parking.id,
+      nombre: parking.nombre
+    })
+
+    // Confirmamos la transacción
     await transaction.commit()
 
-    res.status(201).json({ parking: createdParking })
+    res.status(201).json({
+      parking: createdParking,
+      parkingToken
+    })
   } catch (error) {
-    // 🔥 Si algo falla → Hacemos rollback
+    // Si algo falla, rollback
     await transaction.rollback()
     res.status(500).json({ error: error.message })
   }

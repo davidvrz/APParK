@@ -31,12 +31,14 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Usuario',
-  timestamps: true, // Sequelize gestionará automáticamente createdAt y updatedAt
-  createdAt: 'created_at', // Sequelize lo mapeará a created_at en la BD
-  updatedAt: 'updated_at' // Sequelize lo mapeará a updated_at en la BD
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 })
 
-User.hasMany(Vehicle, { foreignKey: 'usuario_id', as: 'vehicles' }) // Un usuario puede tener varios vehículos
-Vehicle.belongsTo(User, { foreignKey: 'usuario_id', as: 'owner' }) // Un vehículo pertenece a un usuario
+// Relaciones
+
+User.hasMany(Vehicle, { foreignKey: 'usuario_id', as: 'vehicles' })
+Vehicle.belongsTo(User, { foreignKey: 'usuario_id', as: 'owner' })
 
 export default User

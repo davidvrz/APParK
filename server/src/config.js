@@ -15,5 +15,8 @@ export const DB = {
 export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 export const TOKEN_SECRET = process.env.TOKEN_SECRET || 'smart-park-system-secret-token'
+export const TOKEN_SECRET_PARKING = process.env.TOKEN_SECRET_PARKING || 'sistema-interno-provisional-token'
 
-export const config = { systemAccessToken: process.env.SYSTEM_ACCESS_TOKEN }
+export const RESERVA_TIEMPO_MIN = 15 // minutos
+export const RESERVA_TIEMPO_MAX = 120 // minutos
+export const RESERVA_ANTICIPACION_MIN = 30 // minutos

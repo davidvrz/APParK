@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser'
 import authRoutes from './routes/auth.routes.js'
 import profileRoutes from './routes/profile.routes.js'
 import parkingRoutes from './routes/parking.routes.js'
+import reservaRoutes from './routes/reserva.routes.js'
 
 const app = express()
 
@@ -33,6 +34,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/parking', parkingRoutes)
+app.use('/api/reserva', reservaRoutes)
 
 // 🔸 Middleware para rutas no encontradas (404)
 app.use((req, res, next) => {

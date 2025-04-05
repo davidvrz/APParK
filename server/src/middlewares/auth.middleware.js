@@ -1,4 +1,4 @@
-import { verifyToken } from '../libs/jwt.js'
+import { verifyUserToken } from '../libs/jwt.js'
 
 // Middleware para validar el access token desde el header
 export const authenticate = (req, res, next) => {
@@ -10,7 +10,7 @@ export const authenticate = (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(token)
+    const decoded = verifyUserToken(token)
     req.user = decoded
     next()
   } catch (error) {
@@ -30,7 +30,7 @@ export const refreshToken = (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(refreshToken)
+    const decoded = verifyUserToken(refreshToken)
     req.user = decoded
     next()
   } catch (error) {

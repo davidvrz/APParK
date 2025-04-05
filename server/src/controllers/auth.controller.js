@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import User from '../models/user.model.js'
-import { generateAccessToken, generateRefreshToken, verifyToken } from '../libs/jwt.js'
+import { generateAccessToken, generateRefreshToken, verifyUserToken } from '../libs/jwt.js'
 import pick from 'lodash/pick.js'
 
 export const register = async (req, res) => {
@@ -120,7 +120,7 @@ export const refreshAccessToken = (req, res) => {
     }
 
     // Verifica el refresh token
-    const decoded = verifyToken(refreshToken)
+    const decoded = verifyUserToken(refreshToken)
 
     // Genera un nuevo access token
     const { token: newAccessToken, expiresIn } = generateAccessToken({

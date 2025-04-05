@@ -1,13 +1,16 @@
 import jwt from 'jsonwebtoken'
-import { TOKEN_SECRET } from '../config.js'
+import { TOKEN_SECRET, TOKEN_SECRET_PARKING } from '../config.js'
 
-// Access Token → Expira en 30 minutos
 export const generateAccessToken = (payload) => {
-  const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: '30m' })
+  const token = jwt.sign(
+    { ...payload, type: 'user' },
+    TOKEN_SECRET,
+    { expiresIn: '30m' }
+  )
   const decoded = jwt.decode(token)
   return {
     token,
-    expiresIn: decoded.exp * 1000 // Convertir a milisegundos para el frontend
+    expiresIn: decoded.exp * 1000 // 30 minutos
   }
 }
 
@@ -21,4 +24,12 @@ export const generateRefreshToken = (payload) => {
   }
 }
 
-export const verifyToken = (token) => jwt.verify(token, TOKEN_SECRET)
+export const generateParkingToken = ({ parkingId, nombre }) => {
+  return jwt.sign(
+    { type: 'parking', parkingId, nombre },
+    TOKEN_SECRET_PARKING
+  )
+}
+
+export const verifyUserToken = (token) => jwt.verify(token, TOKEN_SECRET)
+export const verifyParkingToken = (token) => jwt.verify(token, TOKEN_SECRET_PARKING)

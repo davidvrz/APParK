@@ -124,7 +124,6 @@ export const deleteVehicle = async (req, res) => {
   }
 }
 
-// ✅ Eliminar cuenta de usuario
 export const deleteAccount = async (req, res) => {
   try {
     const { id: userId } = req.user

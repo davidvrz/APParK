@@ -79,7 +79,9 @@ CREATE TABLE IF NOT EXISTS Reserva (
     plaza_id INT,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
+    estado ENUM('activa', 'completada', 'cancelada') DEFAULT 'activa',
+    precio_total DECIMAL(10,2),
+    matricula VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Usuario(id) ON DELETE CASCADE,
@@ -88,20 +90,6 @@ CREATE TABLE IF NOT EXISTS Reserva (
     CONSTRAINT unique_reserva UNIQUE (plaza_id, start_time, end_time)
 );
 
--- ==========================
--- TABLA: HistorialReserva
--- ==========================
-CREATE TABLE IF NOT EXISTS HistorialReserva (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    plaza_id INT,
-    usuario_id INT,
-    fecha_inicio TIMESTAMP NOT NULL,
-    fecha_fin TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (plaza_id) REFERENCES Plaza(id) ON DELETE CASCADE,
-    FOREIGN KEY (usuario_id) REFERENCES Usuario(id) ON DELETE SET NULL
-);
 
 -- ==========================
 -- TABLA: Valoración

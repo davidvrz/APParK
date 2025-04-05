@@ -1,4 +1,5 @@
-import { verifyToken } from '../libs/jwt.js'
+import { verifyUserToken, verifyParkingToken } from '../libs/jwt.js'
+import jwt from 'jsonwebtoken'
 
 export const parkingAccess = (req, res, next) => {
   const authHeader = req.headers.authorization
@@ -8,17 +9,27 @@ export const parkingAccess = (req, res, next) => {
     return res.status(401).json({ error: 'No autorizado' })
   }
 
-  // ✅ 1. Si el token es el del sistema → Permitir acceso
-  if (token === process.env.SYSTEM_ACCESS_TOKEN) {
-    req.systemAccess = true
-    return next()
-  }
-
-  // ✅ 2. Si el token es un token JWT → Autenticar como usuario
   try {
-    const decoded = verifyToken(token)
-    req.user = decoded
-    return next()
+    const decoded = jwt.decode(token)
+
+    if (decoded?.type === 'parking') {
+      const verified = verifyParkingToken(token)
+      req.parking = verified
+
+      const parkingIdFromRoute = parseInt(req.params.parkingId || req.body.parkingId)
+      if (parkingIdFromRoute && verified.parkingId !== parkingIdFromRoute) {
+        return res.status(403).json({ error: 'Acceso denegado para este parking' })
+      }
+      return next()
+    }
+
+    if (decoded?.type === 'user') {
+      const verified = verifyUserToken(token)
+      req.user = verified
+      return next()
+    }
+
+    return res.status(403).json({ error: 'Tipo de token no válido' })
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'Token expirado' })
