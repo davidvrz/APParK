@@ -14,7 +14,6 @@ const Planta = sequelize.define('Planta', {
   updatedAt: 'updated_at'
 })
 
-// Relaciones
 Planta.hasMany(Plaza, { foreignKey: 'planta_id', as: 'plazas', onDelete: 'CASCADE' })
 Plaza.belongsTo(Planta, { foreignKey: 'planta_id', as: 'planta' })
 

@@ -1,6 +1,7 @@
 import app from './app.js'
 import 'dotenv/config'
 import { connectDB } from './database/db.js'
+import './jobs/reserva.worker.js'
 
 const PORT = process.env.PORT || 3000
 

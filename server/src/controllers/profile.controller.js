@@ -128,17 +128,14 @@ export const deleteAccount = async (req, res) => {
   try {
     const { id: userId } = req.user
 
-    // Eliminar todos los vehículos asociados al usuario
     await Vehicle.destroy({ where: { usuario_id: userId } })
 
-    // Eliminar la cuenta de usuario
     const deleted = await User.destroy({ where: { id: userId } })
 
     if (!deleted) {
       return res.status(404).json({ error: 'Usuario no encontrado' })
     }
 
-    // Eliminar la cookie de refresh token
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN

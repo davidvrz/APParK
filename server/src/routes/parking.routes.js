@@ -19,7 +19,8 @@ import {
   getPlazaState,
   createPlaza,
   updatePlaza,
-  deletePlaza
+  deletePlaza,
+  getReservasParking
 } from '../controllers/parking.controller.js'
 
 const router = Router()
@@ -40,5 +41,7 @@ router.delete('/:parkingId/plantas/:plantaId', authenticate, requireAdmin, delet
 router.post('/:parkingId/plantas/:plantaId/plazas', authenticate, requireAdmin, validateSchema(plazaSchema), createPlaza)
 router.put('/:parkingId/plantas/:plantaId/plazas/:plazaId', authenticate, requireAdmin, validateSchema(plazaSchema), updatePlaza)
 router.delete('/:parkingId/plantas/:plantaId/plazas/:plazaId', authenticate, requireAdmin, deletePlaza)
+
+router.get('/:parkingId/reservas', authenticate, requireAdmin, getReservasParking)
 
 export default router

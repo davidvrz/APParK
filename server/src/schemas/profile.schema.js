@@ -11,7 +11,6 @@ export const profileSchema = z.object({
   newPassword: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres').max(64, 'La nueva contraseña no debe exceder de los 64 caracteres').optional()
 })
   .refine(data => {
-    // Si se pasa una nueva contraseña, también debe pasarse la actual
     if (data.newPassword && !data.currentPassword) {
       return false
     }

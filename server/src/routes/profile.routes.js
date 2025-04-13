@@ -6,22 +6,16 @@ import { getProfile, updateProfile, addVehicle, updateVehicle, deleteVehicle, de
 
 const router = Router()
 
-// Obtener perfil de usuario
 router.get('/', authenticate, getProfile)
 
-// Actualizar perfil
 router.put('/', authenticate, updateProfile)
 
-// Añadir vehículo
 router.post('/vehicle', authenticate, validateSchema(vehicleSchema), addVehicle)
 
-// Actualizar vehículo
 router.put('/vehicle/:id', authenticate, validateSchema(vehicleSchema), updateVehicle)
 
-// Eliminar vehículo
 router.delete('/vehicle/:id', authenticate, deleteVehicle)
 
-// Eliminar cuenta de usuario
 router.delete('/', authenticate, deleteAccount)
 
 export default router

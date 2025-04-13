@@ -10,9 +10,13 @@ export const parkingAuth = (req, res, next) => {
 
   try {
     const decoded = verifyParkingToken(token)
+    const parkingIdFromRequest = parseInt(req.params.parkingId || req.body.parkingId)
 
-    const parkingIdFromRoute = parseInt(req.params.parkingId || req.body.parkingId)
-    if (parkingIdFromRoute && decoded.parkingId !== parkingIdFromRoute) {
+    if (!parkingIdFromRequest) {
+      return res.status(400).json({ error: 'Debe indicarse el ID del parking en la petición' })
+    }
+
+    if (decoded.parkingId !== parkingIdFromRequest) {
       return res.status(403).json({ error: 'Acceso denegado para este parking' })
     }
 

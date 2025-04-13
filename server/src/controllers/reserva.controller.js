@@ -3,12 +3,11 @@ import Reserva from '../models/reserva.model.js'
 import Plaza from '../models/plaza.model.js'
 import Vehicle from '../models/vehicle.model.js'
 import { sequelize } from '../database/db.js'
-import Parking from '../models/parking.model.js'
-import Planta from '../models/planta.model.js'
+import ReservaRapida from '../models/reservaRapida.model.js'
 import pick from 'lodash/pick.js'
+import { reservaQueue } from '../jobs/reserva.queue.js'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '../config.js'
 
-// Crear reserva
 export const createReserva = async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -26,6 +25,7 @@ export const createReserva = async (req, res) => {
     }
 
     // antelación mínima
+    /*
     const diffAntelacion = (start - now) / (1000 * 60)
     if (diffAntelacion < RESERVA_ANTICIPACION_MIN) {
       await transaction.rollback()
@@ -33,7 +33,7 @@ export const createReserva = async (req, res) => {
         error: `Las reservas deben hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
       })
     }
-
+    */
     const diffMin = (end - start) / (1000 * 60)
     if (diffMin < RESERVA_TIEMPO_MIN || diffMin > RESERVA_TIEMPO_MAX) {
       await transaction.rollback()
@@ -52,14 +52,17 @@ export const createReserva = async (req, res) => {
       return res.status(403).json({ error: 'Vehículo no válido para este usuario' })
     }
 
-    // Obtener plaza para calcular precioTotal
     const plaza = await Plaza.findByPk(plazaId, { transaction })
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
-    // Comprobación de solapamiento con otras reservas activas
+    if (!plaza.reservable) {
+      await transaction.rollback()
+      return res.status(400).json({ error: 'Esta plaza no está disponible para reservas normales' })
+    }
+
     const overlapping = await Reserva.findOne({
       where: {
         plaza_id: plazaId,
@@ -81,7 +84,6 @@ export const createReserva = async (req, res) => {
       return res.status(400).json({ error: 'La plaza ya está reservada en ese horario' })
     }
 
-    // Comprobación de solapamiento con otras reservas activas (VEHÍCULO)
     const overlappingVehicle = await Reserva.findOne({
       where: {
         vehiculo_id: vehicleId,
@@ -111,7 +113,6 @@ export const createReserva = async (req, res) => {
     const durationHours = (new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60)
     const precioTotal = durationHours * plaza.precioHora
 
-    // Crear reserva
     const reserva = await Reserva.create({
       user_id: userId,
       vehiculo_id: vehicleId,
@@ -121,7 +122,18 @@ export const createReserva = async (req, res) => {
       precioTotal
     }, { transaction })
 
-    // Marcar plaza como Reservada
+    await reservaQueue.removeJobs(`${reserva.id}`)
+    const delay = new Date(endTime).getTime() - Date.now()
+    console.log(`\n\nReserva ${reserva.id} programada para completarse en ${delay} ms\n\n`)
+    await reservaQueue.add(
+      'completar-reserva',
+      { reservaId: reserva.id },
+      {
+        delay,
+        jobId: `${reserva.id}`
+      }
+    )
+
     await Plaza.update({ estado: 'Reservado' }, {
       where: { id: plazaId },
       transaction
@@ -140,7 +152,6 @@ export const createReserva = async (req, res) => {
   }
 }
 
-// Obtener reservas activas del usuario autenticado
 export const getReservasByUser = async (req, res) => {
   try {
     const { id: userId } = req.user
@@ -149,7 +160,7 @@ export const getReservasByUser = async (req, res) => {
       where: { user_id: userId, estado: 'activa' },
       include: [
         { model: Vehicle, as: 'vehicle', attributes: ['id', 'matricula', 'tipo'] },
-        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo', 'estado', 'precioHora'] }
+        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo', 'precioHora'] }
       ],
       order: [['startTime', 'ASC']]
     })
@@ -226,6 +237,11 @@ export const updateReserva = async (req, res) => {
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
+    if (!plaza.reservable) {
+      await transaction.rollback()
+      return res.status(400).json({ error: 'Esta plaza no está disponible para reservas normales' })
+    }
+
     if (vehicle.tipo !== plaza.tipo) {
       await transaction.rollback()
       return res.status(400).json({
@@ -277,7 +293,6 @@ export const updateReserva = async (req, res) => {
       return res.status(400).json({ error: 'Este vehículo ya tiene una reserva en ese horario' })
     }
 
-    // liberar la anterior plaza y reservar la nueva
     if (reserva.plaza_id !== plazaId) {
       await Plaza.update({ estado: 'Libre' }, {
         where: { id: reserva.plaza_id },
@@ -300,6 +315,19 @@ export const updateReserva = async (req, res) => {
       endTime,
       precioTotal
     }, { transaction })
+
+    await reservaQueue.removeJobs(`${reserva.id}`)
+
+    const delay = new Date(endTime).getTime() - Date.now()
+
+    await reservaQueue.add(
+      'completar-reserva',
+      { reservaId: reserva.id },
+      {
+        delay,
+        jobId: `${reserva.id}`
+      }
+    )
 
     await transaction.commit()
 
@@ -331,7 +359,6 @@ export const cancelReserva = async (req, res) => {
       return res.status(400).json({ error: 'Solo se pueden cancelar reservas activas' })
     }
 
-    // Liberar plaza
     await Plaza.update({ estado: 'Libre' }, {
       where: { id: reserva.plaza_id },
       transaction
@@ -339,6 +366,8 @@ export const cancelReserva = async (req, res) => {
 
     reserva.estado = 'cancelada'
     await reserva.save({ transaction })
+
+    await reservaQueue.removeJobs(`${reserva.id}`)
     await transaction.commit()
 
     res.status(200).json({ message: 'Reserva cancelada correctamente' })
@@ -360,7 +389,6 @@ export const deleteReserva = async (req, res) => {
       return res.status(404).json({ error: 'Reserva no encontrada' })
     }
 
-    // Liberar plaza si la reserva aún está activa
     if (reserva.estado === 'activa') {
       await Plaza.update({ estado: 'Libre' }, {
         where: { id: reserva.plaza_id },
@@ -386,7 +414,7 @@ export const getHistorialReservasByUser = async (req, res) => {
       where: { user_id: userId },
       include: [
         { model: Vehicle, as: 'vehicle', attributes: ['id', 'matricula', 'tipo'] },
-        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo', 'estado', 'precioHora'] }
+        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo'] }
       ],
       order: [['startTime', 'DESC']]
     })
@@ -401,22 +429,21 @@ export const getHistorialReservasByUser = async (req, res) => {
   }
 }
 
-export const quickReserve = async (req, res) => {
+export const createReservaRapida = async (req, res) => {
   const transaction = await sequelize.transaction()
 
   try {
     const { plazaId, matricula, tipoVehiculo } = req.body
 
-    if (!matricula || !tipoVehiculo) {
-      await transaction.rollback()
-      return res.status(400).json({ error: 'Se requiere matrícula y tipo de vehículo' })
-    }
-
-    // Validar plaza
     const plaza = await Plaza.findByPk(plazaId, { transaction })
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
+    }
+
+    if (plaza.reservable) {
+      await transaction.rollback()
+      return res.status(400).json({ error: 'Esta plaza no está disponible para reservas rápidas' })
     }
 
     if (plaza.estado !== 'Libre') {
@@ -431,8 +458,7 @@ export const quickReserve = async (req, res) => {
       })
     }
 
-    // Validar que la matrícula no tenga ya una reserva activa
-    const reservaExistente = await Reserva.findOne({
+    const reservaExistente = await ReservaRapida.findOne({
       where: {
         matricula,
         estado: 'activa'
@@ -442,20 +468,18 @@ export const quickReserve = async (req, res) => {
 
     if (reservaExistente) {
       await transaction.rollback()
-      return res.status(400).json({ error: 'Ya existe una reserva activa con esta matrícula' })
+      return res.status(400).json({ error: 'Ya existe una reserva rápida activa con esta matrícula' })
     }
 
     const now = new Date()
 
-    // Crear la reserva
-    const reserva = await Reserva.create({
+    const reserva = await ReservaRapida.create({
       plaza_id: plazaId,
       startTime: now,
       estado: 'activa',
       matricula
     }, { transaction })
 
-    // Actualizar estado de la plaza
     await Plaza.update({ estado: 'Ocupado' }, {
       where: { id: plazaId },
       transaction
@@ -474,26 +498,34 @@ export const quickReserve = async (req, res) => {
   }
 }
 
-export const completeReserva = async (req, res) => {
+export const completeReservaRapida = async (req, res) => {
   const transaction = await sequelize.transaction()
 
   try {
-    const { reservaId } = req.params
+    const { plazaId, matricula } = req.body
 
-    const reserva = await Reserva.findByPk(reservaId, { transaction })
-    if (!reserva) {
-      await transaction.rollback()
-      return res.status(404).json({ error: 'Reserva no encontrada' })
+    if (!plazaId || !matricula) {
+      return res.status(400).json({ error: 'Se requiere plazaId y matrícula' })
     }
 
-    if (reserva.estado !== 'activa') {
+    // Buscar la reserva activa asociada a esa plaza y matrícula
+    const reserva = await ReservaRapida.findOne({
+      where: {
+        plaza_id: plazaId,
+        matricula,
+        estado: 'activa'
+      },
+      transaction
+    })
+
+    if (!reserva) {
       await transaction.rollback()
-      return res.status(400).json({ error: 'La reserva ya ha sido finalizada' })
+      return res.status(404).json({ error: 'Reserva activa no encontrada' })
     }
 
     const now = new Date()
 
-    const plaza = await Plaza.findByPk(reserva.plaza_id, { transaction })
+    const plaza = await Plaza.findByPk(plazaId, { transaction })
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
@@ -502,15 +534,13 @@ export const completeReserva = async (req, res) => {
     const durationHours = (now - new Date(reserva.startTime)) / (1000 * 60 * 60)
     const precioTotal = parseFloat((durationHours * plaza.precioHora).toFixed(2))
 
-    // Finalizar reserva
     reserva.endTime = now
     reserva.estado = 'completada'
     reserva.precioTotal = precioTotal
     await reserva.save({ transaction })
 
-    // Liberar plaza
     await Plaza.update({ estado: 'Libre' }, {
-      where: { id: reserva.plaza_id },
+      where: { id: plazaId },
       transaction
     })
 
@@ -521,49 +551,11 @@ export const completeReserva = async (req, res) => {
     ])
 
     res.status(200).json({
-      message: 'Reserva completada correctamente',
+      message: 'Reserva rápida completada correctamente (simulación sensor)',
       reserva: completed
     })
   } catch (error) {
     await transaction.rollback()
-    res.status(500).json({ error: error.message })
-  }
-}
-
-export const getReservasActivas = async (req, res) => {
-  try {
-    const reservas = await Reserva.findAll({
-      where: { estado: 'active' },
-      include: {
-        model: Plaza,
-        as: 'plaza',
-        attributes: ['id', 'numero', 'tipo', 'estado'],
-        include: {
-          model: Planta,
-          as: 'planta',
-          attributes: ['numero'],
-          include: {
-            model: Parking,
-            as: 'parking',
-            attributes: ['id', 'nombre']
-          }
-        }
-      },
-      order: [['startTime', 'ASC']]
-    })
-
-    const formatted = reservas.map(reserva => {
-      const base = pick(reserva.get(), ['id', 'startTime', 'precioTotal'])
-      return {
-        ...base,
-        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
-        planta: pick(reserva.plaza.planta, ['numero']),
-        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre'])
-      }
-    })
-
-    res.status(200).json({ reservas: formatted })
-  } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }

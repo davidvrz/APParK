@@ -6,6 +6,11 @@ const Plaza = sequelize.define('Plaza', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  reservable: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  },
   tipo: {
     type: DataTypes.ENUM('Coche', 'Moto', 'Especial', 'Eléctrico', 'Discapacitados', 'VIP'),
     allowNull: false

@@ -12,7 +12,7 @@ const Reserva = sequelize.define('Reserva', {
   },
   endTime: {
     type: DataTypes.DATE,
-    allowNull: true, // ✅ Permitir null para reservas sin endTime
+    allowNull: false,
     field: 'end_time'
   },
   estado: {
@@ -27,7 +27,7 @@ const Reserva = sequelize.define('Reserva', {
     field: 'precio_total'
   },
   matricula: {
-    type: DataTypes.STRING(10), // ✅ Campo adicional
+    type: DataTypes.STRING(10),
     allowNull: true
   }
 }, {
@@ -37,7 +37,6 @@ const Reserva = sequelize.define('Reserva', {
   updatedAt: 'updated_at'
 })
 
-// Relaciones
 Reserva.belongsTo(User, { foreignKey: 'user_id', as: 'user' })
 User.hasMany(Reserva, { foreignKey: 'user_id', as: 'reservas' })
 

@@ -2,6 +2,7 @@ import Parking from '../models/parking.model.js'
 import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
 import pick from 'lodash/pick.js'
+import Reserva from '../models/reserva.model.js'
 import { sequelize } from '../database/db.js'
 import { generateParkingToken } from '../libs/jwt.js'
 
@@ -41,7 +42,6 @@ export const getParkingState = async (req, res) => {
       return res.status(404).json({ error: 'Parking no encontrado' })
     }
 
-    // Contar plazas libres, ocupadas y reservadas
     let plazasLibres = 0
     let plazasOcupadas = 0
     let plazasReservadas = 0
@@ -131,12 +131,11 @@ export const getPlazaState = async (req, res) => {
 }
 
 export const createParking = async (req, res) => {
-  const transaction = await sequelize.transaction() // 🔥 Iniciamos una transacción
+  const transaction = await sequelize.transaction()
 
   try {
     const { nombre, ubicacion, capacidad, estado, plantas } = req.body
 
-    // Crear el parking
     const parking = await Parking.create(
       { nombre, ubicacion, capacidad, estado },
       { transaction }
@@ -144,7 +143,6 @@ export const createParking = async (req, res) => {
 
     let createdParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'capacidad', 'estado'])
 
-    // Si hay plantas definidas, las creamos junto con las plazas
     if (plantas && plantas.length > 0) {
       const createdPlantas = await Promise.all(
         plantas.map(async (planta) => {
@@ -156,7 +154,6 @@ export const createParking = async (req, res) => {
             { transaction }
           )
 
-          // Si hay plazas definidas en la planta, las creamos
           if (planta.plazas && planta.plazas.length > 0) {
             await Promise.all(
               planta.plazas.map(async (plaza) => {
@@ -184,7 +181,6 @@ export const createParking = async (req, res) => {
         })
       )
 
-      // Agregamos las plantas creadas al objeto de respuesta
       createdParking = {
         ...createdParking,
         plantas: createdPlantas
@@ -196,7 +192,6 @@ export const createParking = async (req, res) => {
       nombre: parking.nombre
     })
 
-    // Confirmamos la transacción
     await transaction.commit()
 
     res.status(201).json({
@@ -204,7 +199,6 @@ export const createParking = async (req, res) => {
       parkingToken
     })
   } catch (error) {
-    // Si algo falla, rollback
     await transaction.rollback()
     res.status(500).json({ error: error.message })
   }
@@ -341,6 +335,47 @@ export const deletePlaza = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Plaza eliminada correctamente' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const getReservasParking = async (req, res) => {
+  const { parkingId } = req.params
+
+  try {
+    const reservas = await Reserva.findAll({
+      where: { estado: 'activa' },
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        attributes: ['id', 'numero', 'tipo', 'estado'],
+        include: {
+          model: Planta,
+          as: 'planta',
+          attributes: ['numero'],
+          include: {
+            model: Parking,
+            as: 'parking',
+            where: { id: parkingId },
+            attributes: ['id', 'nombre']
+          }
+        }
+      },
+      order: [['startTime', 'ASC']]
+    })
+
+    const formatted = reservas.map(reserva => {
+      const base = pick(reserva.get(), ['id', 'startTime', 'precioTotal'])
+      return {
+        ...base,
+        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
+        planta: pick(reserva.plaza.planta, ['numero']),
+        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre'])
+      }
+    })
+
+    res.status(200).json({ reservas: formatted })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

@@ -36,8 +36,6 @@ const User = sequelize.define('User', {
   updatedAt: 'updated_at'
 })
 
-// Relaciones
-
 User.hasMany(Vehicle, { foreignKey: 'usuario_id', as: 'vehicles' })
 Vehicle.belongsTo(User, { foreignKey: 'usuario_id', as: 'owner' })
 

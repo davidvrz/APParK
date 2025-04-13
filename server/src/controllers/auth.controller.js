@@ -7,16 +7,13 @@ export const register = async (req, res) => {
   try {
     const { email, password, nombreCompleto, telefono, rol } = req.body
 
-    // Verifica si el usuario ya existe
     const existingUser = await User.findOne({ where: { email } })
     if (existingUser) {
       return res.status(400).json({ error: 'El usuario ya existe' })
     }
 
-    // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Crear el usuario
     const newUser = await User.create({
       email,
       hashedPassword,
@@ -25,7 +22,6 @@ export const register = async (req, res) => {
       rol
     })
 
-    // Generar el access token y refresh token
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({
       id: newUser.id,
       email: newUser.email,
@@ -36,7 +32,6 @@ export const register = async (req, res) => {
       id: newUser.id
     })
 
-    // Configurar cookies seguras con el refresh token
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN
@@ -46,7 +41,6 @@ export const register = async (req, res) => {
 
     const createdUser = pick(newUser.get(), ['id', 'email', 'nombreCompleto', 'telefono', 'rol'])
 
-    // Responder con el access token
     res.status(201).json({
       message: 'Usuario registrado correctamente',
       user: createdUser,
@@ -64,20 +58,16 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // Buscar el usuario
     const user = await User.findOne({ where: { email } })
     if (!user) {
       return res.status(401).json({ error: 'Credenciales incorrectas' })
     }
 
-    // Verificar la contraseña
     const isMatch = await bcrypt.compare(password, user.hashedPassword)
-    console.log(user.hashedPassword)
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales incorrectas' })
     }
 
-    // Generar tokens
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({
       id: user.id,
       email: user.email,
@@ -88,7 +78,6 @@ export const login = async (req, res) => {
       id: user.id
     })
 
-    // Configurar cookie segura con el refresh token
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN
@@ -119,7 +108,6 @@ export const refreshAccessToken = (req, res) => {
       return res.status(401).json({ error: 'No autorizado' })
     }
 
-    // Verifica el refresh token
     const decoded = verifyUserToken(refreshToken)
 
     // Genera un nuevo access token
@@ -145,7 +133,6 @@ export const refreshAccessToken = (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    // Eliminar la cookie con el refresh token
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN

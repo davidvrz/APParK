@@ -11,12 +11,17 @@ export const DB = {
   PORT: process.env.DB_PORT || 3306
 }
 
+export const redisConfig = {
+  redisHost: process.env.REDIS_HOST || 'localhost',
+  redisPort: process.env.REDIS_PORT || 6379
+}
+
 // URL del frontend para permitir CORS
 export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 export const TOKEN_SECRET = process.env.TOKEN_SECRET || 'smart-park-system-secret-token'
 export const TOKEN_SECRET_PARKING = process.env.TOKEN_SECRET_PARKING || 'sistema-interno-provisional-token'
 
-export const RESERVA_TIEMPO_MIN = 15 // minutos
+export const RESERVA_TIEMPO_MIN = 0 // minutos
 export const RESERVA_TIEMPO_MAX = 120 // minutos
 export const RESERVA_ANTICIPACION_MIN = 30 // minutos

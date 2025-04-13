@@ -7,7 +7,7 @@ const Vehicle = sequelize.define('Vehicle', {
     allowNull: false,
     unique: true,
     validate: {
-      len: [7, 10] // Matrículas tipo ABC-123 o similares
+      len: [7, 10] // Matrículas tipo ABC-1234
     }
   },
   tipo: {
