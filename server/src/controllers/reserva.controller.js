@@ -1,9 +1,11 @@
 import { Op } from 'sequelize'
 import Reserva from '../models/reserva.model.js'
+import ReservaRapida from '../models/reservaRapida.model.js'
+import Parking from '../models/parking.model.js'
+import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
 import Vehicle from '../models/vehicle.model.js'
 import { sequelize } from '../database/db.js'
-import ReservaRapida from '../models/reservaRapida.model.js'
 import pick from 'lodash/pick.js'
 import { reservaQueue } from '../jobs/reserva.queue.js'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '../config.js'
@@ -24,8 +26,6 @@ export const createReserva = async (req, res) => {
       return res.status(400).json({ error: 'La reserva debe programarse para un momento futuro' })
     }
 
-    // antelación mínima
-    /*
     const diffAntelacion = (start - now) / (1000 * 60)
     if (diffAntelacion < RESERVA_ANTICIPACION_MIN) {
       await transaction.rollback()
@@ -33,7 +33,7 @@ export const createReserva = async (req, res) => {
         error: `Las reservas deben hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
       })
     }
-    */
+
     const diffMin = (end - start) / (1000 * 60)
     if (diffMin < RESERVA_TIEMPO_MIN || diffMin > RESERVA_TIEMPO_MAX) {
       await transaction.rollback()
@@ -429,6 +429,87 @@ export const getHistorialReservasByUser = async (req, res) => {
   }
 }
 
+export const getReservasParking = async (req, res) => {
+  const { parkingId } = req.params
+
+  try {
+    const reservas = await Reserva.findAll({
+      where: { estado: 'activa' },
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        attributes: ['id', 'numero', 'tipo', 'estado'],
+        include: {
+          model: Planta,
+          as: 'planta',
+          attributes: ['numero'],
+          include: {
+            model: Parking,
+            as: 'parking',
+            where: { id: parkingId },
+            attributes: ['id', 'nombre']
+          }
+        }
+      },
+      order: [['startTime', 'ASC']]
+    })
+
+    const formatted = reservas.map(reserva => {
+      const base = pick(reserva.get(), ['id', 'startTime', 'precioTotal'])
+      return {
+        ...base,
+        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
+        planta: pick(reserva.plaza.planta, ['numero'])
+      }
+    })
+
+    res.status(200).json({ reservas: formatted })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const getReservasRapidasParking = async (req, res) => {
+  const { parkingId } = req.params
+
+  try {
+    const reservas = await ReservaRapida.findAll({
+      where: { estado: 'activa' },
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        attributes: ['id', 'numero', 'tipo', 'estado'],
+        include: {
+          model: Planta,
+          as: 'planta',
+          attributes: ['numero'],
+          include: {
+            model: Parking,
+            as: 'parking',
+            where: { id: parkingId },
+            attributes: ['id', 'nombre']
+          }
+        }
+      },
+      order: [['startTime', 'ASC']]
+    })
+
+    const formatted = reservas.map(reserva => {
+      const base = pick(reserva.get(), ['id', 'startTime', 'matricula'])
+      return {
+        ...base,
+        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
+        planta: pick(reserva.plaza.planta, ['numero']),
+        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre'])
+      }
+    })
+
+    res.status(200).json({ reservasRapidas: formatted })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
 export const createReservaRapida = async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -502,9 +583,9 @@ export const completeReservaRapida = async (req, res) => {
   const transaction = await sequelize.transaction()
 
   try {
-    const { plazaId, matricula } = req.body
+    const { plazaId } = req.body
 
-    if (!plazaId || !matricula) {
+    if (!plazaId) {
       return res.status(400).json({ error: 'Se requiere plazaId y matrícula' })
     }
 
@@ -512,7 +593,6 @@ export const completeReservaRapida = async (req, res) => {
     const reserva = await ReservaRapida.findOne({
       where: {
         plaza_id: plazaId,
-        matricula,
         estado: 'activa'
       },
       transaction
@@ -551,7 +631,7 @@ export const completeReservaRapida = async (req, res) => {
     ])
 
     res.status(200).json({
-      message: 'Reserva rápida completada correctamente (simulación sensor)',
+      message: 'Reserva rápida completada correctamente',
       reserva: completed
     })
   } catch (error) {

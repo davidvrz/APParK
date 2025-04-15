@@ -1,14 +1,17 @@
 import { reservaQueue } from './reserva.queue.js'
 import Reserva from '../models/reserva.model.js'
 import Plaza from '../models/plaza.model.js'
-// import { io } from '../sockets/index.js'
 
-reservaQueue.process(async job => {
+// Procesar el job "completar-reserva"
+reservaQueue.process('completar-reserva', async job => {
   const { reservaId } = job.data
 
   try {
     const reserva = await Reserva.findByPk(reservaId)
-    if (!reserva || reserva.estado !== 'activa') return
+    if (!reserva || reserva.estado !== 'activa') {
+      console.log(`⚠️ Job completado pero la reserva ${reservaId} no existe o ya está finalizada`)
+      return
+    }
 
     reserva.estado = 'completada'
     await reserva.save()
@@ -17,6 +20,9 @@ reservaQueue.process(async job => {
       { estado: 'Libre' },
       { where: { id: reserva.plaza_id } }
     )
+
+    console.log(`✅ Reserva completada automáticamente: Reserva #${reserva.id}`)
+
     /*
     io.emit('reserva:completada', {
       plazaId: reserva.plazaId,
@@ -24,6 +30,6 @@ reservaQueue.process(async job => {
     })
     */
   } catch (err) {
-    console.error(`❌ Error al completar reserva ${reservaId}`, err)
+    console.error(`❌ [Bull] Error al completar la reserva ${reservaId}:`, err.message)
   }
 })

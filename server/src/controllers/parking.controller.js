@@ -1,8 +1,9 @@
 import Parking from '../models/parking.model.js'
 import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
+import Anuncio from '../models/anuncio.model.js'
+
 import pick from 'lodash/pick.js'
-import Reserva from '../models/reserva.model.js'
 import { sequelize } from '../database/db.js'
 import { generateParkingToken } from '../libs/jwt.js'
 
@@ -22,7 +23,7 @@ export const getAllParkings = async (req, res) => {
   }
 }
 
-export const getParkingState = async (req, res) => {
+export const getParkingById = async (req, res) => {
   try {
     const { parkingId } = req.params
 
@@ -33,7 +34,7 @@ export const getParkingState = async (req, res) => {
         include: {
           model: Plaza,
           as: 'plazas',
-          attributes: ['id', 'numero', 'tipo', 'estado', 'precioHora']
+          attributes: ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora']
         }
       }
     })
@@ -60,7 +61,7 @@ export const getParkingState = async (req, res) => {
         id: planta.id,
         numero: planta.numero,
         plazas: planta.plazas.map(plaza =>
-          pick(plaza.get(), ['id', 'numero', 'tipo', 'estado', 'precioHora'])
+          pick(plaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
         )
       })),
       plazasLibres,
@@ -74,7 +75,7 @@ export const getParkingState = async (req, res) => {
   }
 }
 
-export const getPlantaState = async (req, res) => {
+export const getPlantaById = async (req, res) => {
   try {
     const { parkingId, plantaId } = req.params
 
@@ -107,7 +108,7 @@ export const getPlantaState = async (req, res) => {
   }
 }
 
-export const getPlazaState = async (req, res) => {
+export const getPlazaById = async (req, res) => {
   try {
     const { plantaId, plazaId } = req.params
 
@@ -122,7 +123,7 @@ export const getPlazaState = async (req, res) => {
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
-    const formattedPlaza = pick(plaza.get(), ['id', 'numero', 'tipo', 'estado', 'precioHora'])
+    const formattedPlaza = pick(plaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
 
     res.status(200).json({ plaza: formattedPlaza })
   } catch (error) {
@@ -154,19 +155,23 @@ export const createParking = async (req, res) => {
             { transaction }
           )
 
+          let plazasCreadas = []
           if (planta.plazas && planta.plazas.length > 0) {
-            await Promise.all(
+            plazasCreadas = await Promise.all(
               planta.plazas.map(async (plaza) => {
-                await Plaza.create(
+                const nuevaPlaza = await Plaza.create(
                   {
                     planta_id: nuevaPlanta.id,
                     numero: plaza.numero,
                     tipo: plaza.tipo,
                     estado: plaza.estado ?? 'Libre',
-                    precioHora: plaza.precioHora
+                    precioHora: plaza.precioHora,
+                    reservable: plaza.reservable ?? true
                   },
                   { transaction }
                 )
+
+                return pick(nuevaPlaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
               })
             )
           }
@@ -174,9 +179,7 @@ export const createParking = async (req, res) => {
           return {
             id: nuevaPlanta.id,
             numero: nuevaPlanta.numero,
-            plazas: planta.plazas.map((plaza) =>
-              pick(plaza, ['numero', 'tipo', 'estado', 'precioHora'])
-            )
+            plazas: plazasCreadas
           }
         })
       )
@@ -280,17 +283,18 @@ export const deletePlanta = async (req, res) => {
 export const createPlaza = async (req, res) => {
   try {
     const { plantaId } = req.params
-    const { numero, tipo, estado, precioHora } = req.body
+    const { numero, reservable, tipo, estado, precioHora } = req.body
 
     const plaza = await Plaza.create({
       planta_id: plantaId,
       numero,
+      reservable,
       tipo,
       estado,
       precioHora
     })
 
-    const createdPlaza = pick(plaza.get(), ['id', 'planta_id', 'numero', 'tipo', 'estado', 'precioHora'])
+    const createdPlaza = pick(plaza.get(), ['id', 'planta_id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
 
     res.status(201).json({ plaza: createdPlaza })
   } catch (error) {
@@ -301,7 +305,7 @@ export const createPlaza = async (req, res) => {
 export const updatePlaza = async (req, res) => {
   try {
     const { plantaId, plazaId } = req.params
-    const { numero, tipo, estado, precioHora } = req.body
+    const { numero, reservable, tipo, estado, precioHora } = req.body
 
     const plaza = await Plaza.findOne({ where: { id: plazaId, planta_id: plantaId } })
 
@@ -310,13 +314,14 @@ export const updatePlaza = async (req, res) => {
     }
 
     plaza.numero = numero ?? plaza.numero
+    plaza.reservable = reservable ?? plaza.reservable
     plaza.tipo = tipo ?? plaza.tipo
     plaza.estado = estado ?? plaza.estado
     plaza.precioHora = precioHora ?? plaza.precioHora
 
     await plaza.save()
 
-    const updatedPlaza = pick(plaza.get(), ['id', 'planta_id', 'numero', 'tipo', 'estado', 'precioHora'])
+    const updatedPlaza = pick(plaza.get(), ['id', 'planta_id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
 
     res.status(200).json({ message: 'Plaza actualizada correctamente', plaza: updatedPlaza })
   } catch (error) {
@@ -340,42 +345,73 @@ export const deletePlaza = async (req, res) => {
   }
 }
 
-export const getReservasParking = async (req, res) => {
-  const { parkingId } = req.params
-
+export const getAnunciosByParkingId = async (req, res) => {
   try {
-    const reservas = await Reserva.findAll({
-      where: { estado: 'activa' },
-      include: {
-        model: Plaza,
-        as: 'plaza',
-        attributes: ['id', 'numero', 'tipo', 'estado'],
-        include: {
-          model: Planta,
-          as: 'planta',
-          attributes: ['numero'],
-          include: {
-            model: Parking,
-            as: 'parking',
-            where: { id: parkingId },
-            attributes: ['id', 'nombre']
-          }
-        }
-      },
-      order: [['startTime', 'ASC']]
+    const { parkingId } = req.params
+
+    const anuncios = await Anuncio.findAll({ where: { parking_id: parkingId } })
+
+    const formatted = anuncios.map(anuncio =>
+      pick(anuncio.get(), ['id', 'parking_id', 'contenido', 'created_at', 'updated_at'])
+    )
+
+    res.status(200).json({ anuncios: formatted })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const createAnuncio = async (req, res) => {
+  try {
+    const { parkingId } = req.params
+    const { contenido } = req.body
+
+    const anuncio = await Anuncio.create({
+      parking_id: parkingId,
+      contenido
     })
 
-    const formatted = reservas.map(reserva => {
-      const base = pick(reserva.get(), ['id', 'startTime', 'precioTotal'])
-      return {
-        ...base,
-        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
-        planta: pick(reserva.plaza.planta, ['numero']),
-        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre'])
-      }
-    })
+    const createdAnuncio = pick(anuncio.get(), ['id', 'parking_id', 'contenido', 'created_at', 'updated_at'])
 
-    res.status(200).json({ reservas: formatted })
+    res.status(201).json({ anuncio: createdAnuncio })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const updateAnuncio = async (req, res) => {
+  try {
+    const { parkingId, id } = req.params
+    const { contenido } = req.body
+
+    const anuncio = await Anuncio.findOne({ where: { id, parking_id: parkingId } })
+
+    if (!anuncio) {
+      return res.status(404).json({ error: 'Anuncio no encontrado para este parking' })
+    }
+
+    anuncio.contenido = contenido ?? anuncio.contenido
+    await anuncio.save()
+
+    const updatedAnuncio = pick(anuncio.get(), ['id', 'parking_id', 'contenido', 'created_at', 'updated_at'])
+
+    res.status(200).json({ message: 'Anuncio actualizado correctamente', anuncio: updatedAnuncio })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const deleteAnuncio = async (req, res) => {
+  try {
+    const { parkingId, id } = req.params
+
+    const deleted = await Anuncio.destroy({ where: { id, parking_id: parkingId } })
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Anuncio no encontrado para este parking' })
+    }
+
+    res.status(200).json({ message: 'Anuncio eliminado correctamente' })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

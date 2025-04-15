@@ -8,7 +8,6 @@ import authRoutes from './routes/auth.routes.js'
 import profileRoutes from './routes/profile.routes.js'
 import parkingRoutes from './routes/parking.routes.js'
 import reservaRoutes from './routes/reserva.routes.js'
-import eventosRoutes from './routes/eventos.routes.js'
 import bullBoardRouter from './jobs/monitor.js'
 
 const app = express()
@@ -37,7 +36,6 @@ app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/parking', parkingRoutes)
 app.use('/api/reserva', reservaRoutes)
-app.use('/api/eventos', eventosRoutes)
 app.use('/admin/queues', bullBoardRouter)
 
 // Middleware para rutas no encontradas (404)

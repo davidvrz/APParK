@@ -1,10 +1,12 @@
 import Eventos from '../models/eventos.model.js'
 import Reserva from '../models/reserva.model.js'
 import ReservaRapida from '../models/reservaRapida.model.js'
+import Parking from '../models/parking.model.js'
+import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
 import { Op } from 'sequelize'
+import pick from 'lodash/pick.js'
 
-// Eventos del sistema - log de eventos
 export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, mensaje = '' }) => {
   try {
     await Eventos.create({
@@ -13,49 +15,61 @@ export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, 
       tipoEvento,
       mensaje
     })
-    console.log(`✅ Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
+    console.log(`Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
   } catch (error) {
-    console.error('❌ Error al registrar evento del sistema:', error.message)
+    console.error('Error al registrar evento del sistema:', error.message)
   }
 }
 
-// Eventos del sistema - log de eventos
-export const getEventos = async (req, res) => {
+export const getEventosByParkingId = async (req, res) => {
+  const { parkingId } = req.params
+
   try {
     const eventos = await Eventos.findAll({
       include: {
         model: Plaza,
         as: 'plaza',
-        attributes: ['id', 'numero', 'tipo', 'estado']
+        attributes: ['id', 'numero', 'reservable', 'tipo', 'estado'],
+        include: {
+          model: Planta,
+          as: 'planta',
+          attributes: ['numero'],
+          include: {
+            model: Parking,
+            as: 'parking',
+            where: { id: parkingId },
+            attributes: ['id', 'nombre']
+          }
+        }
       },
       order: [['fecha', 'DESC']]
     })
 
-    const formateados = eventos.map(e => ({
-      id: e.id,
-      plazaId: e.plaza_id,
-      matricula: e.matricula,
-      tipoEvento: e.tipoEvento,
-      mensaje: e.mensaje,
-      fecha: e.fecha,
-      plaza: e.plaza
-        ? {
-            id: e.plaza.id,
-            numero: e.plaza.numero,
-            tipo: e.plaza.tipo,
-            estado: e.plaza.estado
-          }
+    const formattedEventos = eventos.map(evento => ({
+      id: evento.id,
+      plazaId: evento.plaza_id,
+      matricula: evento.matricula,
+      tipoEvento: evento.tipoEvento,
+      mensaje: evento.mensaje,
+      fecha: evento.fecha,
+      plaza: evento.plaza
+        ? pick(evento.plaza, ['id', 'numero', 'reservable', 'tipo', 'estado'])
+        : null,
+      planta: evento.plaza?.planta
+        ? pick(evento.plaza.planta, ['numero'])
+        : null,
+      parking: evento.plaza?.planta?.parking
+        ? pick(evento.plaza.planta.parking, ['id', 'nombre'])
         : null
     }))
 
-    res.status(200).json({ eventos: formateados })
+    res.status(200).json({ eventos: formattedEventos })
   } catch (error) {
-    console.error('❌ Error al obtener eventos del sistema:', error.message)
+    console.error(' Error al obtener eventos del parking:', error.message)
     res.status(500).json({ error: 'Error interno al recuperar eventos del sistema' })
   }
 }
 
-// Evento fisico del sensor
 export const procesarEventoSensor = async (req, res) => {
   const { plazaId, matricula, tipoEvento } = req.body
 
@@ -66,14 +80,12 @@ export const procesarEventoSensor = async (req, res) => {
   const now = new Date()
 
   try {
-    // Obtener la plaza y comprobar existencia
     const plaza = await Plaza.findByPk(plazaId)
     if (!plaza) {
       await registrarEventos({ plazaId, matricula, tipoEvento: 'anomalia', mensaje: 'Plaza no encontrada' })
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
-    // Buscar reserva activa en ese momento con esa matrícula (normal o rápida)
     const reserva = await Reserva.findOne({
       where: {
         plaza_id: plazaId,
@@ -93,41 +105,25 @@ export const procesarEventoSensor = async (req, res) => {
       }
     })
 
-    // Evento tipo ENTRADA
+    // ENTRADA
     if (tipoEvento === 'entrada') {
       if (reserva) {
-        await registrarEventos({
-          plazaId,
-          matricula,
-          tipoEvento: 'entrada',
-          mensaje: 'Vehículo llegó correctamente a su plaza reservada'
-        })
-        return res.status(200).json({ message: 'Entrada válida registrada' })
+        await registrarEventos({ plazaId, matricula, tipoEvento: 'entrada', mensaje: 'Vehículo llegó correctamente a su plaza reservada' })
+        return res.status(200).json({ message: 'Entrada válida registrada (reserva normal)' })
       }
 
       if (reservaRapida) {
-        await registrarEventos({
-          plazaId,
-          matricula,
-          tipoEvento: 'entrada',
-          mensaje: 'Vehículo llegó a su plaza de reserva rápida'
-        })
+        await registrarEventos({ plazaId, matricula, tipoEvento: 'entrada', mensaje: 'Vehículo llegó a su plaza de reserva rápida' })
         return res.status(200).json({ message: 'Entrada válida registrada (reserva rápida)' })
       }
 
-      await registrarEventos({
-        plazaId,
-        matricula,
-        tipoEvento: 'anomalia',
-        mensaje: 'No hay reserva activa para esta plaza y matrícula'
-      })
+      await registrarEventos({ plazaId, matricula, tipoEvento: 'anomalia', mensaje: 'Entrada sin reserva activa' })
       return res.status(403).json({ error: 'Entrada no autorizada: sin reserva activa' })
     }
 
-    // Evento tipo SALIDA
+    // SALIDA
     if (tipoEvento === 'salida') {
       if (reservaRapida) {
-        // Completar reserva rápida
         const durationHours = (now - new Date(reservaRapida.startTime)) / (1000 * 60 * 60)
         const precioTotal = parseFloat((durationHours * plaza.precioHora).toFixed(2))
 
@@ -138,41 +134,22 @@ export const procesarEventoSensor = async (req, res) => {
 
         await Plaza.update({ estado: 'Libre' }, { where: { id: plazaId } })
 
-        await registrarEventos({
-          plazaId,
-          matricula,
-          tipoEvento: 'salida',
-          mensaje: 'Reserva rápida completada correctamente'
-        })
-
+        await registrarEventos({ plazaId, matricula, tipoEvento: 'salida', mensaje: 'Reserva rápida completada correctamente' })
         return res.status(200).json({ message: 'Salida registrada y reserva rápida completada' })
       }
 
       if (reserva) {
-        // No completamos reserva normal automáticamente (la completará Bull)
-        await registrarEventos({
-          plazaId,
-          matricula,
-          tipoEvento: 'salida',
-          mensaje: 'Salida detectada para reserva normal (sin acción)'
-        })
+        await registrarEventos({ plazaId, matricula, tipoEvento: 'salida', mensaje: 'Salida registrada para reserva normal (pendiente de completar automáticamente)' })
         return res.status(200).json({ message: 'Salida registrada (reserva normal)' })
       }
 
-      // No hay reserva asociada → posible uso indebido
-      await registrarEventos({
-        plazaId,
-        matricula,
-        tipoEvento: 'anomalia',
-        mensaje: 'Salida detectada sin reserva activa'
-      })
-
+      await registrarEventos({ plazaId, matricula, tipoEvento: 'anomalia', mensaje: 'Salida sin reserva activa' })
       return res.status(403).json({ error: 'Salida no autorizada: sin reserva activa' })
     }
 
     return res.status(400).json({ error: 'Tipo de evento no reconocido' })
   } catch (error) {
-    console.error('❌ Error al procesar evento del sensor:', error.message)
-    return res.status(500).json({ error: 'Error al procesar el evento del sensor' })
+    console.error(' Error al procesar evento del sensor:', error.message)
+    res.status(500).json({ error: 'Error interno al procesar el evento del sensor' })
   }
 }

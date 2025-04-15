@@ -25,10 +25,6 @@ const Reserva = sequelize.define('Reserva', {
     allowNull: false,
     defaultValue: 0,
     field: 'precio_total'
-  },
-  matricula: {
-    type: DataTypes.STRING(10),
-    allowNull: true
   }
 }, {
   tableName: 'Reserva',
