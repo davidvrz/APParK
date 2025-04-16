@@ -1,8 +1,8 @@
 import { reservaQueue } from './reserva.queue.js'
 import Reserva from '../models/reserva.model.js'
 import Plaza from '../models/plaza.model.js'
+import { getIO } from '../sockets/index.js'
 
-// Procesar el job "completar-reserva"
 reservaQueue.process('completar-reserva', async job => {
   const { reservaId } = job.data
 
@@ -21,14 +21,13 @@ reservaQueue.process('completar-reserva', async job => {
       { where: { id: reserva.plaza_id } }
     )
 
-    console.log(`✅ Reserva completada automáticamente: Reserva #${reserva.id}`)
-
-    /*
-    io.emit('reserva:completada', {
-      plazaId: reserva.plazaId,
-      reservaId: reserva.id
+    getIO().emit('parking:update', {
+      plazaId: reserva.plaza_id,
+      nuevoEstado: 'Libre',
+      tipo: 'reserva_completada'
     })
-    */
+
+    console.log(`✅ Reserva completada automáticamente: Reserva #${reserva.id}`)
   } catch (err) {
     console.error(`❌ [Bull] Error al completar la reserva ${reservaId}:`, err.message)
   }

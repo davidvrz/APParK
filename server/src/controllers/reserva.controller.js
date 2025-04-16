@@ -9,6 +9,7 @@ import { sequelize } from '../database/db.js'
 import pick from 'lodash/pick.js'
 import { reservaQueue } from '../jobs/reserva.queue.js'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '../config.js'
+import { getIO } from '../sockets/index.js'
 
 export const createReserva = async (req, res) => {
   const transaction = await sequelize.transaction()
@@ -145,6 +146,12 @@ export const createReserva = async (req, res) => {
       'id', 'user_id', 'vehiculo_id', 'plaza_id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
 
+    getIO().emit('parking:update', {
+      plazaId,
+      nuevoEstado: 'Reservado',
+      tipo: 'reserva_creada'
+    })
+
     res.status(201).json({ reserva: createdReserva })
   } catch (error) {
     await transaction.rollback()
@@ -203,8 +210,6 @@ export const updateReserva = async (req, res) => {
       return res.status(400).json({ error: 'No se puede modificar una reserva ya iniciada' })
     }
 
-    /*
-    // antelación mínima
     const diffAntelacion = (start - now) / (1000 * 60)
     if (diffAntelacion < RESERVA_ANTICIPACION_MIN) {
       await transaction.rollback()
@@ -212,7 +217,7 @@ export const updateReserva = async (req, res) => {
         error: `Las reservas deben hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
       })
     }
-    */
+
     const diffMin = (end - start) / (1000 * 60)
     if (diffMin < RESERVA_TIEMPO_MIN || diffMin > RESERVA_TIEMPO_MAX) {
       await transaction.rollback()
@@ -335,6 +340,20 @@ export const updateReserva = async (req, res) => {
       'id', 'user_id', 'vehiculo_id', 'plaza_id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
 
+    if (reserva.plaza_id !== plazaId) {
+      getIO().emit('parking:update', {
+        plazaId: reserva.plaza_id, // plaza anterior
+        nuevoEstado: 'Libre',
+        tipo: 'reserva_modificada'
+      })
+
+      getIO().emit('parking:update', {
+        plazaId, // nueva plaza
+        nuevoEstado: 'Reservado',
+        tipo: 'reserva_modificada'
+      })
+    }
+
     res.status(200).json({ reserva: updated })
   } catch (error) {
     await transaction.rollback()
@@ -370,6 +389,12 @@ export const cancelReserva = async (req, res) => {
     await reservaQueue.removeJobs(`${reserva.id}`)
     await transaction.commit()
 
+    getIO().emit('parking:update', {
+      plazaId: reserva.plaza_id,
+      nuevoEstado: 'Libre',
+      tipo: 'reserva_cancelada'
+    })
+
     res.status(200).json({ message: 'Reserva cancelada correctamente' })
   } catch (error) {
     await transaction.rollback()
@@ -398,6 +423,12 @@ export const deleteReserva = async (req, res) => {
 
     await reserva.destroy({ transaction })
     await transaction.commit()
+
+    getIO().emit('parking:update', {
+      plazaId: reserva.plaza_id,
+      nuevoEstado: 'Libre',
+      tipo: 'reserva_eliminada'
+    })
 
     res.status(200).json({ message: 'Reserva eliminada correctamente' })
   } catch (error) {
@@ -572,6 +603,12 @@ export const createReservaRapida = async (req, res) => {
       'id', 'plaza_id', 'startTime', 'estado', 'matricula'
     ])
 
+    getIO().emit('parking:update', {
+      plazaId,
+      nuevoEstado: 'Ocupado',
+      tipo: 'reserva_rapida_creada'
+    })
+
     res.status(201).json({ reserva: createdReserva })
   } catch (error) {
     await transaction.rollback()
@@ -589,7 +626,6 @@ export const completeReservaRapida = async (req, res) => {
       return res.status(400).json({ error: 'Se requiere plazaId y matrícula' })
     }
 
-    // Buscar la reserva activa asociada a esa plaza y matrícula
     const reserva = await ReservaRapida.findOne({
       where: {
         plaza_id: plazaId,
@@ -629,6 +665,12 @@ export const completeReservaRapida = async (req, res) => {
     const completed = pick(reserva.get(), [
       'id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
+
+    getIO().emit('parking:update', {
+      plazaId,
+      nuevoEstado: 'Libre',
+      tipo: 'reserva_rapida_completada'
+    })
 
     res.status(200).json({
       message: 'Reserva rápida completada correctamente',

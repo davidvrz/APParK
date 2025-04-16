@@ -6,18 +6,28 @@ import Planta from '../models/planta.model.js'
 import Plaza from '../models/plaza.model.js'
 import { Op } from 'sequelize'
 import pick from 'lodash/pick.js'
+import { getIO } from '../sockets/index.js'
 
 export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, mensaje = '' }) => {
   try {
-    await Eventos.create({
+    const evento = await Eventos.create({
       plaza_id: plazaId,
       matricula,
       tipoEvento,
       mensaje
     })
-    console.log(`Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
+
+    getIO().emit('evento:registrado', {
+      plazaId,
+      matricula,
+      tipoEvento,
+      mensaje,
+      fecha: evento.fecha
+    })
+
+    console.log(`✅ Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
   } catch (error) {
-    console.error('Error al registrar evento del sistema:', error.message)
+    console.error('❌ Error al registrar evento del sistema:', error.message)
   }
 }
 
@@ -133,6 +143,12 @@ export const procesarEventoSensor = async (req, res) => {
         await reservaRapida.save()
 
         await Plaza.update({ estado: 'Libre' }, { where: { id: plazaId } })
+
+        getIO().emit('parking:update', {
+          plazaId,
+          nuevoEstado: 'Libre',
+          tipo: 'reserva_rapida_completada'
+        })
 
         await registrarEventos({ plazaId, matricula, tipoEvento: 'salida', mensaje: 'Reserva rápida completada correctamente' })
         return res.status(200).json({ message: 'Salida registrada y reserva rápida completada' })

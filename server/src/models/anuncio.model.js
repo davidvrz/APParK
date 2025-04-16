@@ -14,7 +14,6 @@ const Anuncio = sequelize.define('Anuncio', {
   updatedAt: 'updated_at'
 })
 
-// Asociación con Parking
 Anuncio.belongsTo(Parking, { foreignKey: 'parking_id', as: 'parking' })
 Parking.hasMany(Anuncio, { foreignKey: 'parking_id', as: 'anuncios' })
 

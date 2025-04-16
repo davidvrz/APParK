@@ -35,7 +35,6 @@ const ReservaRapida = sequelize.define('ReservaRapida', {
   updatedAt: 'updated_at'
 })
 
-// Asociación con Plaza
 ReservaRapida.belongsTo(Plaza, { foreignKey: 'plaza_id', as: 'plaza' })
 Plaza.hasMany(ReservaRapida, { foreignKey: 'plaza_id', as: 'reservasRapidas' })
 
