@@ -10,11 +10,13 @@ import parkingRoutes from './routes/parking.routes.js'
 import reservaRoutes from './routes/reserva.routes.js'
 import bullBoardRouter from './jobs/monitor.js'
 
+import { FRONTEND_URL } from './config.js'
+
 const app = express()
 
 // Habilitar CORS para permitir solicitudes desde el frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: FRONTEND_URL,
   credentials: true // Permitir cookies desde el frontend
 }))
 
