@@ -4,13 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales */
 body {
-    @apply bg-gray-100 text-gray-800 antialiased font-sans;
+    @apply bg-secondary text-dark antialiased font-sans transition-all duration-200 ease-in-out;
 }
 
 h1,
 h2,
 h3 {
-    @apply font-heading text-gray-900;
+    @apply font-heading text-dark;
+}
+
+a {
+    @apply transition duration-200 ease-in-out;
 }

@@ -12,6 +12,7 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,23 +21,38 @@ function Login() {
       return
     }
 
+    setLoading(true)
+    setError('')
+
     const result = await login(email, password)
     if (result.ok) navigate('/dashboard')
     else setError(result.error)
+
+    setLoading(false)
   }
 
   return (
     <AuthFormWrapper title="Inicia sesión">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <FormError message={error} />
 
-        <label className="block text-sm font-medium text-dark">Correo electrónico</label>
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ejemplo@correo.com" />
+        <div>
+          <label className="text-sm font-medium text-dark">Correo electrónico</label>
+          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ejemplo@correo.com" />
+        </div>
 
-        <label className="block text-sm font-medium text-dark">Contraseña</label>
-        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+        <div>
+          <label className="text-sm font-medium text-dark">Contraseña</label>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+        </div>
 
-        <Button type="submit">Entrar</Button>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="transition duration-200 ease-in-out"
+        >
+          {loading ? 'Iniciando Sesión...' : 'Login'}
+        </Button>
       </form>
 
       <p className="text-sm mt-4 text-center text-grayText">

@@ -1,9 +1,11 @@
-// src/router/AppRoutes.jsx
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Login from '../pages/Login.jsx'
-import Register from '../pages/Register.jsx'
-import Dashboard from '../pages/Dashboard.jsx'
-import PrivateRoute from './PrivateRoute.jsx'
+import DashboardLayout from '../layouts/DashboardLayout'
+import Login from '../pages/Login'
+import Register from '../pages/Register'
+import Dashboard from '../pages/Dashboard'
+import HistorialReservas from '../pages/Historial'
+import PrivateRoute from './PrivateRoute'
+import NotFound from '../pages/NotFound'
 
 function AppRoutes() {
   return (
@@ -15,10 +17,15 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <DashboardLayout />
           </PrivateRoute>
         }
-      />
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="historial" element={<HistorialReservas />} />
+        {/* Aquí irán también "nueva" y "perfil" en el futuro */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
     </Routes>
   )
 }

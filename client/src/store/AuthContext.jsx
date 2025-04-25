@@ -1,20 +1,23 @@
+// src/store/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import axios from '../api/axios.js'
+import axios, { setAccessToken as syncAxiosToken } from '../api/axios.js'
 
 export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [accessToken, setAccessToken] = useState(null)
+  const [accessTokenState, setAccessTokenState] = useState(null)
 
+  // Al montar, intentamos recuperar token del localStorage
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
     if (token) {
       try {
         const decoded = jwtDecode(token)
         setUser({ id: decoded.id, email: decoded.email })
-        setAccessToken(token)
+        setAccessTokenState(token)
+        syncAxiosToken(token) // sincroniza con interceptores
       } catch (err) {
         console.error('Token inválido, eliminando...', err)
         localStorage.removeItem('accessToken')
@@ -22,15 +25,28 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
+  // Si el accessToken cambia, actualizamos usuario
+  useEffect(() => {
+    if (accessTokenState) {
+      try {
+        const decoded = jwtDecode(accessTokenState)
+        setUser({ id: decoded.id, email: decoded.email })
+      } catch {
+        logout()
+      }
+    }
+  }, [accessTokenState])
+
   const login = async (email, password) => {
     try {
       const res = await axios.post('/auth/login', { email, password })
 
-      const token = res.data.accessToken.token
+      const { token } = res.data.accessToken
       const decoded = jwtDecode(token)
 
       localStorage.setItem('accessToken', token)
-      setAccessToken(token)
+      syncAxiosToken(token) // sincroniza con axios.js
+      setAccessTokenState(token)
       setUser({ id: decoded.id, email: decoded.email })
 
       return { ok: true }
@@ -61,7 +77,8 @@ export const AuthProvider = ({ children }) => {
       console.error('Error al cerrar sesión', err)
     } finally {
       localStorage.removeItem('accessToken')
-      setAccessToken(null)
+      setAccessTokenState(null)
+      syncAxiosToken(null) // limpiar axios
       setUser(null)
     }
   }
@@ -70,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        accessToken,
+        accessToken: accessTokenState,
         isAuthenticated: !!user,
         login,
         register,

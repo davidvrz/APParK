@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL
 
 let accessToken = localStorage.getItem('accessToken') || null
 
-const setAccessToken = (token) => {
+export const setAccessToken = (token) => {
   accessToken = token
   localStorage.setItem('accessToken', token)
 }

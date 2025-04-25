@@ -34,20 +34,30 @@ function Register() {
 
   return (
     <AuthFormWrapper title="Crear cuenta">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <FormError message={error} />
 
-        <label className="block text-sm font-medium text-dark">Nombre completo</label>
-        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" />
+        <div>
+          <label className="text-sm font-medium text-dark">Nombre completo</label>
+          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" />
+        </div>
 
-        <label className="block text-sm font-medium text-dark">Correo electrónico</label>
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ejemplo@correo.com" />
+        <div>
+          <label className="text-sm font-medium text-dark">Correo electrónico</label>
+          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ejemplo@correo.com" />
+        </div>
 
-        <label className="block text-sm font-medium text-dark">Contraseña</label>
-        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+        <div>
+          <label className="text-sm font-medium text-dark">Contraseña</label>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+        </div>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Registrando...' : 'Registrarse'}
+        <Button
+          type="submit"
+          disabled={loading}
+          className="transition duration-200 ease-in-out"
+        >
+          {loading ? 'Registrandose...' : 'Registrarse'}
         </Button>
       </form>
 
