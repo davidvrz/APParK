@@ -1,147 +1,182 @@
-import { Fragment } from 'react'
-import { Menu, Transition } from '@headlessui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell, faBars, faUser } from '@fortawesome/free-solid-svg-icons'
-import { useAuth } from '../../hooks/useAuth'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import classNames from 'classnames'
+import { useState, useEffect } from "react";
+import { cloneElement } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Map, Menu, User, LogOut, Home, Clock, Car, PlusCircle, LayoutDashboard } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
+import { useAuth } from "@/hooks/useAuth";
 
 function HeaderBar() {
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const currentPath = location.pathname
+  const { logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const currentPath = location.pathname;
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
+    await logout();
+    navigate("/login");
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navItems = [
+    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && currentPath === "/dashboard" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Dashboard", path: "/dashboard", gradient: "from-purple-500 to-pink-600" },
+    { icon: <Map className={`h-5 w-5 ${isScrolled && currentPath === "/map" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Map", path: "/map", gradient: "from-purple-500 to-pink-600" },
+    { icon: <Car className={`h-5 w-5 ${isScrolled && currentPath === "/vehicles" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Vehicles", path: "/vehicles", gradient: "from-purple-500 to-pink-600" },
+  ];
 
   return (
-    <div className="sticky top-0 z-50 flex items-start justify-between px-4 py-2 w-full max-w-7xl mx-auto space-x-4">
+    <div className="sticky top-0 z-50 flex justify-between items-start w-full max-w-7xl mx-auto px-4 py-3">
       {/* Isla izquierda: logo */}
-      <div className="bg-transparent">
-        <div className="text-xl font-heading text-primary font-bold">SmartPark</div>
-      </div>
+      <motion.div
+        className="px-4 py-2"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ 
+          y: 0, 
+          opacity: isScrolled ? 0 : 1,
+          scale: isScrolled ? 0 : 1 
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <Link to="/dashboard" className="flex items-center">
+          <span className="text-xl font-poppins font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            APParK
+          </span>
+        </Link>
+      </motion.div>
 
       {/* Isla central: navegación sticky */}
-      <div className="hidden md:flex gap-6 px-6 py-2 rounded-full bg-white/30 backdrop-blur-md border border-white/20 shadow text-sm font-medium text-dark sticky top-4 z-40">
-        <Link to="/dashboard" className={`transition ${currentPath === '/dashboard' ? 'text-primary font-semibold' : 'text-dark'}`}>Inicio</Link>
-        <Link to="/dashboard/historial" className={`transition ${currentPath === '/dashboard/historial' ? 'text-primary font-semibold' : 'text-dark'}`}>Historial</Link>
-        <Link to="/dashboard/nueva" className={`transition ${currentPath === '/dashboard/nueva' ? 'text-primary font-semibold' : 'text-dark'}`}>Nueva reserva</Link>
-      </div>
+      <motion.div
+        className="hidden md:flex gap-1 px-4 py-2 rounded-full bg-white/60 backdrop-blur-lg shadow-md text-sm font-medium text-gray-800 dark:text-gray-200"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ 
+          y: 0, 
+          opacity: 1,
+          paddingLeft: isScrolled ? "0.75rem" : "1rem",
+          paddingRight: isScrolled ? "0.75rem" : "1rem",
+          gap: isScrolled ? "0.5rem" : "0.75rem",
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        {navItems.map((item) => {
+          const isActive = currentPath === item.path;
+          return (
+            <Link key={item.path} to={item.path} className="relative">
+              <motion.div
+                className="flex items-center px-3 py-1.5 transition-all duration-300 relative overflow-hidden"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{
+                  paddingLeft: "0.3rem",
+                  paddingRight: "0.3rem",
+                }}
+              >
+                <div className="flex items-center relative z-10">
+                  {item.icon}
+                  <AnimatePresence>
+                    {(!isScrolled || isActive) && (
+                      <motion.span
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: "auto", opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`${isActive ? `bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent font-semibold` : ""} whitespace-nowrap overflow-hidden`}
+                      >
+                        {isScrolled && isActive ? item.label : !isScrolled ? item.label : ""}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </Link>
+          )
+        })}
+      </motion.div>
 
       {/* Isla derecha: notificaciones y perfil sticky */}
-      <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/30 backdrop-blur-md border border-white/20 shadow text-dark sticky top-4 z-40">
-        <button className="hover:text-primary transition">
-          <FontAwesomeIcon icon={faBell} className="text-lg" />
-        </button>
+      <motion.div
+        className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 backdrop-blur-lg shadow text-gray-800 dark:text-gray-200 sticky top-4 z-40"
+        animate={{
+          scale: isScrolled ? 0.9 : 1,
+          paddingLeft: isScrolled ? "0.75rem" : "1rem",
+          paddingRight: isScrolled ? "0.75rem" : "1rem",
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div className="relative" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          <Bell className="h-5 w-5" />
+          <motion.div
+            className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 15,
+              delay: 1,
+            }}
+          />
+        </motion.div>
 
-        <Menu as="div" className="relative inline-block text-left">
-          <div>
-            <Menu.Button className="flex items-center gap-2 text-dark hover:text-primary transition">
-              <FontAwesomeIcon icon={faUser} />
-            </Menu.Button>
-          </div>
-          <Transition
-            as={Fragment}
-            enter="transition duration-150 ease-out"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition duration-100 ease-in"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black/10 focus:outline-none z-50">
-              <Menu.Item as="div">
-                {({ active }) => (
-                  <button
-                    onClick={handleLogout}
-                    className={classNames('block w-full text-left px-4 py-2 text-sm', {
-                      'bg-gray-100': active
-                    })}
-                  >
-                    Cerrar sesión
-                  </button>
-                )}
-              </Menu.Item>
-            </Menu.Items>
-          </Transition>
-        </Menu>
-      </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              className="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <User className="h-5 w-5" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Cerrar sesión</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </motion.div>
 
-      {/* ✅ Mobile: menú hamburguesa */}
+      {/* Mobile: menú hamburguesa */}
       <div className="md:hidden">
-        <Menu as="div" className="relative inline-block text-left">
-          <div>
-            <Menu.Button className="text-dark">
-              <FontAwesomeIcon icon={faBars} className="text-xl" />
-            </Menu.Button>
-          </div>
-          <Transition
-            as={Fragment}
-            enter="transition duration-150 ease-out"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition duration-100 ease-in"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black/10 focus:outline-none z-50">
-              <Menu.Item as="div">
-                {({ active }) => (
-                  <Link
-                    to="/dashboard"
-                    className={classNames('block px-4 py-2 text-sm', {
-                      'bg-gray-100': active
-                    })}
-                  >
-                    Inicio
-                  </Link>
-                )}
-              </Menu.Item>
-              <Menu.Item as="div">
-                {({ active }) => (
-                  <Link
-                    to="/dashboard/historial"
-                    className={classNames('block px-4 py-2 text-sm', {
-                      'bg-gray-100': active
-                    })}
-                  >
-                    Historial
-                  </Link>
-                )}
-              </Menu.Item>
-              <Menu.Item as="div">
-                {({ active }) => (
-                  <Link
-                    to="/dashboard/nueva"
-                    className={classNames('block px-4 py-2 text-sm', {
-                      'bg-gray-100': active
-                    })}
-                  >
-                    Nueva reserva
-                  </Link>
-                )}
-              </Menu.Item>
-              <Menu.Item as="div">
-                {({ active }) => (
-                  <button
-                    onClick={handleLogout}
-                    className={classNames('block w-full text-left px-4 py-2 text-sm', {
-                      'bg-gray-100': active
-                    })}
-                  >
-                    Cerrar sesión
-                  </button>
-                )}
-              </Menu.Item>
-            </Menu.Items>
-          </Transition>
-        </Menu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              className="text-gray-800 dark:text-gray-200"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Menu className="h-6 w-6" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+            {navItems.map((item) => (
+              <DropdownMenuItem key={item.path} asChild>
+                <Link to={item.path} className="cursor-pointer">
+                  <div className="mr-2">{item.icon}</div>
+                  <span>{item.label}</span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Cerrar sesión</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
-  )
+  );
 }
 
-export default HeaderBar
+export default HeaderBar;

@@ -1,79 +1,83 @@
-import { useAuth } from '../hooks/useAuth'
-import { Link } from 'react-router-dom'
-import ReservasActivas from '../components/dashboard/ReservasActivas'
-import HistorialReservas from '../components/dashboard/HistorialReservas'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
+import ReservasActivas from "@/components/dashboard/ReservasActivas"
+import HistorialReservas from "@/components/dashboard/HistorialReservas"
+import { QuickActions } from "@/components/dashboard/QuickActions"
+import { FavoriteParkings } from "@/components/dashboard/FavoriteParkings"
+import { Vehicles } from "@/components/dashboard/Vehicles"
+import { useAuth } from "@/hooks/useAuth"
 
-function Dashboard() {
+export default function Dashboard() {
   const { user } = useAuth()
+  const [expandedReservation, setExpandedReservation] = useState(null)
+
+  const isExpanded = !!expandedReservation
 
   return (
-    <div className="pb-24 space-y-8">
-      {/* Sección de bienvenida */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="p-6 rounded-2xl shadow-xl bg-white/30 backdrop-blur-md border border-white/20"
-      >
-        <h1 className="text-2xl font-heading text-dark mb-2">
-          ¡Hola, <span className="text-primary">{user?.email}</span>!
-        </h1>
-        <p className="text-sm text-grayText">Aquí puedes gestionar tus reservas y vehículos.</p>
-      </motion.section>
+    <LayoutGroup>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-auto">
+        {/* Reservas Activas - Ocupa más espacio cuando está expandida */}
+        <motion.div
+          layout
+          className={`${
+            isExpanded ? "md:col-span-3 lg:col-span-4 row-span-3" : "md:col-span-2 lg:col-span-2 row-span-2"
+          }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <ReservasActivas onExpandReservation={setExpandedReservation} expandedReservationId={expandedReservation} />
+        </motion.div>
 
-      {/* Reservas activas */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="p-4 rounded-2xl shadow-lg bg-white/30 backdrop-blur-md border border-white/20"
-      >
-        <h2 className="font-heading text-lg text-dark mb-4">Reservas activas</h2>
-        <ReservasActivas modo="pila" />
-      </motion.section>
+        {/* Acciones Rápidas - Se oculta cuando hay una reserva expandida en móvil */}
+        <AnimatePresence>
+          {(!isExpanded || window.innerWidth >= 768) && (
+            <motion.div
+              layout
+              className="md:col-span-1 lg:col-span-1"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, height: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <QuickActions />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Historial horizontal */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="p-4 rounded-2xl shadow-lg bg-white/30 backdrop-blur-md border border-white/20"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-heading text-lg text-dark">Historial reciente</h2>
-          <Link to="/dashboard/historial" className="text-sm text-primary hover:underline">
-            Ver todo →
-          </Link>
-        </div>
-        <HistorialReservas modo="horizontal" limite={5} />
-      </motion.section>
+        {/* Mis Coches - Se oculta cuando hay una reserva expandida en móvil */}
+        <AnimatePresence>
+          {(!isExpanded || window.innerWidth >= 992) && (
+            <motion.div
+              layout
+              className="md:col-span-1 lg:col-span-1 row-span-1"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, height: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Vehicles />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Acciones rápidas */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="p-4 rounded-2xl shadow-lg bg-white/30 backdrop-blur-md border border-white/20"
-      >
-        <h2 className="font-heading text-lg text-dark mb-4">Acciones rápidas</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <Link
-            to="/dashboard/nueva"
-            className="p-4 bg-primary text-white rounded-xl shadow hover:bg-primary/90 transition-all text-center"
-          >
-            Nueva reserva
-          </Link>
-          <Link
-            to="/perfil"
-            className="p-4 bg-accent/90 text-white rounded-xl shadow hover:bg-accent transition-all text-center"
-          >
-            Mis vehículos
-          </Link>
-        </div>
-      </motion.section>
-    </div>
+        {/* Historial de Reservas - Se oculta cuando hay una reserva expandida en móvil */}
+        <AnimatePresence>
+          {(!isExpanded || window.innerWidth >= 992) && (
+            <motion.div
+              layout
+              className="md:col-span-2 lg:col-span-2 row-span-1"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, height: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <HistorialReservas />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </LayoutGroup>
+    
   )
 }
-
-export default Dashboard

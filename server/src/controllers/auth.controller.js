@@ -24,6 +24,7 @@ export const register = async (req, res) => {
 
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({
       id: newUser.id,
+      nombreCompleto: newUser.nombreCompleto,
       email: newUser.email,
       rol: newUser.rol
     })
@@ -70,6 +71,7 @@ export const login = async (req, res) => {
 
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({
       id: user.id,
+      nombreCompleto: user.nombreCompleto,
       email: user.email,
       rol: user.rol
     })
@@ -113,6 +115,7 @@ export const refreshAccessToken = (req, res) => {
     // Genera un nuevo access token
     const { token: newAccessToken, expiresIn } = generateAccessToken({
       id: decoded.id,
+      nombreCompleto: decoded.nombreCompleto,
       email: decoded.email,
       rol: decoded.rol
     })

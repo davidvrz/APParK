@@ -3,7 +3,6 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
 import Dashboard from '../pages/Dashboard'
-import HistorialReservas from '../pages/Historial'
 import PrivateRoute from './PrivateRoute'
 import NotFound from '../pages/NotFound'
 
@@ -22,8 +21,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="historial" element={<HistorialReservas />} />
-        {/* Aquí irán también "nueva" y "perfil" en el futuro */}
+        {/* Aquí irán las rutas contenidas en Dashboard */}
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

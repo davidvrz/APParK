@@ -166,17 +166,43 @@ export const getReservasByUser = async (req, res) => {
     const reservas = await Reserva.findAll({
       where: { user_id: userId, estado: 'activa' },
       include: [
-        { model: Vehicle, as: 'vehicle', attributes: ['id', 'matricula', 'tipo'] },
-        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo', 'precioHora'] }
+        {
+          model: Vehicle,
+          as: 'vehicle',
+          attributes: ['id', 'matricula', 'tipo']
+        },
+        {
+          model: Plaza,
+          as: 'plaza',
+          attributes: ['id', 'numero', 'tipo', 'precioHora'],
+          include: {
+            model: Planta,
+            as: 'planta',
+            attributes: ['numero'],
+            include: {
+              model: Parking,
+              as: 'parking',
+              attributes: ['id', 'nombre', 'ubicacion']
+            }
+          }
+        }
       ],
       order: [['startTime', 'ASC']]
     })
 
-    const formattedReservas = reservas.map(reserva => pick(reserva.get(), [
-      'id', 'startTime', 'endTime', 'estado', 'vehicle', 'plaza', 'precioTotal'
-    ]))
+    const formatted = reservas.map(reserva => {
+      const base = pick(reserva.get(), ['id', 'startTime', 'endTime', 'estado', 'precioTotal'])
 
-    res.status(200).json({ reservas: formattedReservas })
+      return {
+        ...base,
+        vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo']),
+        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'precioHora']),
+        planta: pick(reserva.plaza.planta, ['numero']),
+        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion'])
+      }
+    })
+
+    res.status(200).json({ reservas: formatted })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -444,17 +470,39 @@ export const getHistorialReservasByUser = async (req, res) => {
     const reservas = await Reserva.findAll({
       where: { user_id: userId },
       include: [
-        { model: Vehicle, as: 'vehicle', attributes: ['id', 'matricula', 'tipo'] },
-        { model: Plaza, as: 'plaza', attributes: ['id', 'numero', 'tipo'] }
+        {
+          model: Vehicle,
+          as: 'vehicle',
+          attributes: ['id', 'matricula', 'tipo']
+        },
+        {
+          model: Plaza,
+          as: 'plaza',
+          attributes: ['id', 'numero', 'tipo', 'precioHora'],
+          include: {
+            model: Planta,
+            as: 'planta',
+            attributes: ['numero'],
+            include: {
+              model: Parking,
+              as: 'parking',
+              attributes: ['id', 'nombre', 'ubicacion']
+            }
+          }
+        }
       ],
       order: [['startTime', 'DESC']]
     })
 
-    const formattedReservas = reservas.map(reserva => pick(reserva.get(), [
-      'id', 'startTime', 'endTime', 'estado', 'vehicle', 'plaza', 'precioTotal'
-    ]))
+    const formattedHistorial = reservas.map(reserva => ({
+      ...pick(reserva.get(), ['id', 'startTime', 'endTime', 'estado', 'precioTotal']),
+      vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo']),
+      plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'precioHora']),
+      planta: pick(reserva.plaza.planta, ['numero']),
+      parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion'])
+    }))
 
-    res.status(200).json({ historial: formattedReservas })
+    res.status(200).json({ historial: formattedHistorial })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
