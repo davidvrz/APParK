@@ -27,14 +27,17 @@ function HeaderBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Usamos el mismo gradiente para todas las secciones
+  const activeGradient = "from-purple-500 to-pink-600";
+
   const navItems = [
-    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && currentPath === "/dashboard" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Dashboard", path: "/dashboard", gradient: "from-purple-500 to-pink-600" },
-    { icon: <Map className={`h-5 w-5 ${isScrolled && currentPath === "/map" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Map", path: "/map", gradient: "from-purple-500 to-pink-600" },
-    { icon: <Car className={`h-5 w-5 ${isScrolled && currentPath === "/vehicles" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Vehicles", path: "/vehicles", gradient: "from-purple-500 to-pink-600" },
+    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && currentPath === "/dashboard" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <Map className={`h-5 w-5 ${isScrolled && currentPath === "/map" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Mapa", path: "/map" },
+    { icon: <Car className={`h-5 w-5 ${isScrolled && currentPath === "/vehiculos" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Mis Vehículos", path: "/vehiculos" },
   ];
 
   return (
-    <div className="sticky top-0 z-50 flex justify-between items-start w-full max-w-7xl mx-auto px-4 py-3">
+    <div className="sticky top-0 z-50 flex justify-between items-start w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-3">
       {/* Isla izquierda: logo */}
       <motion.div
         className="px-4 py-2"
@@ -90,7 +93,7 @@ function HeaderBar() {
                         animate={{ width: "auto", opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`${isActive ? `bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent font-semibold` : ""} whitespace-nowrap overflow-hidden`}
+                        className={`${isActive ? `bg-gradient-to-r ${activeGradient} bg-clip-text text-transparent font-semibold` : ""} whitespace-nowrap overflow-hidden`}
                       >
                         {isScrolled && isActive ? item.label : !isScrolled ? item.label : ""}
                       </motion.span>

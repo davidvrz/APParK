@@ -58,6 +58,15 @@ axiosInstance.interceptors.response.use(
       }
     }
 
+    // Personalizar el manejo de errores para facilitar el acceso al mensaje del backend
+    if (error.response?.data?.error) {
+      // Si el backend devuelve un objeto con la propiedad 'error', la extraemos
+      error.message = error.response.data.error
+    } else if (error.response?.data?.details) {
+      // Para errores de validación que devuelven detalles
+      error.message = error.response.data.details.map(detail => detail.message).join(', ')
+    }
+    
     return Promise.reject(error)
   }
 )

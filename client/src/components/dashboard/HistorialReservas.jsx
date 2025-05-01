@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Clock, MapPin, Car, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, MapPin, Car, ChevronLeft, ChevronRight } from "lucide-react";
 import { useReservas } from "@/hooks/useReservas";
 
 function HistorialReservas() {
@@ -63,20 +63,22 @@ function HistorialReservas() {
   const current = historial[currentIndex];
 
   return (
-    <Card className="min-h-[500px] h-full overflow-hidden bg-white/80 backdrop-blur-sm border-none shadow-lg dark:bg-gray-800/60">
-      <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+    <Card className="min-h-[500px] h-full overflow-hidden bg-white border-2 border-blue-200 dark:border-blue-900/30 shadow-sm dark:bg-gray-800/60">
+      <CardHeader className="border-b border-gray-100 dark:border-gray-700">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-white">Historial de Reservas</CardTitle>
-          <Badge variant="outline" className="text-white border-white">{historial.length} Reservas</Badge>
+          <div>
+            <CardTitle>Historial de Reservas</CardTitle>
+            <CardDescription className="text-gray-500">Tus reservas anteriores</CardDescription>
+          </div>
+          <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800">{historial.length} Reservas</Badge>
         </div>
-        <CardDescription className="text-purple-100">Tus reservas anteriores</CardDescription>
       </CardHeader>
 
       <CardContent className="p-4 relative">
         {historial.length === 0 ? (
           <div className="h-[350px] flex flex-col items-center justify-center text-center px-8">
-            <div className="mx-auto w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-              <Clock className="h-6 w-6 text-purple-600" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
+              <Clock className="h-6 w-6 text-blue-500" />
             </div>
             <h3 className="text-lg font-medium mb-2">Aún no tienes reservas pasadas</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">
@@ -103,7 +105,7 @@ function HistorialReservas() {
                     className="absolute w-[85%] h-full cursor-grab active:cursor-grabbing"
                     style={{ zIndex: 10 }}
                   >
-                    <Card className="w-full h-full overflow-hidden border shadow-lg">
+                    <Card className="w-full h-full overflow-hidden border shadow-lg bg-white dark:bg-gray-800">
                       <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-start justify-between mb-4">
                           <div>
@@ -122,29 +124,22 @@ function HistorialReservas() {
                           <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                             <p className="text-sm text-gray-500">Entrada</p>
                             <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1 text-purple-500" />
+                              <Clock className="h-4 w-4 mr-1 text-blue-500" />
                               <span className="font-medium">{current.startTime}</span>
                             </div>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                             <p className="text-sm text-gray-500">Salida</p>
                             <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1 text-purple-500" />
+                              <Clock className="h-4 w-4 mr-1 text-blue-500" />
                               <span className="font-medium">{current.endTime}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                          <Car className="h-4 w-4 mr-2 text-purple-500" />
+                          <Car className="h-4 w-4 mr-2 text-blue-500" />
                           <span className="font-medium">{current.vehicle?.matricula || "Vehículo"}</span>
-                        </div>
-
-                        <div className="mt-auto pt-4 flex justify-center pb-2">
-                          <Button variant="outline" size="sm" className="w-full">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Ver detalles completos
-                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -173,7 +168,7 @@ function HistorialReservas() {
                 {historial.map((_, index) => (
                   <div
                     key={index}
-                    className={`h-2 w-2 rounded-full ${index === currentIndex ? "bg-purple-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                    className={`h-2 w-2 rounded-full ${index === currentIndex ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"}`}
                   />
                 ))}
               </div>
@@ -183,7 +178,7 @@ function HistorialReservas() {
       </CardContent>
 
       <CardFooter className="bg-gray-50 dark:bg-gray-800/80 border-t flex justify-center items-center">
-        <Button variant="link" size="sm">Ver historial completo</Button>
+        <Button variant="link" size="sm" className="text-blue-500">Ver historial completo</Button>
       </CardFooter>
     </Card>
   );

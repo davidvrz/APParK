@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, MapPin, Calendar, Car, ExternalLink, Edit, Trash2, ChevronDown } from "lucide-react";
+import { Clock, MapPin, Calendar, Car, Edit, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -12,80 +12,115 @@ function formatDate(dateString) {
   return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es });
 }
 
-function ReservaCard({ reservation, onExpand, onViewDetails, onEdit, onDelete, isExpanded  }) {
+function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
   const startTime = formatTime(reservation.startTime);
   const endTime = formatTime(reservation.endTime);
   const startDate = formatDate(reservation.startTime);
   const parkingName = reservation.parking?.nombre || "Parking desconocido";
   const parkingAddress = reservation.parking?.ubicacion || "Ubicación no disponible";
   const carPlate = reservation.vehicle?.matricula || "Vehículo";
+  const plazaNumber = reservation.plaza?.numero || "N/A";
+  const price = reservation.precioTotal ? `${reservation.precioTotal} €` : "0.00 €";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3 }}
-      className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ 
+        type: "spring", 
+        damping: 15, 
+        stiffness: 300, 
+        duration: 0.2 
+      }}
+      className="h-full flex flex-col cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
       onClick={onExpand}
+      whileHover={{ scale: 1.02 }}
     >
-      <div className="flex items-start justify-between">
-        {/* Info de la reserva */}
-        <div>
-          <h3 className="font-medium text-lg">{parkingName}</h3>
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-            <MapPin className="h-3 w-3 mr-1" />
-            <span>{parkingAddress}</span>
-          </div>
-
-          <div className="flex items-center mt-2">
-            <div className="flex items-center text-sm mr-4">
-              <Clock className="h-3 w-3 mr-1 text-blue-500" />
-              <span>{startTime} - {endTime}</span>
-            </div>
-            <div className="flex items-center text-sm">
-              <Calendar className="h-3 w-3 mr-1 text-blue-500" />
-              <span>{startDate}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center mt-2">
-            <div className="flex items-center text-sm">
-              <Car className="h-3 w-3 mr-1 text-blue-500" />
-              <span>{carPlate}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Precio y acciones */}
-        <div className="text-right">
-          <div className="font-bold">{reservation.precioTotal ? `${reservation.precioTotal} €` : "Precio N/D"}</div>
-
-          <div className="flex mt-2 space-x-1">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={onViewDetails}>
-              <ExternalLink className="h-3 w-3" />
-              <span className="sr-only">Ver detalles</span>
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={onEdit}>
-              <Edit className="h-3 w-3" />
-              <span className="sr-only">Editar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-3 w-3" />
-              <span className="sr-only">Cancelar</span>
-            </Button>
+      {/* Cabecera con gradiente */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 py-3 px-4 text-white">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">{parkingName}</h3>
+          <div className="text-xs px-2 py-1 bg-white/20 rounded-full">
+            Activa
           </div>
         </div>
       </div>
+      
+      {/* Contenido principal */}
+      <div className="flex-grow p-5 space-y-3 bg-white dark:bg-gray-800">
+        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+          <MapPin className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+          <span className="line-clamp-1">{parkingAddress}</span>
+        </div>
+        
+        <div className="flex items-center text-sm">
+          <Calendar className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+          <span>{startDate}</span>
+        </div>
+        
+        <div className="flex items-center text-sm">
+          <Clock className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+          <span>{startTime} - {endTime}</span>
+        </div>
+        
+        <div className="flex items-center text-sm">
+          <Car className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+          <span>
+            {carPlate} · Plaza {plazaNumber}
+          </span>
+        </div>
+      </div>
+      
+      {/* Pie con precio y acciones */}
+      <div className="px-5 py-3 flex justify-between items-center bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+        <div className="text-right font-bold text-lg">
+          {price}
+        </div>
+        <div className="flex space-x-2">
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 px-3 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(e);
+              }}
+            >
+              <Edit className="h-3.5 w-3.5 mr-1" />
+              Editar
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              size="sm"
+              variant="outline" 
+              className="h-8 w-8 rounded-full text-red-500 hover:text-red-600 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel(e);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </motion.div>
+        </div>
+      </div>
 
-      {/* Icono de expandir */}
-      <div className="flex justify-center mt-2">
-        <ChevronDown className="h-5 w-5 text-gray-400" />
+      {/* Indicador de expandir */}
+      <div className="flex justify-center py-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+        <motion.div 
+          animate={{ y: [0, 2, 0] }}
+          transition={{
+            repeat: Infinity,
+            repeatType: "reverse",
+            duration: 1,
+            ease: "easeInOut",
+          }}
+        >
+          <ChevronDown className="h-4 w-4 text-gray-400" />
+        </motion.div>
       </div>
     </motion.div>
   );

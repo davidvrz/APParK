@@ -1,197 +1,350 @@
 import { useState } from "react"
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
-import { Card,  CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from "@/components/ui/Card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/Badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog"
-import { AlertCircle, Car, ExternalLink } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/Dialog"
+import { AlertCircle, Car, PlusCircle } from "lucide-react"
+
 import ReservaCard from "./ReservaCard"
 import ReservaDetails from "./ReservaDetails"
-import ReservaEditForm from "@/components/dashboard/ReservaEditForm"
-import { useReservas } from "@/hooks/useReservas"
-import { cancelarReserva as apiCancelarReserva, modificarReserva } from "@/api/reservas"
+import ReservaEditForm from "./ReservaEditForm"
 
-function ReservasActivas() {
-  const { reservas = [], loading, refetch } = useReservas()
+import { useReservas } from "@/hooks/useReservas"
+import { useVehiculos } from "@/hooks/useVehiculos"
+import { useParking } from "@/hooks/useParking"
+
+// Transiciones simplificadas
+const transitionConfig = {
+  type: "spring",
+  stiffness: 280,
+  damping: 20,
+  duration: 0.2
+};
+
+// Componente para tarjeta de crear nueva reserva
+const NewReservaCard = ({ onClick }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={transitionConfig}
+    whileHover={{ 
+      scale: 1.02,
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)"
+    }}
+    className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm h-full flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-200 dark:border-gray-700"
+    onClick={onClick}
+  >
+    <div className="text-center p-8">
+      <motion.div 
+        className="mx-auto w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4"
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut"
+        }}
+      >
+        <PlusCircle className="h-7 w-7 text-blue-500 dark:text-blue-400" />
+      </motion.div>
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        Nueva Reserva
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Programa una nueva reserva de aparcamiento
+      </p>
+      <Button 
+        size="sm" 
+        className="bg-blue-500 hover:bg-blue-600 text-white"
+      >
+        Crear Reserva
+      </Button>
+    </div>
+  </motion.div>
+);
+
+export default function ReservasActivas() {
+  const {
+    reservas,
+    loading,
+    error,
+    cancelarReserva,
+    modificarReserva,
+    clearError
+  } = useReservas()
+
+  // Estado UI
   const [expandedId, setExpandedId] = useState(null)
   const [selectedReservation, setSelectedReservation] = useState(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
 
-  const expandedReservation = reservas.find((r) => r.id === expandedId)
+  // Datos auxiliares: vehículos y plazas del parking
+  const { vehiculos } = useVehiculos()
+  const parkingId = selectedReservation?.parking?.id
+  const { parking } = useParking(parkingId)
+  
+  // Verificar si hay una reserva expandida
+  const expandedReservation = reservas.find((r) => r.id === expandedId);
+  const isExpanded = !!expandedId;
 
-  const handleCancelReservation = async () => {
-    if (!selectedReservation) return
-
-    try {
-      await apiCancelarReserva(selectedReservation.id)
-      await refetch()
-    } catch (err) {
-      console.error("Error al cancelar reserva:", err)
-    } finally {
-      setCancelOpen(false)
-      if (expandedId === selectedReservation.id) setExpandedId(null)
-      setSelectedReservation(null)
-    }
+  // Preparar array de 3 slots para reservas
+  const reservasSlots = [...reservas.slice(0, 3)]
+  while (reservasSlots.length < 3) {
+    reservasSlots.push(null) // Los slots vacíos serán para crear reserva
   }
 
-  const handleSaveReserva = async (updatedData) => {
+  // Procesamiento de plazas disponibles
+  const plazasDisponibles = parking?.plantas?.flatMap(planta => {
+    return planta.plazas?.map(plaza => ({
+      ...plaza,
+      planta: { 
+        id: planta.id,
+        numero: planta.numero,
+        parking_id: planta.parking_id
+      }
+    })) || [];
+  }) || [];
+
+  const handleCancel = async () => {
+    if (!selectedReservation) return
+    await cancelarReserva(selectedReservation.id)
+    setCancelOpen(false)
+    if (expandedId === selectedReservation.id) setExpandedId(null)
+    setSelectedReservation(null)
+  }
+
+  const handleSave = async (form) => {
+    if (!selectedReservation) return
+    clearError()
+    setEditLoading(true)
     try {
-      await modificarReserva(updatedData.id, updatedData)
-      await refetch()
+      const payload = {
+        vehicleId: Number(form.vehicleId),
+        plazaId:   Number(form.plazaId),
+        startTime: new Date(form.startTime).toISOString(),
+        endTime:   new Date(form.endTime).toISOString()
+      }
+      await modificarReserva(selectedReservation.id, payload)
+      setEditOpen(false)
+      setSelectedReservation(null)
     } catch (err) {
       console.error("Error al modificar reserva:", err)
     } finally {
-      setEditOpen(false)
-      setSelectedReservation(null)
+      setEditLoading(false)
     }
   }
 
+  const handleCloseEditDialog = () => {
+    setEditOpen(false)
+    setSelectedReservation(null)
+    clearError()
+  }
+  
+  const handleCreateReserva = () => {
+    // Aquí iría la lógica para crear una nueva reserva
+    alert("Crear nueva reserva - Implementar navegación a formulario de creación");
+  };
+
   return (
     <LayoutGroup>
-      <Card className={`min-h-[500px] h-full overflow-hidden bg-white/80 backdrop-blur-sm border-none shadow-lg dark:bg-gray-800/60 transition-all duration-300 ${expandedId ? "z-10" : ""}`}>
-        <motion.div layout>
-          <CardHeader className="bg-gradient-to-r from-blue-700 to-cyan-600 text-white">
+      <Card className="bg-gray-100 dark:bg-gray-800/90 border-none shadow-sm rounded-xl overflow-hidden">
+        <motion.div layout transition={transitionConfig}>
+          <CardHeader className="border-b border-gray-100 dark:border-gray-700 pb-4">
             <div className="flex justify-between items-center">
-              <CardTitle>Reservas Activas</CardTitle>
-              <Badge variant="outline" className="text-white border-white">{reservas.length} Activas</Badge>
+              <div>
+                <CardTitle className="text-xl font-semibold text-gray-800 dark:text-gray-100">Mis Reservas</CardTitle>
+                <CardDescription className="text-gray-500 dark:text-gray-400 mt-1">
+                  Gestiona tus reservas de aparcamiento actuales
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800">
+                {reservas.length} Activas
+              </Badge>
             </div>
-            <CardDescription className="text-blue-100">Tus reservas de estacionamiento actuales</CardDescription>
           </CardHeader>
         </motion.div>
 
-        <motion.div layout className="flex-grow overflow-y-auto">
-          <CardContent className="p-0 h-full">
-            <AnimatePresence mode="wait">
-              {expandedReservation ? (
-                <ReservaDetails
-                  reservation={expandedReservation}
-                  onClose={() => setExpandedId(null)}
-                  onCancel={() => {
-                    setSelectedReservation(expandedReservation)
-                    setCancelOpen(true)
+        <motion.div layout transition={transitionConfig}>
+          <CardContent className="p-6">
+            {loading ? (
+              <div className="h-56 flex items-center justify-center">
+                <motion.div 
+                  className="rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-100"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    ease: "linear",
+                    duration: 0.8,
+                    repeat: Infinity,
                   }}
                 />
-              ) : (
-                <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="divide-y">
-                  {reservas.map((reserva) => (
-                    <ReservaCard
-                      key={reserva.id}
-                      reservation={reserva}
-                      onExpand={() => setExpandedId(reserva.id)}
-                      onViewDetails={(e) => {
-                        e.stopPropagation()
-                        setSelectedReservation(reserva)
-                        setDetailsOpen(true)
-                      }}
-                      onEdit={(e) => {
-                        e.stopPropagation()
-                        setSelectedReservation(reserva)
-                        setEditOpen(true)
-                      }}
-                      onCancel={(e) => {
-                        e.stopPropagation()
-                        setSelectedReservation(reserva)
-                        setCancelOpen(true)
-                      }}
-                    />
-                  ))}
-
-                  {!loading && reservas.length === 0 && (
-                    <div className="p-8 text-center">
-                      <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                        <Car className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <h3 className="text-lg font-medium mb-2">No tienes reservas activas</h3>
-                      <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        Crea una nueva reserva para ver tus estacionamientos activos aquí
-                      </p>
-                      <Button>Crear Reserva</Button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait" initial={false}>
+                {isExpanded ? (
+                  // Vista expandida
+                  <motion.div
+                    key="expanded-view"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={transitionConfig}
+                    layout
+                    className="overflow-hidden rounded-xl"
+                  >
+                    {expandedReservation && (
+                      <ReservaDetails 
+                        reservation={expandedReservation} 
+                        onClose={() => setExpandedId(null)}
+                        onDelete={() => {
+                          setSelectedReservation(expandedReservation);
+                          setCancelOpen(true);
+                        }}
+                        onEdit={() => {
+                          clearError();
+                          setSelectedReservation(expandedReservation);
+                          setEditOpen(true);
+                        }}
+                      />
+                    )}
+                  </motion.div>
+                ) : (
+                  // Vista de cards en grid
+                  <motion.div
+                    key="grid-view"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={transitionConfig}
+                    layout
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  >
+                    {reservasSlots.map((reserva, index) => (
+                      <motion.div 
+                        key={reserva ? reserva.id : `empty-${index}`}
+                        layout
+                        className="rounded-xl overflow-hidden shadow-sm h-full"
+                        transition={transitionConfig}
+                      >
+                        {reserva ? (
+                          <ReservaCard
+                            reservation={reserva}
+                            onExpand={() => setExpandedId(reserva.id)}
+                            onEdit={(e) => {
+                              e.stopPropagation();
+                              clearError();
+                              setSelectedReservation(reserva);
+                              setEditOpen(true);
+                            }}
+                            onCancel={(e) => {
+                              e.stopPropagation();
+                              setSelectedReservation(reserva);
+                              setCancelOpen(true);
+                            }}
+                          />
+                        ) : (
+                          <NewReservaCard onClick={handleCreateReserva} />
+                        )}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </CardContent>
         </motion.div>
 
-        {!expandedReservation && reservas.length > 0 && (
-          <motion.div layout>
-            <CardFooter className="flex justify-center py-3 border-t">
-              <Button variant="ghost" className="bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent font-medium">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Ver todas las reservas
-              </Button>
+        {reservas.length > 3 && !isExpanded && (
+          <motion.div 
+            layout
+            transition={transitionConfig}
+          >
+            <CardFooter className="flex justify-center py-4 border-t border-gray-100 dark:border-gray-700">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  variant="outline"
+                  className="h-9 px-4 rounded-full text-blue-500 dark:text-blue-400 border-blue-200 dark:border-blue-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  Ver todas mis reservas ({reservas.length})
+                </Button>
+              </motion.div>
             </CardFooter>
           </motion.div>
         )}
       </Card>
 
-      {/* Diálogo de detalles */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Detalles de Reserva</DialogTitle>
-            <DialogDescription>Información completa de tu reserva</DialogDescription>
-          </DialogHeader>
-          {selectedReservation && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold">{selectedReservation.parking?.nombre || "Parking"}</h3>
-                <p className="text-sm text-gray-500">{selectedReservation.parking?.ubicacion || "Ubicación desconocida"}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                <p className="text-sm">Plaza {selectedReservation.plaza?.numero || "N/A"} ({selectedReservation.plaza?.tipo || "N/A"})</p>
-              </div>
-            </div>
-          )}
-          <DialogFooter className="flex justify-end">
-            <Button variant="outline" onClick={() => setDetailsOpen(false)}>Cerrar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Diálogo de cancelación */}
+      {/* — Confirmación de cancelación — */}
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-800">
           <DialogHeader>
             <DialogTitle className="flex items-center text-red-500">
               <AlertCircle className="h-5 w-5 mr-2" />
               Cancelar Reserva
             </DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que deseas cancelar esta reserva? Esta acción no se puede deshacer.
+            <DialogDescription className="text-gray-500 dark:text-gray-400">
+              ¿Estás seguro de que deseas cancelar esta reserva?
             </DialogDescription>
           </DialogHeader>
           {selectedReservation && (
-            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg mb-4">
-              <h3 className="font-medium">{selectedReservation.parking?.nombre || "Parking"}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{selectedReservation.plaza?.tipo} - Plaza {selectedReservation.plaza?.numero}</p>
+            <div className="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg mb-4">
+              <h3 className="font-medium text-gray-800 dark:text-gray-100">
+                {selectedReservation.parking?.nombre || "Parking"}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {selectedReservation.plaza?.tipo} – Plaza{" "}
+                {selectedReservation.plaza?.numero}
+              </p>
             </div>
           )}
           <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setCancelOpen(false)}>Volver</Button>
-            <Button variant="destructive" onClick={handleCancelReservation}>Confirmar Cancelación</Button>
+            <Button variant="outline" onClick={() => setCancelOpen(false)}>
+              Volver
+            </Button>
+            <Button variant="destructive" onClick={handleCancel}>
+              Confirmar Cancelación
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo de edición */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg">
+      {/* — Modificar reserva — */}
+      <Dialog open={editOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) handleCloseEditDialog();
+        else setEditOpen(true);
+      }}>
+        <DialogContent className="sm:max-w-lg bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle>Modificar Reserva</DialogTitle>
-            <DialogDescription>Cambia la plaza, vehículo u horario de esta reserva</DialogDescription>
+            <DialogTitle className="text-gray-800 dark:text-gray-100">Modificar Reserva</DialogTitle>
+            <DialogDescription className="text-gray-500 dark:text-gray-400">
+              Cambia plaza, vehículo u horario de esta reserva
+            </DialogDescription>
           </DialogHeader>
           {selectedReservation && (
             <ReservaEditForm
               reserva={selectedReservation}
-              onCancel={() => {
-                setEditOpen(false)
-                setSelectedReservation(null)
-              }}
-              onSave={handleSaveReserva}
+              vehiculos={vehiculos}
+              plazasDisponibles={plazasDisponibles}
+              onCancel={handleCloseEditDialog}
+              onSave={handleSave}
+              apiError={error}
+              isLoading={loading || editLoading}
             />
           )}
         </DialogContent>
@@ -199,5 +352,3 @@ function ReservasActivas() {
     </LayoutGroup>
   )
 }
-
-export default ReservasActivas

@@ -11,7 +11,7 @@ export const getProfile = async (req, res) => {
       include: [{
         model: Vehicle,
         as: 'vehicles',
-        attributes: ['id', 'matricula', 'tipo']
+        attributes: ['id', 'matricula', 'modelo', 'tipo']
       }]
     })
 
@@ -57,18 +57,33 @@ export const updateProfile = async (req, res) => {
   }
 }
 
+export const getUserVehicles = async (req, res) => {
+  try {
+    const { id: userId } = req.user
+    const vehicles = await Vehicle.findAll({
+      where: { usuario_id: userId },
+      attributes: ['id', 'matricula', 'modelo', 'tipo']
+    })
+
+    res.status(200).json({ vehicles })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
 export const addVehicle = async (req, res) => {
   try {
-    const { matricula, tipo } = req.body
+    const { matricula, modelo, tipo } = req.body
     const { id: userId } = req.user
 
     const vehicle = await Vehicle.create({
       matricula,
+      modelo,
       tipo,
       usuario_id: userId
     })
 
-    const createdVehicle = pick(vehicle.get(), ['id', 'matricula', 'tipo'])
+    const createdVehicle = pick(vehicle.get(), ['id', 'matricula', 'modelo', 'tipo'])
 
     res.status(201).json({ vehicle: createdVehicle })
   } catch (error) {
@@ -79,7 +94,7 @@ export const addVehicle = async (req, res) => {
 export const updateVehicle = async (req, res) => {
   try {
     const { id } = req.params
-    const { matricula, tipo } = req.body
+    const { matricula, modelo, tipo } = req.body
     const { id: userId } = req.user
 
     const vehicle = await Vehicle.findOne({
@@ -91,11 +106,12 @@ export const updateVehicle = async (req, res) => {
     }
 
     vehicle.matricula = matricula ?? vehicle.matricula
+    vehicle.modelo = modelo ?? vehicle.modelo
     vehicle.tipo = tipo ?? vehicle.tipo
 
     await vehicle.save()
 
-    const updatedVehicle = pick(vehicle.get(), ['id', 'matricula', 'tipo'])
+    const updatedVehicle = pick(vehicle.get(), ['id', 'matricula', 'modelo', 'tipo'])
 
     res.status(200).json({ message: 'Vehículo actualizado correctamente', vehicle: updatedVehicle })
   } catch (error) {

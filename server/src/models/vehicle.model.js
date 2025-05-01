@@ -10,6 +10,10 @@ const Vehicle = sequelize.define('Vehicle', {
       len: [7, 10] // Matrículas tipo ABC-1234
     }
   },
+  modelo: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   tipo: {
     type: DataTypes.ENUM('Coche', 'Moto', 'Especial'),
     allowNull: false

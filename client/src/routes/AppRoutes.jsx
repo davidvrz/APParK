@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import DashboardLayout from '../layouts/DashboardLayout'
+import MainLayout from '../layouts/MainLayout'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
 import Dashboard from '../pages/Dashboard'
+import Vehiculos from '../pages/Vehiculos'
 import PrivateRoute from './PrivateRoute'
 import NotFound from '../pages/NotFound'
 
@@ -12,16 +13,14 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <DashboardLayout />
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        {/* Aquí irán las rutas contenidas en Dashboard */}
+      
+      {/* Layout compartido para todas las rutas protegidas */}
+      <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/vehiculos" element={<Vehiculos />} />
+        {/* Aquí irán otras rutas como /mapa */}
+        
+        {/* Página 404 para rutas desconocidas */}
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -8,6 +8,10 @@ export const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [accessTokenState, setAccessTokenState] = useState(null)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const clearError = () => setError(null)
 
   // Podriamos hacer una peticion a la API para obtener el usuario
   // Al montar, intentamos recuperar token del localStorage
@@ -23,9 +27,11 @@ export const AuthProvider = ({ children }) => {
           nombreCompleto: decoded.nombreCompleto
         })
         setAccessTokenState(token)
-        syncAxiosToken(token) // sincroniza con interceptores
+        syncAxiosToken(token) 
+        clearError()
       } catch (err) {
         console.error('Token inválido, eliminando...', err)
+        setError('Sesión expirada o inválida')
         localStorage.removeItem('accessToken')
       }
     }
@@ -42,13 +48,17 @@ export const AuthProvider = ({ children }) => {
           rol: decoded.rol,
           nombreCompleto: decoded.nombreCompleto
         })
-      } catch {
+        clearError()
+      } catch (err) {
+        setError('Error al decodificar token')
         logout()
       }
     }
   }, [accessTokenState])
 
   const login = async (email, password) => {    
+    setLoading(true)
+    clearError()
     try {
       const res = await loginUser(email, password)
       const { token } = res.data.accessToken
@@ -66,35 +76,49 @@ export const AuthProvider = ({ children }) => {
 
       return { ok: true }
     } catch (err) {
+      console.error("Error al iniciar sesión:", err)
+      setError(err.message)
       return {
         ok: false,
-        error: err.response?.data?.message || 'Error al iniciar sesión'
+        error: err.message
       }
+    } finally {
+      setLoading(false)
     }
   }
 
   const register = async (nombre, email, password) => {
+    setLoading(true)
+    clearError()
     try {
       await registerUser(nombre, email, password)
       return await login(email, password)
     } catch (err) {
+      console.error("Error al registrarse:", err)
+      setError(err.message)
       return {
         ok: false,
-        error: err.response?.data?.message || 'Error al registrarse'
+        error: err.message
       }
+    } finally {
+      setLoading(false)
     }
   }
 
   const logout = async () => {
+    setLoading(true)
+    clearError()
     try {
       await logoutUser()
     } catch (err) {
-      console.error('Error al cerrar sesión', err)
+      console.error("Error al cerrar sesión:", err)
+      setError(err.message)
     } finally {
       localStorage.removeItem('accessToken')
       setAccessTokenState(null)
-      syncAxiosToken(null) // limpiar axios
+      syncAxiosToken(null)
       setUser(null)
+      setLoading(false)
     }
   }
 
@@ -104,6 +128,9 @@ export const AuthProvider = ({ children }) => {
         user,
         accessToken: accessTokenState,
         isAuthenticated: !!user,
+        loading,
+        error,
+        clearError,
         login,
         register,
         logout
