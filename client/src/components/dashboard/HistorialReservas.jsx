@@ -1,10 +1,28 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Clock, MapPin, Car, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useReservas } from "@/hooks/useReservas";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+// Funciones para formatear fechas y horas
+function formatTime(dateString) {
+  if (!dateString) return "N/D";
+  return format(new Date(dateString), "HH:mm", { locale: es });
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "N/D";
+  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es });
+}
+
+function formatShortDate(dateString) {
+  if (!dateString) return "N/D";
+  return format(new Date(dateString), "d MMM yyyy", { locale: es });
+}
 
 function HistorialReservas() {
   const { historial = [] } = useReservas();
@@ -67,27 +85,34 @@ function HistorialReservas() {
       <CardHeader className="border-b border-gray-100 dark:border-gray-700">
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Historial de Reservas</CardTitle>
-            <CardDescription className="text-gray-500">Tus reservas anteriores</CardDescription>
+            <CardTitle className="font-display text-xl font-semibold tracking-tight">Historial de Reservas</CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400 font-normal">Tus reservas anteriores</CardDescription>
           </div>
-          <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800">{historial.length} Reservas</Badge>
+          <div className="flex items-center gap-2">
+            <Button variant="link" size="sm" className="text-blue-500 font-medium">
+              Ver completo
+            </Button>
+            <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
+              {historial.length} Reservas
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 relative">
+      <CardContent className="p-6 pb-8 relative">
         {historial.length === 0 ? (
           <div className="h-[350px] flex flex-col items-center justify-center text-center px-8">
             <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
               <Clock className="h-6 w-6 text-blue-500" />
             </div>
-            <h3 className="text-lg font-medium mb-2">Aún no tienes reservas pasadas</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <h3 className="text-lg font-display font-medium tracking-tight mb-2">Aún no tienes reservas pasadas</h3>
+            <p className="text-gray-500 dark:text-gray-400 font-normal mb-4">
               Cuando realices una reserva y se complete, aparecerá aquí tu historial.
             </p>
-            <Button>Crear Reserva</Button>
+            <Button className="font-medium">Crear Reserva</Button>
           </div>
         ) : (
-          <div className="flex justify-center items-center h-[350px] px-8" ref={constraintsRef}>
+          <div className="flex justify-center items-center h-[380px] px-8" ref={constraintsRef}>
             <div className="relative w-full h-full flex justify-center items-center perspective-1000">
 
               <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -106,40 +131,68 @@ function HistorialReservas() {
                     style={{ zIndex: 10 }}
                   >
                     <Card className="w-full h-full overflow-hidden border shadow-lg bg-white dark:bg-gray-800">
-                      <CardContent className="p-4 h-full flex flex-col">
+                      <CardContent className="p-5 h-full flex flex-col">
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h3 className="text-xl font-bold">{current.parking?.nombre || "Parking"}</h3>
-                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              <span>{current.parking?.ubicacion || "Ubicación no disponible"}</span>
+                            <h3 className="font-display text-xl font-medium tracking-tight text-gray-900 dark:text-gray-100">
+                              {current.parking?.nombre || "Parking"}
+                            </h3>
+                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+                              <span className="font-normal">{current.parking?.ubicacion || "Ubicación no disponible"}</span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold">{current.precioTotal ? `${current.precioTotal}€` : "Precio N/D"}</div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                            <p className="text-sm text-gray-500">Entrada</p>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1 text-blue-500" />
-                              <span className="font-medium">{current.startTime}</span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                            <p className="text-sm text-gray-500">Salida</p>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1 text-blue-500" />
-                              <span className="font-medium">{current.endTime}</span>
+                            <div className="font-display font-bold text-xl tracking-tight text-gray-900 dark:text-gray-100">
+                              {current.precioTotal ? `${current.precioTotal}€` : "Precio N/D"}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                          <Car className="h-4 w-4 mr-2 text-blue-500" />
-                          <span className="font-medium">{current.vehicle?.matricula || "Vehículo"}</span>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-500 font-medium mb-1">Entrada</p>
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1.5 text-blue-500" />
+                              <span className="text-sm font-normal">{formatShortDate(current.startTime)}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <Clock className="h-4 w-4 mr-1.5 text-blue-500" />
+                              <span className="text-sm font-medium">{formatTime(current.startTime)}</span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-500 font-medium mb-1">Salida</p>
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1.5 text-blue-500" />
+                              <span className="text-sm font-normal">{formatShortDate(current.endTime)}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <Clock className="h-4 w-4 mr-1.5 text-blue-500" />
+                              <span className="text-sm font-medium">{formatTime(current.endTime)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4 mt-4">
+                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex-1">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Car className="h-4 w-4 mr-1.5 text-blue-500" />
+                                <span className="text-sm font-medium">{current.vehicle?.matricula || "Matrícula N/D"}</span>
+                              </div>
+                              <span className="text-xs text-gray-500 font-normal">
+                                {current.vehicle?.modelo || ""}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex-1">
+                            <p className="text-sm text-gray-500 font-medium mb-1">Ubicación</p>
+                            <div className="text-sm font-normal">
+                              Plaza {current.plaza?.numero || "N/D"} · 
+                              Planta {current.planta?.numero || current.plaza?.planta?.numero || "N/D"}
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -147,28 +200,40 @@ function HistorialReservas() {
                 )}
               </AnimatePresence>
 
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-md z-20"
-                onClick={prevCard}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 h-10 w-10 rounded-full bg-white/80 backdrop-blur-sm shadow-md z-20"
-                onClick={nextCard}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
+              {historial.length > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 h-10 w-10 rounded-full bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm shadow-md z-20"
+                    onClick={prevCard}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 h-10 w-10 rounded-full bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm shadow-md z-20"
+                    onClick={nextCard}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </>
+              )}
 
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-1 z-20">
+              {/* Indicadores de navegación */}
+              <div className="absolute -bottom-5 left-0 right-0 flex justify-center space-x-2 z-20">
                 {historial.map((_, index) => (
-                  <div
+                  <button
                     key={index}
-                    className={`h-2 w-2 rounded-full ${index === currentIndex ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                    onClick={() => {
+                      setDirection(index > currentIndex ? 1 : -1);
+                      setCurrentIndex(index);
+                    }}
+                    className={`h-2 w-${index === currentIndex ? '6' : '2'} rounded-full transition-all duration-300 ${
+                      index === currentIndex ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400"
+                    }`}
+                    aria-label={`Ver reserva ${index + 1}`}
                   />
                 ))}
               </div>
@@ -176,10 +241,6 @@ function HistorialReservas() {
           </div>
         )}
       </CardContent>
-
-      <CardFooter className="bg-gray-50 dark:bg-gray-800/80 border-t flex justify-center items-center">
-        <Button variant="link" size="sm" className="text-blue-500">Ver historial completo</Button>
-      </CardFooter>
     </Card>
   );
 }

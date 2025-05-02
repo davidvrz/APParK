@@ -40,8 +40,8 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
       {/* Cabecera con gradiente */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-500 py-3 px-4 text-white">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium">{parkingName}</h3>
-          <div className="text-xs px-2 py-1 bg-white/20 rounded-full">
+          <h3 className="font-display font-medium tracking-tight">{parkingName}</h3>
+          <div className="text-xs px-2 py-1 bg-white/20 rounded-full font-medium">
             Activa
           </div>
         </div>
@@ -51,22 +51,22 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
       <div className="flex-grow p-5 space-y-3 bg-white dark:bg-gray-800">
         <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
           <MapPin className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-          <span className="line-clamp-1">{parkingAddress}</span>
+          <span className="line-clamp-1 font-normal">{parkingAddress}</span>
         </div>
         
         <div className="flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
-          <span>{startDate}</span>
+          <span className="font-medium">{startDate}</span>
         </div>
         
         <div className="flex items-center text-sm">
           <Clock className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
-          <span>{startTime} - {endTime}</span>
+          <span className="font-normal">{startTime} - {endTime}</span>
         </div>
         
         <div className="flex items-center text-sm">
           <Car className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
-          <span>
+          <span className="font-normal">
             {carPlate} · Plaza {plazaNumber}
           </span>
         </div>
@@ -74,7 +74,7 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
       
       {/* Pie con precio y acciones */}
       <div className="px-5 py-3 flex justify-between items-center bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-        <div className="text-right font-bold text-lg">
+        <div className="text-right font-display font-bold text-lg tracking-tight">
           {price}
         </div>
         <div className="flex space-x-2">
@@ -82,7 +82,7 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
             <Button 
               size="sm" 
               variant="outline" 
-              className="h-8 px-3 rounded-full"
+              className="h-8 px-3 rounded-full font-medium"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(e);

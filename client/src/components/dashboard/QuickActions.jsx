@@ -1,37 +1,34 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { PlusCircle, Clock, Car, History } from "lucide-react";
 import { Link } from "react-router-dom";
+
+// Importamos las ilustraciones
+import mapIllustration from "@/assets/Paper map-cuate.svg";
+import timeIllustration from "@/assets/time flies-rafiki.svg";
+import carIllustration from "@/assets/By my car-rafiki.svg";
+import cityIllustration from "@/assets/City driver-rafiki.svg";
 
 export function QuickActions() {
   const actions = [
     {
-      icon: PlusCircle,
+      image: mapIllustration,
       label: "Nueva Reserva",
-      color: "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300",
       link: "/map",
-      description: "Reservar plaza"
     },
     {
-      icon: Clock,
+      image: timeIllustration,
       label: "Extender Tiempo",
-      color: "bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-300",
       link: "/parking/details",
-      description: "Prolongar estancia"
     },
     {
-      icon: Car,
+      image: carIllustration,
       label: "Mis Vehículos",
-      color: "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300",
       link: "/cars",
-      description: "Gestionar coches"
     },
     {
-      icon: History,
-      label: "Historial",
-      color: "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-300",
+      image: cityIllustration,
+      label: "Mi Historial",
       link: "/parking/history",
-      description: "Ver reservas pasadas"
     },
   ];
 
@@ -52,13 +49,18 @@ export function QuickActions() {
           <Link to={action.link} className="h-full">
             <Button
               variant="ghost"
-              className="w-full h-full flex flex-col items-center justify-center p-5 text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              className="w-full h-full flex flex-col items-center justify-between p-4 text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
-              <div className={`w-16 h-16 rounded-full ${action.color} flex items-center justify-center mb-4 shadow-md`}>
-                <action.icon className="h-7 w-7" />
+              <div className="flex-grow flex items-center justify-center w-full mb-2 p-2 overflow-hidden">
+                <img 
+                  src={action.image} 
+                  alt={action.label} 
+                  className="h-36 w-36 object-contain" 
+                />
               </div>
-              <span className="font-medium text-lg mb-1">{action.label}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{action.description}</span>
+              <div className="text-center">
+                <span className="font-display font-medium text-lg tracking-tight block">{action.label}</span>
+              </div>
             </Button>
           </Link>
         </motion.div>

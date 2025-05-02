@@ -3,12 +3,14 @@ import {
   getAllParkings,
   getParkingById,
   getPlantaById,
-  getPlazaById
+  getPlazaById,
+  getAnunciosByParkingId
 } from '@/api/parking'
 
 export const useParking = (parkingId = null) => {
   const [parkings, setParkings] = useState([])
   const [parking, setParking] = useState(null)
+  const [anuncios, setAnuncios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -42,6 +44,18 @@ export const useParking = (parkingId = null) => {
       throw err
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAnuncios = async (id) => {
+    if (!id) return []
+    try {
+      const { anuncios } = await getAnunciosByParkingId(id)
+      setAnuncios(anuncios || [])
+      return anuncios
+    } catch (err) {
+      console.error('Error al obtener anuncios del parking:', err)
+      return []
     }
   }
 
@@ -79,11 +93,13 @@ export const useParking = (parkingId = null) => {
   return {
     parkings,
     parking,
+    anuncios,
     loading,
     error,
     clearError,
     fetchParkings,
     fetchParkingById,
+    fetchAnuncios,
     fetchPlantaById,
     fetchPlazaById
   }

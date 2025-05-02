@@ -52,7 +52,7 @@ function HeaderBar() {
         transition={{ duration: 0.3 }}
       >
         <Link to="/dashboard" className="flex items-center">
-          <span className="text-xl font-poppins font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <span className="text-xl font-display font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             APParK
           </span>
         </Link>
@@ -93,7 +93,7 @@ function HeaderBar() {
                         animate={{ width: "auto", opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`${isActive ? `bg-gradient-to-r ${activeGradient} bg-clip-text text-transparent font-semibold` : ""} whitespace-nowrap overflow-hidden`}
+                        className={`${isActive ? `font-display font-medium tracking-tight bg-gradient-to-r ${activeGradient} bg-clip-text text-transparent` : "font-medium"} whitespace-nowrap overflow-hidden`}
                       >
                         {isScrolled && isActive ? item.label : !isScrolled ? item.label : ""}
                       </motion.span>
@@ -142,7 +142,7 @@ function HeaderBar() {
             </motion.button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 rounded-xl">
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium">
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>
@@ -165,13 +165,13 @@ function HeaderBar() {
           <DropdownMenuContent align="end" className="w-40 rounded-xl">
             {navItems.map((item) => (
               <DropdownMenuItem key={item.path} asChild>
-                <Link to={item.path} className="cursor-pointer">
+                <Link to={item.path} className="cursor-pointer font-medium">
                   <div className="mr-2">{item.icon}</div>
                   <span>{item.label}</span>
                 </Link>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium">
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>

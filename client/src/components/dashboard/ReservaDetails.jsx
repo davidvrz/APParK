@@ -48,7 +48,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
       {/* Header con gradiente */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold">Detalles de Reserva</h3>
+          <h3 className="text-xl font-display font-semibold tracking-tight">Detalles de Reserva</h3>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-white hover:bg-white/20">
             <X className="h-4 w-4" />
           </Button>
@@ -61,33 +61,33 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
         <div className="flex-1 p-6 space-y-6">
           {/* Información principal */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-            <h4 className="font-medium text-lg mb-2">{parkingName}</h4>
+            <h4 className="font-display font-medium text-lg tracking-tight mb-2">{parkingName}</h4>
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
               <MapPin className="h-4 w-4 mr-1 text-blue-500" />
-              <span>{parkingAddress}</span>
+              <span className="font-normal">{parkingAddress}</span>
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Entrada</p>
+                <p className="text-sm text-gray-500 font-medium">Entrada</p>
                 <div className="flex items-center mt-1">
                   <Clock className="h-4 w-4 mr-1 text-blue-500" />
                   <span className="font-medium">{formatTime(reservation.startTime)}</span>
                 </div>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-4 w-4 mr-1 text-blue-500" />
-                  <span className="text-sm">{formatDate(reservation.startTime)}</span>
+                  <span className="text-sm font-normal">{formatDate(reservation.startTime)}</span>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Salida</p>
+                <p className="text-sm text-gray-500 font-medium">Salida</p>
                 <div className="flex items-center mt-1">
                   <Clock className="h-4 w-4 mr-1 text-blue-500" />
                   <span className="font-medium">{formatTime(reservation.endTime)}</span>
                 </div>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-4 w-4 mr-1 text-blue-500" />
-                  <span className="text-sm">{formatDate(reservation.endTime)}</span>
+                  <span className="text-sm font-normal">{formatDate(reservation.endTime)}</span>
                 </div>
               </div>
             </div>
@@ -101,14 +101,14 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
 
           {/* Precio y acciones */}
           <div className="flex justify-between items-center mt-4">
-            <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="text-xl font-display font-bold tracking-tight text-gray-900 dark:text-gray-100">
               {price}
             </div>
             <div className="flex space-x-2">
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="h-8 px-3 rounded-full"
+                className="h-8 px-3 rounded-full font-medium"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onEdit) onEdit(e);
@@ -131,7 +131,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
             </div>
           </div>
           
-          <div className="text-lg font-bold flex items-center text-green-500">
+          <div className="text-lg font-display font-bold tracking-tight flex items-center text-green-500">
             <Clock className="h-5 w-5 mr-2" />
             <span>Reserva Activa</span>
           </div>
@@ -141,8 +141,8 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
         <div className="flex-1 bg-gray-100 dark:bg-gray-700 relative min-h-[300px]">
           <div className="absolute inset-0 flex items-center justify-center flex-col">
             <Navigation className="h-10 w-10 text-blue-500 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">Mapa de ubicación</p>
-            <div className="text-xs text-center text-gray-400 mt-2">
+            <p className="text-gray-500 dark:text-gray-400 font-medium">Mapa de ubicación</p>
+            <div className="text-xs text-center text-gray-400 mt-2 font-normal">
               Parking {parkingName}<br />
               Plaza {parkingSpot}
             </div>
@@ -158,7 +158,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
           className="flex items-center gap-2 text-gray-500 hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors"
         >
           <ChevronUp className="h-4 w-4" />
-          <span className="text-xs">Minimizar</span>
+          <span className="text-xs font-medium">Minimizar</span>
         </Button>
       </div>
     </motion.div>
@@ -168,11 +168,11 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
 function InfoCard({ icon: Icon, title, content }) {
   return (
     <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg">
-      <h4 className="font-medium mb-2 flex items-center">
+      <h4 className="font-display font-medium tracking-tight mb-2 flex items-center">
         <Icon className="h-4 w-4 mr-2 text-blue-500" />
         {title}
       </h4>
-      <p className="text-sm">{content}</p>
+      <p className="text-sm font-normal">{content}</p>
     </div>
   );
 }

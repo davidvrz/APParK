@@ -1,9 +1,13 @@
+/* Importar fuentes de Google */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     :root {
+        /* Variables de color existentes */
         --background: 0 0% 100%;
         --foregrounds: 222.2 84% 4.9%;
 
@@ -35,14 +39,51 @@
         --radius: 0.5rem;
 
         --chart-1: 12 76% 61%;
-
         --chart-2: 173 58% 39%;
-
         --chart-3: 197 37% 24%;
-
         --chart-4: 43 74% 66%;
-
         --chart-5: 27 87% 67%;
+
+        /* Variables de tipografía */
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        --font-display: 'Poppins', var(--font-sans);
+
+        /* Escala de tipografía */
+        --font-size-xs: 0.75rem;
+        /* 12px */
+        --font-size-sm: 0.875rem;
+        /* 14px */
+        --font-size-base: 1rem;
+        /* 16px */
+        --font-size-lg: 1.125rem;
+        /* 18px */
+        --font-size-xl: 1.25rem;
+        /* 20px */
+        --font-size-2xl: 1.5rem;
+        /* 24px */
+        --font-size-3xl: 1.875rem;
+        /* 30px */
+        --font-size-4xl: 2.25rem;
+        /* 36px */
+
+        /* Line heights */
+        --line-height-tight: 1.25;
+        --line-height-normal: 1.5;
+        --line-height-relaxed: 1.75;
+
+        /* Font weights */
+        --font-weight-light: 300;
+        --font-weight-normal: 400;
+        --font-weight-medium: 500;
+        --font-weight-semibold: 600;
+        --font-weight-bold: 700;
+
+        /* Letter spacing */
+        --letter-spacing-tighter: -0.05em;
+        --letter-spacing-tight: -0.025em;
+        --letter-spacing-normal: 0;
+        --letter-spacing-wide: 0.025em;
+        --letter-spacing-wider: 0.05em;
     }
 
     .dark {
@@ -86,8 +127,84 @@
         @apply border-border;
     }
 
+    html {
+        font-family: var(--font-sans);
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
     body {
         @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-display {
+        font-family: var(--font-display);
+        letter-spacing: var(--letter-spacing-tight);
+    }
+
+    h1 {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-tight);
+    }
+
+    h2 {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-semibold);
+        line-height: var(--line-height-tight);
+    }
+
+    h3 {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-normal);
+    }
+
+    h4 {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-normal);
+    }
+
+    p {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-relaxed);
+    }
+
+    .text-xs {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-relaxed);
+    }
+
+    .text-sm {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-normal);
+    }
+
+    .text-base {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-normal);
+    }
+
+    .text-lg {
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-normal);
+    }
+
+    .text-xl {
+        font-size: var(--font-size-xl);
+        line-height: var(--line-height-tight);
+    }
+
+    .text-2xl {
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-tight);
     }
 }
 
@@ -102,5 +219,46 @@
 
     .backface-hidden {
         backface-visibility: hidden;
+    }
+
+    /* Utilidades de tipografía */
+    .font-light {
+        font-weight: var(--font-weight-light);
+    }
+
+    .font-normal {
+        font-weight: var(--font-weight-normal);
+    }
+
+    .font-medium {
+        font-weight: var(--font-weight-medium);
+    }
+
+    .font-semibold {
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .font-bold {
+        font-weight: var(--font-weight-bold);
+    }
+
+    .tracking-tighter {
+        letter-spacing: var(--letter-spacing-tighter);
+    }
+
+    .tracking-tight {
+        letter-spacing: var(--letter-spacing-tight);
+    }
+
+    .tracking-normal {
+        letter-spacing: var(--letter-spacing-normal);
+    }
+
+    .tracking-wide {
+        letter-spacing: var(--letter-spacing-wide);
+    }
+
+    .tracking-wider {
+        letter-spacing: var(--letter-spacing-wider);
     }
 }

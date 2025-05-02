@@ -144,8 +144,8 @@ export default function ReservaEditForm({
       {(errors.server || apiError) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="font-display font-medium">Error</AlertTitle>
+          <AlertDescription className="font-normal">
             {errors.server || apiError}
           </AlertDescription>
         </Alert>
@@ -155,15 +155,15 @@ export default function ReservaEditForm({
       {success && (
         <Alert variant="success" className="bg-green-50 text-green-800">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle>Éxito</AlertTitle>
-          <AlertDescription>Reserva modificada correctamente</AlertDescription>
+          <AlertTitle className="font-display font-medium">Éxito</AlertTitle>
+          <AlertDescription className="font-normal">Reserva modificada correctamente</AlertDescription>
         </Alert>
       )}
 
       {/* Selección de vehículo y plaza */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className={errors.vehicleId ? "text-red-500" : ""}>
+          <Label className={`${errors.vehicleId ? "text-red-500" : ""} font-medium`}>
             Vehículo {errors.vehicleId && `(${errors.vehicleId})`}
           </Label>
           <Select
@@ -185,7 +185,7 @@ export default function ReservaEditForm({
         </div>
 
         <div>
-          <Label className={errors.plazaId ? "text-red-500" : ""}>
+          <Label className={`${errors.plazaId ? "text-red-500" : ""} font-medium`}>
             Plaza {errors.plazaId && `(${errors.plazaId})`}
           </Label>
           <Select
@@ -210,7 +210,7 @@ export default function ReservaEditForm({
       {/* Fechas y horas con rangos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className={errors.startTime || errors.ahead ? "text-red-500" : ""}>
+          <Label className={`${errors.startTime || errors.ahead ? "text-red-500" : ""} font-medium`}>
             Inicio {errors.startTime && `(${errors.startTime})`}
           </Label>
           <Input
@@ -223,10 +223,10 @@ export default function ReservaEditForm({
             min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60000)
               .toISOString().slice(0,16)}
           />
-          {errors.ahead && <p className="text-red-500 text-xs">{errors.ahead}</p>}
+          {errors.ahead && <p className="text-red-500 text-xs font-normal">{errors.ahead}</p>}
         </div>
         <div>
-          <Label className={errors.endTime || errors.duration ? "text-red-500" : ""}>
+          <Label className={`${errors.endTime || errors.duration ? "text-red-500" : ""} font-medium`}>
             Fin {errors.endTime && `(${errors.endTime})`}
           </Label>
           <Input
@@ -249,7 +249,7 @@ export default function ReservaEditForm({
                 : undefined
             }
           />
-          {errors.duration && <p className="text-red-500 text-xs">{errors.duration}</p>}
+          {errors.duration && <p className="text-red-500 text-xs font-normal">{errors.duration}</p>}
         </div>
       </div>
 
@@ -260,12 +260,14 @@ export default function ReservaEditForm({
           variant="outline"
           onClick={onCancel}
           disabled={isLoading || submitting}
+          className="font-medium"
         >
           Cancelar
         </Button>
         <Button
           type="submit"
           disabled={isLoading || submitting || success}
+          className="font-medium"
         >
           {submitting ? (
             <>

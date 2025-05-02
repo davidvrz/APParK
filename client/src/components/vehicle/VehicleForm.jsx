@@ -86,15 +86,15 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription className="font-normal">{error}</AlertDescription>
         </Alert>
       )}
 
-      <div>
-        <Label htmlFor="matricula" className={validationErrors.matricula ? "text-red-500" : ""}>
+      <div className="space-y-2">
+        <Label htmlFor="matricula" className={validationErrors.matricula ? "text-red-500 font-medium" : "font-medium"}>
           Matrícula {validationErrors.matricula && `(${validationErrors.matricula})`}
         </Label>
         <Input
@@ -103,13 +103,13 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
           placeholder="Ejemplo: 1234ABC"
           value={formData.matricula}
           onChange={handleInputChange}
-          className={validationErrors.matricula ? "border-red-500" : ""}
+          className={validationErrors.matricula ? "border-red-500 mt-1" : "mt-1"}
           disabled={isSubmitting}
         />
       </div>
 
-      <div>
-        <Label htmlFor="modelo">
+      <div className="space-y-2 pt-2">
+        <Label htmlFor="modelo" className="font-medium">
           Modelo (opcional)
         </Label>
         <Input
@@ -118,12 +118,13 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
           placeholder="Ejemplo: Seat Ibiza, Honda CBR..."
           value={formData.modelo}
           onChange={handleInputChange}
+          className="mt-1"
           disabled={isSubmitting}
         />
       </div>
 
-      <div>
-        <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500" : ""}>
+      <div className="space-y-2 pt-2">
+        <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500 font-medium" : "font-medium"}>
           Tipo de vehículo {validationErrors.tipo && `(${validationErrors.tipo})`}
         </Label>
         <Select 
@@ -131,7 +132,7 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
           onValueChange={handleSelectChange}
           disabled={isSubmitting}
         >
-          <SelectTrigger className={validationErrors.tipo ? "border-red-500" : ""}>
+          <SelectTrigger className={validationErrors.tipo ? "border-red-500 mt-1" : "mt-1"}>
             <SelectValue placeholder="Selecciona un tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -144,7 +145,7 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
 
       <Button 
         type="submit" 
-        className="w-full"
+        className="w-full font-medium mt-4"
         disabled={isSubmitting}
       >
         {isSubmitting ? (

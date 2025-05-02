@@ -5,8 +5,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
-  CardFooter
+  CardContent
 } from "@/components/ui/Card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/Badge"
@@ -63,15 +62,15 @@ const NewReservaCard = ({ onClick }) => (
       >
         <PlusCircle className="h-7 w-7 text-blue-500 dark:text-blue-400" />
       </motion.div>
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+      <h3 className="font-display text-lg font-medium tracking-tight text-gray-900 dark:text-gray-100 mb-2">
         Nueva Reserva
       </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4">
         Programa una nueva reserva de aparcamiento
       </p>
       <Button 
         size="sm" 
-        className="bg-blue-500 hover:bg-blue-600 text-white"
+        className="bg-blue-500 hover:bg-blue-600 text-white font-medium"
       >
         Crear Reserva
       </Button>
@@ -170,14 +169,25 @@ export default function ReservasActivas() {
           <CardHeader className="border-b border-gray-100 dark:border-gray-700 pb-4">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-xl font-semibold text-gray-800 dark:text-gray-100">Mis Reservas</CardTitle>
-                <CardDescription className="text-gray-500 dark:text-gray-400 mt-1">
+                <CardTitle className="font-display text-xl font-semibold tracking-tight text-gray-800 dark:text-gray-100">Mis Reservas</CardTitle>
+                <CardDescription className="font-normal text-gray-500 dark:text-gray-400 mt-1">
                   Gestiona tus reservas de aparcamiento actuales
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800">
-                {reservas.length} Activas
-              </Badge>
+              <div className="flex items-center gap-2">
+                {reservas.length > 3 && !isExpanded && (
+                  <Button 
+                    variant="link"
+                    size="sm"
+                    className="text-blue-500 dark:text-blue-400 font-medium tracking-tight"
+                  >
+                    Ver completo
+                  </Button>
+                )}
+                <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
+                  {reservas.length} Activas
+                </Badge>
+              </div>
             </div>
           </CardHeader>
         </motion.div>
@@ -270,54 +280,36 @@ export default function ReservasActivas() {
             )}
           </CardContent>
         </motion.div>
-
-        {reservas.length > 3 && !isExpanded && (
-          <motion.div 
-            layout
-            transition={transitionConfig}
-          >
-            <CardFooter className="flex justify-center py-4 border-t border-gray-100 dark:border-gray-700">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  variant="outline"
-                  className="h-9 px-4 rounded-full text-blue-500 dark:text-blue-400 border-blue-200 dark:border-blue-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                >
-                  Ver todas mis reservas ({reservas.length})
-                </Button>
-              </motion.div>
-            </CardFooter>
-          </motion.div>
-        )}
       </Card>
 
       {/* — Confirmación de cancelación — */}
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent className="sm:max-w-md bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="flex items-center text-red-500">
+            <DialogTitle className="flex items-center text-red-500 font-display tracking-tight">
               <AlertCircle className="h-5 w-5 mr-2" />
               Cancelar Reserva
             </DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
+            <DialogDescription className="font-normal text-gray-500 dark:text-gray-400">
               ¿Estás seguro de que deseas cancelar esta reserva?
             </DialogDescription>
           </DialogHeader>
           {selectedReservation && (
             <div className="bg-gray-50 dark:bg-gray-700/40 p-4 rounded-lg mb-4">
-              <h3 className="font-medium text-gray-800 dark:text-gray-100">
+              <h3 className="font-display font-medium tracking-tight text-gray-800 dark:text-gray-100">
                 {selectedReservation.parking?.nombre || "Parking"}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-normal">
                 {selectedReservation.plaza?.tipo} – Plaza{" "}
                 {selectedReservation.plaza?.numero}
               </p>
             </div>
           )}
           <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setCancelOpen(false)}>
+            <Button variant="outline" onClick={() => setCancelOpen(false)} className="font-medium">
               Volver
             </Button>
-            <Button variant="destructive" onClick={handleCancel}>
+            <Button variant="destructive" onClick={handleCancel} className="font-medium">
               Confirmar Cancelación
             </Button>
           </DialogFooter>
@@ -331,8 +323,8 @@ export default function ReservasActivas() {
       }}>
         <DialogContent className="sm:max-w-lg bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-gray-800 dark:text-gray-100">Modificar Reserva</DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
+            <DialogTitle className="text-gray-800 dark:text-gray-100 font-display tracking-tight">Modificar Reserva</DialogTitle>
+            <DialogDescription className="text-gray-500 dark:text-gray-400 font-normal">
               Cambia plaza, vehículo u horario de esta reserva
             </DialogDescription>
           </DialogHeader>
