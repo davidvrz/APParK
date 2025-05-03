@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -11,68 +11,83 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
 })
 
-// Spanish center coordinates (around Madrid)
+// Default center coordinates (España)
 const defaultCenter = [40.416775, -3.70379]
 
+// Componente para actualizar la vista del mapa cuando cambian los parkings
+function MapUpdater({ parkings }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (parkings && parkings.length > 0) {
+      // Si hay parkings, crear un bounds para ajustar el mapa
+      try {
+        const bounds = L.latLngBounds(
+          parkings.map(parking => [
+            Number(parking.latitud),
+            Number(parking.longitud)
+          ])
+        )
+
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [50, 50] })
+        }
+      } catch (error) {
+        console.error("Error ajustando el mapa:", error)
+      }
+    }
+  }, [parkings, map])
+
+  return null
+}
+
 const ParkingMap = ({ parkings = [], onSelectParking }) => {
-  const getGeocodeForParking = (parking) => {
-    // This is a simplified approach - in a real application you would:
-    // 1. Either store lat/lng in your parking model
-    // 2. Or use a geocoding service (Google Maps, Mapbox, etc.) to convert addresses to coordinates
-    // For this example, we'll create random locations around Spain
-
-    // Create deterministic "random" positions based on parking ID for demo
-    const id = parking.id || 0
-    const latOffset = (id * 0.05) % 2 - 1
-    const lngOffset = (id * 0.07) % 2 - 1
-
-    return [defaultCenter[0] + latOffset, defaultCenter[1] + lngOffset]
-  }
+  const [mapReady, setMapReady] = useState(false)
 
   return (
-    <MapContainer
-      center={defaultCenter}
-      zoom={6}
-      style={{ height: '100%', width: '100%' }}
-      whenCreated={(mapInstance) => {
-        // Optional: store map instance in state if needed
-      }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={defaultCenter}
+        zoom={6}
+        style={{ height: '100%', width: '100%', minHeight: '500px' }}
+        whenReady={() => setMapReady(true)}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      {parkings.map((parking) => {
-        const position = getGeocodeForParking(parking)
+        {parkings.map((parking) => {
+          // Usar las coordenadas reales del parking desde la base de datos
+          const position = [
+            Number(parking.latitud) || defaultCenter[0],
+            Number(parking.longitud) || defaultCenter[1]
+          ]
 
-        return (
-          <Marker
-            key={parking.id}
-            position={position}
-            eventHandlers={{
-              click: () => onSelectParking(parking),
-            }}
-          >
-            <Popup>
-              <div>
-                <h3 className="font-bold">{parking.nombre}</h3>
-                <p>{parking.ubicacion}</p>
-                <button
-                  className="text-blue-600 hover:underline mt-2"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onSelectParking(parking)
-                  }}
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        )
-      })}
-    </MapContainer>
+          return (
+            <Marker
+              key={parking.id}
+              position={position}
+              eventHandlers={{
+                click: () => onSelectParking(parking)
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <strong>{parking.nombre}</strong>
+                  <p className="text-sm">{parking.ubicacion}</p>
+                  <p className="text-sm mt-1">
+                    <span className="text-green-600">{parking.plazasLibres}</span> plazas libres
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        })}
+
+        {mapReady && <MapUpdater parkings={parkings} />}
+      </MapContainer>
+    </div>
   )
 }
 

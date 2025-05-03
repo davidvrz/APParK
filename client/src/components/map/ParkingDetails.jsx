@@ -1,46 +1,55 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParking } from '@/hooks/useParking'
-import ReservationForm from './ReservationForm'
+import ParkingReservationFlow from './ParkingReservationFlow'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChevronLeftIcon, MapPinIcon, CarIcon, CalendarIcon, BellIcon, Loader2 } from 'lucide-react'
+import {
+  ChevronLeftIcon,
+  MapPinIcon,
+  CalendarIcon,
+  BellIcon,
+  Loader2,
+  Layout,
+  InfoIcon
+} from 'lucide-react'
 
-const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
-  const [activeTab, setActiveTab] = useState('info')
-  const [showReservationForm, setShowReservationForm] = useState(false)
+const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'info' }) => {
+  const [activeTab, setActiveTab] = useState(initialSection)
   const [loadingAnuncios, setLoadingAnuncios] = useState(false)
+  const anunciosLoadedRef = useRef(false)
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
 
   useEffect(() => {
     // Fetch complete parking details when a parking is selected
     if (parkingPreview?.id) {
       fetchParkingById(parkingPreview.id)
+      // Resetear el estado de carga de anuncios cuando cambia el parking
+      anunciosLoadedRef.current = false
     }
   }, [parkingPreview?.id, fetchParkingById])
 
-  // Cargar anuncios cuando se selecciona la pestaña de anuncios
+  // Cargar anuncios solo cuando se selecciona la pestaña de anuncios y no se han cargado ya
   useEffect(() => {
-    if (activeTab === 'anuncios' && parking?.id && !loadingAnuncios) {
+    if (activeTab === 'info' && parking?.id && !loadingAnuncios && !anunciosLoadedRef.current) {
       setLoadingAnuncios(true)
-      fetchAnuncios(parking.id).finally(() => setLoadingAnuncios(false))
+      fetchAnuncios(parking.id)
+        .then(() => {
+          // Marcar que los anuncios ya se han cargado
+          anunciosLoadedRef.current = true
+        })
+        .finally(() => {
+          setLoadingAnuncios(false)
+        })
     }
-  }, [activeTab, parking?.id, loadingAnuncios, fetchAnuncios])
-
-  const handleMakeReservation = () => {
-    setActiveTab('plazas')
-    setShowReservationForm(true)
-  }
-
-  const handleCancelReservation = () => {
-    setShowReservationForm(false)
-  }
+  }, [activeTab, parking?.id, fetchAnuncios])
 
   if (loading) {
     return (
       <Card className="h-full w-full overflow-auto">
         <CardContent className="p-6">
           <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mr-2" />
             <p className="text-lg">Cargando información del parking...</p>
           </div>
         </CardContent>
@@ -97,23 +106,26 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
       </CardHeader>
 
       <CardContent className="p-0">
-        <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab}>
           <div className="px-4 border-b">
             <TabsList className="w-full justify-start">
-              <TabsTrigger value="info">Información</TabsTrigger>
-              <TabsTrigger value="plazas">Plazas disponibles</TabsTrigger>
-              <TabsTrigger value="anuncios">
-                Anuncios
-                {anuncios.length > 0 && (
-                  <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600 font-medium">
-                    {anuncios.length}
-                  </span>
-                )}
+              <TabsTrigger value="info" className="flex items-center gap-1.5">
+                <InfoIcon className="h-4 w-4" />
+                <span>Información</span>
+              </TabsTrigger>
+              <TabsTrigger value="plan" className="flex items-center gap-1.5">
+                <Layout className="h-4 w-4" />
+                <span>Plano y Reservas</span>
+              </TabsTrigger>
+              <TabsTrigger value="reservation" className="flex items-center gap-1.5">
+                <CalendarIcon className="h-4 w-4" />
+                <span>Reservar</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           <div className="p-4">
+            {/* SECCIÓN DE INFORMACIÓN */}
             <TabsContent value="info" className="m-0">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
@@ -135,123 +147,37 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <h3 className="font-medium mb-2">Plantas del Parking</h3>
-                  {parking.plantas && parking.plantas.length > 0 ? (
-                    <div className="space-y-3">
-                      {parking.plantas.map(planta => (
-                        <div key={planta.id} className="border rounded-md p-3">
-                          <h4 className="font-medium">Planta {planta.numero}</h4>
-                          <p className="text-sm text-slate-500">
-                            {planta.plazas.length} plazas en total
-                          </p>
-                        </div>
-                      ))}
+                <div className="mt-6">
+                  <h3 className="font-medium mb-3">Anuncios</h3>
+                  {loadingAnuncios ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Cargando anuncios...</span>
                     </div>
-                  ) : (
-                    <p className="text-sm text-slate-500">No hay información de plantas disponible</p>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="plazas" className="m-0">
-              {showReservationForm ? (
-                <ReservationForm
-                  parkingId={parking.id}
-                  onCancel={handleCancelReservation}
-                  plantas={parking.plantas}
-                />
-              ) : (
-                <div className="space-y-4">
-                  <h3 className="font-medium">Plazas Disponibles</h3>
-                  {parking.plantas?.some(planta =>
-                    planta.plazas?.some(plaza => plaza.estado === 'Libre' && plaza.reservable)
-                  ) ? (
-                      <div>
-                        {parking.plantas.map(planta => {
-                          const plazasLibres = planta.plazas.filter(
-                            plaza => plaza.estado === 'Libre' && plaza.reservable
-                          )
-
-                          if (plazasLibres.length === 0) return null
-
-                          return (
-                            <div key={planta.id} className="mb-4">
-                              <h4 className="text-sm font-medium mb-2">Planta {planta.numero}</h4>
-                              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                                {plazasLibres.map(plaza => (
-                                  <div
-                                    key={plaza.id}
-                                    className="border rounded-md p-3 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
-                                  >
-                                    <div className="flex items-center mb-1">
-                                      <CarIcon className="h-4 w-4 mr-1" />
-                                      <span className="font-medium">Plaza {plaza.numero}</span>
-                                    </div>
-                                    <div className="text-xs text-slate-500">{plaza.tipo}</div>
-                                    <div className="text-xs font-medium mt-1">{plaza.precioHora}€/hora</div>
-                                  </div>
-                                ))}
+                  ) : anuncios.length > 0 ? (
+                    <div className="space-y-3">
+                      {anuncios.map(anuncio => (
+                        <Card key={anuncio.id} className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-2.5">
+                              <div className="mt-0.5">
+                                <BellIcon className="h-5 w-5 text-blue-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm">{anuncio.contenido}</p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {new Date(anuncio.created_at).toLocaleDateString('es-ES', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </p>
                               </div>
                             </div>
-                          )
-                        })}
-
-                        <Button
-                          className="mt-4"
-                          onClick={handleMakeReservation}
-                        >
-                          <CalendarIcon className="h-4 w-4 mr-2" />
-                        Hacer una reserva
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="bg-amber-50 p-4 rounded-md">
-                        <p className="text-amber-600">
-                        No hay plazas disponibles para reservar en este momento.
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="anuncios" className="m-0">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">Anuncios</h3>
-                  {loadingAnuncios && (
-                    <div className="flex items-center text-sm text-slate-500">
-                      <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      Cargando...
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  {anuncios.length > 0 ? (
-                    anuncios.map(anuncio => (
-                      <Card key={anuncio.id} className="overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-2.5">
-                            <div className="mt-0.5">
-                              <BellIcon className="h-5 w-5 text-blue-500" />
-                            </div>
-                            <div>
-                              <p className="text-sm">{anuncio.contenido}</p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {new Date(anuncio.created_at).toLocaleDateString('es-ES', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
                   ) : (
                     <Card>
                       <CardContent className="p-4">
@@ -263,6 +189,30 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
                   )}
                 </div>
               </div>
+            </TabsContent>
+
+            {/* SECCIÓN DEL PLANO Y RESERVAS */}
+            <TabsContent value="plan" className="m-0">
+              <ParkingReservationFlow
+                parking={parking}
+                onCancel={() => setActiveTab('info')}
+              />
+            </TabsContent>
+
+            {/* SECCIÓN DE FORMULARIO DE RESERVA */}
+            <TabsContent value="reservation" className="m-0">
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <h3 className="font-medium text-blue-800 mb-1">Reserva una plaza en {parking.nombre}</h3>
+                <p className="text-sm text-blue-700">
+                  Completa el formulario para reservar una plaza en este parking.
+                </p>
+              </div>
+
+              <ParkingReservationFlow
+                parking={parking}
+                onCancel={() => setActiveTab('info')}
+                skipPlano={true}
+              />
             </TabsContent>
           </div>
         </Tabs>

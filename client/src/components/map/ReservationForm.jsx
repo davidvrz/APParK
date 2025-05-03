@@ -23,10 +23,10 @@ import {
 import { CalendarIcon, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '@/config'
 
-const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
+const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId }) => {
   const [form, setForm] = useState({
     vehicleId: '',
-    plazaId: '',
+    plazaId: preselectedPlazaId ? String(preselectedPlazaId) : '',
     startTime: '',
     endTime: ''
   })
@@ -38,11 +38,13 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
   const { vehiculos, loading: loadingVehiculos } = useVehiculos()
   const { crearReserva, error: reservaError, clearError } = useReservas()
 
-  // Plazas filtradas por tipo de vehículo
+  // Plazas filtradas por tipo de vehículo o la plaza preseleccionada
   const plazasDisponibles = plantas.flatMap(planta =>
     planta.plazas
       .filter(plaza =>
-        plaza.estado === 'Libre' &&
+        preselectedPlazaId ?
+          String(plaza.id) === String(preselectedPlazaId) :
+          plaza.estado === 'Libre' &&
         plaza.reservable &&
         (!selectedTipoVehiculo || plaza.tipo === selectedTipoVehiculo)
       )
@@ -67,8 +69,10 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
     const vehiculo = vehiculos.find(v => String(v.id) === value)
     setSelectedTipoVehiculo(vehiculo ? vehiculo.tipo : null)
 
-    // Limpiar plaza seleccionada si cambia el tipo de vehículo
-    setForm(prev => ({ ...prev, plazaId: '' }))
+    // Si no hay plaza preseleccionada, limpiar la selección
+    if (!preselectedPlazaId) {
+      setForm(prev => ({ ...prev, plazaId: '' }))
+    }
 
     if (errors.vehicleId) setErrors(prev => ({ ...prev, vehicleId: undefined }))
   }
@@ -103,6 +107,16 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
       const diffAhead = (start - now) / 60000
       if (diffAhead < RESERVA_ANTICIPACION_MIN) {
         errs.ahead = `La reserva debe hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
+      }
+    }
+
+    // Verificar compatibilidad de vehículo con plaza (solo si ambos están seleccionados)
+    if (form.vehicleId && form.plazaId && !errs.vehicleId && !errs.plazaId) {
+      const vehiculo = vehiculos.find(v => String(v.id) === form.vehicleId)
+      const plaza = plazasDisponibles.find(p => String(p.id) === form.plazaId)
+
+      if (vehiculo && plaza && vehiculo.tipo !== plaza.tipo) {
+        errs.compatibility = `Esta plaza de tipo ${plaza.tipo} no es compatible con tu vehículo de tipo ${vehiculo.tipo}`
       }
     }
 
@@ -152,6 +166,20 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
     }))
   }, [])
 
+  // Si hay un vehículo compatible con la plaza preseleccionada, seleccionarlo automáticamente
+  useEffect(() => {
+    if (preselectedPlazaId && vehiculos.length > 0 && !form.vehicleId) {
+      const plaza = plazasDisponibles.find(p => String(p.id) === String(preselectedPlazaId))
+
+      if (plaza) {
+        const compatibleVehicle = vehiculos.find(v => v.tipo === plaza.tipo)
+        if (compatibleVehicle) {
+          handleSelectVehicle(String(compatibleVehicle.id))
+        }
+      }
+    }
+  }, [preselectedPlazaId, vehiculos, plazasDisponibles, form.vehicleId])
+
   if (loadingVehiculos) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -186,14 +214,21 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Realizar Reserva</CardTitle>
-        <CardDescription>Completa el formulario para reservar una plaza</CardDescription>
-      </CardHeader>
+    <div className="w-full">
+      {preselectedPlazaId && plazasDisponibles.length > 0 && plazasDisponibles[0].tipo && (
+        <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800">
+          <AlertTitle className="font-medium">
+            Has seleccionado la Plaza {plazasDisponibles[0].numero}
+          </AlertTitle>
+          <AlertDescription>
+            Esta plaza es de tipo <strong>{plazasDisponibles[0].tipo}</strong>. Por favor, selecciona
+            un vehículo compatible para completar la reserva.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6">
+        <div className="space-y-6">
           {/* Mensaje de error general */}
           {(errors.server || reservaError) && (
             <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-200">
@@ -201,6 +236,17 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
                 {errors.server || reservaError}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error de compatibilidad */}
+          {errors.compatibility && (
+            <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error de compatibilidad</AlertTitle>
+              <AlertDescription>
+                {errors.compatibility}
               </AlertDescription>
             </Alert>
           )}
@@ -232,7 +278,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
               <SelectContent>
                 {vehiculos.map(v => (
                   <SelectItem key={v.id} value={String(v.id)}>
-                    {v.matricula} — {v.tipo}
+                    {v.modelo} — {v.matricula}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -247,10 +293,10 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
             <Select
               value={form.plazaId}
               onValueChange={handleSelectPlaza}
-              disabled={submitting || !selectedTipoVehiculo}
+              disabled={submitting || (!selectedTipoVehiculo && !preselectedPlazaId)}
             >
               <SelectTrigger className={`w-full ${errors.plazaId ? "border-red-500" : ""}`}>
-                <SelectValue placeholder={selectedTipoVehiculo ? "Selecciona una plaza" : "Selecciona primero un vehículo"} />
+                <SelectValue placeholder={selectedTipoVehiculo || preselectedPlazaId ? "Selecciona una plaza" : "Selecciona primero un vehículo"} />
               </SelectTrigger>
               <SelectContent>
                 {plazasDisponibles.length > 0 ? (
@@ -316,9 +362,9 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
               {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
             </div>
           </div>
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex justify-end space-x-2 border-t p-4">
+        <div className="flex justify-end space-x-2 border-t mt-6 pt-4">
           <Button
             type="button"
             variant="outline"
@@ -349,9 +395,9 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
               </>
             )}
           </Button>
-        </CardFooter>
+        </div>
       </form>
-    </Card>
+    </div>
   )
 }
 
