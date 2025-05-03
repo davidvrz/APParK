@@ -11,6 +11,14 @@ const Parking = sequelize.define('Parking', {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+  latitud: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: false
+  },
+  longitud: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: false
+  },
   capacidad: {
     type: DataTypes.INTEGER,
     allowNull: false

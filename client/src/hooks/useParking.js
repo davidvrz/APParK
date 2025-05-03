@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   getAllParkings,
   getParkingById,
@@ -16,7 +16,7 @@ export const useParking = (parkingId = null) => {
 
   const clearError = () => setError(null)
 
-  const fetchParkings = async () => {
+  const fetchParkings = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
@@ -28,9 +28,9 @@ export const useParking = (parkingId = null) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchParkingById = async (id) => {
+  const fetchParkingById = useCallback(async (id) => {
     if (!id) return null
     clearError()
     setLoading(true)
@@ -45,9 +45,9 @@ export const useParking = (parkingId = null) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchAnuncios = async (id) => {
+  const fetchAnuncios =  useCallback(async (id) => {
     if (!id) return []
     try {
       const { anuncios } = await getAnunciosByParkingId(id)
@@ -57,7 +57,7 @@ export const useParking = (parkingId = null) => {
       console.error('Error al obtener anuncios del parking:', err)
       return []
     }
-  }
+  }, [])
 
   const fetchPlantaById = async (parkingId, plantaId) => {
     clearError()
@@ -88,7 +88,7 @@ export const useParking = (parkingId = null) => {
     if (parkingId) {
       fetchParkingById(parkingId)
     }
-  }, [parkingId])
+  }, [parkingId, fetchParkingById])
 
   return {
     parkings,

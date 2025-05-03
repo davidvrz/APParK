@@ -120,5 +120,5 @@ export default {
   plugins: [
     scrollbarHide,
     animatePlugin ]
-	
+
 }

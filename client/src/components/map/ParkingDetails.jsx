@@ -11,13 +11,13 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
   const [showReservationForm, setShowReservationForm] = useState(false)
   const [loadingAnuncios, setLoadingAnuncios] = useState(false)
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
-  
+
   useEffect(() => {
     // Fetch complete parking details when a parking is selected
     if (parkingPreview?.id) {
       fetchParkingById(parkingPreview.id)
     }
-  }, [parkingPreview?.id])
+  }, [parkingPreview?.id, fetchParkingById])
 
   // Cargar anuncios cuando se selecciona la pestaña de anuncios
   useEffect(() => {
@@ -25,7 +25,7 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
       setLoadingAnuncios(true)
       fetchAnuncios(parking.id).finally(() => setLoadingAnuncios(false))
     }
-  }, [activeTab, parking?.id])
+  }, [activeTab, parking?.id, loadingAnuncios, fetchAnuncios])
 
   const handleMakeReservation = () => {
     setActiveTab('plazas')
@@ -76,16 +76,16 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
     <Card className="h-full w-full overflow-auto">
       <CardHeader className="bg-slate-50 sticky top-0 z-10">
         <div className="flex items-start">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="mr-2 -ml-2 h-8 w-8" 
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2 -ml-2 h-8 w-8"
             onClick={onClose}
             title="Volver al mapa"
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </Button>
-          
+
           <div>
             <CardTitle className="text-xl">{parking.nombre}</CardTitle>
             <CardDescription className="flex items-center mt-1">
@@ -157,7 +157,7 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
 
             <TabsContent value="plazas" className="m-0">
               {showReservationForm ? (
-                <ReservationForm 
+                <ReservationForm
                   parkingId={parking.id}
                   onCancel={handleCancelReservation}
                   plantas={parking.plantas}
@@ -165,54 +165,54 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
               ) : (
                 <div className="space-y-4">
                   <h3 className="font-medium">Plazas Disponibles</h3>
-                  {parking.plantas?.some(planta => 
+                  {parking.plantas?.some(planta =>
                     planta.plazas?.some(plaza => plaza.estado === 'Libre' && plaza.reservable)
                   ) ? (
-                    <div>
-                      {parking.plantas.map(planta => {
-                        const plazasLibres = planta.plazas.filter(
-                          plaza => plaza.estado === 'Libre' && plaza.reservable
-                        )
-                        
-                        if (plazasLibres.length === 0) return null
-                        
-                        return (
-                          <div key={planta.id} className="mb-4">
-                            <h4 className="text-sm font-medium mb-2">Planta {planta.numero}</h4>
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                              {plazasLibres.map(plaza => (
-                                <div 
-                                  key={plaza.id} 
-                                  className="border rounded-md p-3 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
-                                >
-                                  <div className="flex items-center mb-1">
-                                    <CarIcon className="h-4 w-4 mr-1" />
-                                    <span className="font-medium">Plaza {plaza.numero}</span>
+                      <div>
+                        {parking.plantas.map(planta => {
+                          const plazasLibres = planta.plazas.filter(
+                            plaza => plaza.estado === 'Libre' && plaza.reservable
+                          )
+
+                          if (plazasLibres.length === 0) return null
+
+                          return (
+                            <div key={planta.id} className="mb-4">
+                              <h4 className="text-sm font-medium mb-2">Planta {planta.numero}</h4>
+                              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                {plazasLibres.map(plaza => (
+                                  <div
+                                    key={plaza.id}
+                                    className="border rounded-md p-3 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  >
+                                    <div className="flex items-center mb-1">
+                                      <CarIcon className="h-4 w-4 mr-1" />
+                                      <span className="font-medium">Plaza {plaza.numero}</span>
+                                    </div>
+                                    <div className="text-xs text-slate-500">{plaza.tipo}</div>
+                                    <div className="text-xs font-medium mt-1">{plaza.precioHora}€/hora</div>
                                   </div>
-                                  <div className="text-xs text-slate-500">{plaza.tipo}</div>
-                                  <div className="text-xs font-medium mt-1">{plaza.precioHora}€/hora</div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
-                      
-                      <Button 
-                        className="mt-4" 
-                        onClick={handleMakeReservation}
-                      >
-                        <CalendarIcon className="h-4 w-4 mr-2" />
+                          )
+                        })}
+
+                        <Button
+                          className="mt-4"
+                          onClick={handleMakeReservation}
+                        >
+                          <CalendarIcon className="h-4 w-4 mr-2" />
                         Hacer una reserva
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="bg-amber-50 p-4 rounded-md">
-                      <p className="text-amber-600">
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 p-4 rounded-md">
+                        <p className="text-amber-600">
                         No hay plazas disponibles para reservar en este momento.
-                      </p>
-                    </div>
-                  )}
+                        </p>
+                      </div>
+                    )}
                 </div>
               )}
             </TabsContent>
@@ -228,7 +228,7 @@ const ParkingDetails = ({ parking: parkingPreview, onClose }) => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="space-y-3">
                   {anuncios.length > 0 ? (
                     anuncios.map(anuncio => (

@@ -66,7 +66,7 @@ axiosInstance.interceptors.response.use(
       // Para errores de validación que devuelven detalles
       error.message = error.response.data.details.map(detail => detail.message).join(', ')
     }
-    
+
     return Promise.reject(error)
   }
 )

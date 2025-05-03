@@ -11,7 +11,7 @@ const Map = () => {
 
   useEffect(() => {
     fetchParkings()
-  }, [])
+  }, [fetchParkings])
 
   const handleParkingSelect = (parking) => {
     setSelectedParking(parking)
@@ -47,16 +47,16 @@ const Map = () => {
 
       <div className="flex-grow relative">
         {isDetailExpanded && selectedParking ? (
-          <ParkingDetails 
-            parking={selectedParking} 
+          <ParkingDetails
+            parking={selectedParking}
             onClose={handleCloseDetails}
           />
         ) : (
           <Card className="h-full">
             <CardContent className="p-0 h-full">
-              <ParkingMap 
-                parkings={parkings} 
-                onSelectParking={handleParkingSelect} 
+              <ParkingMap
+                parkings={parkings}
+                onSelectParking={handleParkingSelect}
               />
             </CardContent>
           </Card>

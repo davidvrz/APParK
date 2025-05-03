@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { addVehicle, updateVehicle, deleteVehicle } from '@/api/vehicle'
 import { getUserVehicles } from '@/api/profile'
 
@@ -9,11 +9,10 @@ export const useVehiculos = () => {
 
   const clearError = () => setError(null)
 
-  const fetchVehiculos = async () => {
+  const fetchVehiculos = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
-      // Usar la nueva función dedicada para obtener vehículos
       const response = await getUserVehicles()
       setVehiculos(response?.vehicles || [])
     } catch (err) {
@@ -22,7 +21,7 @@ export const useVehiculos = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const añadirVehiculo = async (data) => {
     clearError()
@@ -65,7 +64,7 @@ export const useVehiculos = () => {
 
   useEffect(() => {
     fetchVehiculos()
-  }, [])
+  }, [fetchVehiculos])
 
   return {
     vehiculos,
@@ -75,6 +74,6 @@ export const useVehiculos = () => {
     añadirVehiculo,
     actualizarVehiculo,
     eliminarVehiculo,
-    fetchVehiculos,
+    fetchVehiculos
   }
 }

@@ -1,100 +1,100 @@
-import { useState } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { Button } from "@/components/ui/Button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert";
-import { Plus, Car, Loader2 } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/Dialog";
-import { useVehiculos } from "@/hooks/useVehiculos";
-import VehicleCard from "@/components/vehicle/VehicleCard";
-import VehicleForm from "@/components/vehicle/VehicleForm";
+import { useState } from "react"
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
+import { Button } from "@/components/ui/Button"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert"
+import { Plus, Car, Loader2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/Dialog"
+import { useVehiculos } from "@/hooks/useVehiculos"
+import VehicleCard from "@/components/vehicle/VehicleCard"
+import VehicleForm from "@/components/vehicle/VehicleForm"
 
 export default function Vehiculos() {
-  const { 
-    vehiculos, 
-    loading, 
-    error, 
-    añadirVehiculo, 
-    actualizarVehiculo, 
-    eliminarVehiculo 
-  } = useVehiculos();
+  const {
+    vehiculos,
+    loading,
+    error,
+    añadirVehiculo,
+    actualizarVehiculo,
+    eliminarVehiculo
+  } = useVehiculos()
 
   // Estados para gestionar los diálogos
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [formError, setFormError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [formError, setFormError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
 
   // Abrir diálogo para añadir vehículo
   const handleAddClick = () => {
-    setFormError(null);
-    setIsAddDialogOpen(true);
-  };
+    setFormError(null)
+    setIsAddDialogOpen(true)
+  }
 
   // Abrir diálogo para editar vehículo
   const handleEditClick = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setFormError(null);
-    setIsEditDialogOpen(true);
-  };
+    setSelectedVehicle(vehicle)
+    setFormError(null)
+    setIsEditDialogOpen(true)
+  }
 
   // Abrir diálogo para eliminar vehículo
   const handleDeleteClick = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setFormError(null);
-    setIsDeleteDialogOpen(true);
-  };
+    setSelectedVehicle(vehicle)
+    setFormError(null)
+    setIsDeleteDialogOpen(true)
+  }
 
   // Guardar nuevo vehículo
   const handleAddSubmit = async (formData) => {
-    setSubmitting(true);
+    setSubmitting(true)
     try {
-      await añadirVehiculo(formData);
-      setIsAddDialogOpen(false);
+      await añadirVehiculo(formData)
+      setIsAddDialogOpen(false)
     } catch (err) {
-      setFormError(err.message || "Error al añadir el vehículo");
+      setFormError(err.message || "Error al añadir el vehículo")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   // Actualizar vehículo existente
   const handleEditSubmit = async (formData) => {
-    if (!selectedVehicle) return;
-    
-    setSubmitting(true);
+    if (!selectedVehicle) return
+
+    setSubmitting(true)
     try {
-      await actualizarVehiculo(selectedVehicle.id, formData);
-      setIsEditDialogOpen(false);
+      await actualizarVehiculo(selectedVehicle.id, formData)
+      setIsEditDialogOpen(false)
     } catch (err) {
-      setFormError(err.message || "Error al actualizar el vehículo");
+      setFormError(err.message || "Error al actualizar el vehículo")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   // Eliminar vehículo
   const handleDelete = async () => {
-    if (!selectedVehicle) return;
-    
-    setSubmitting(true);
+    if (!selectedVehicle) return
+
+    setSubmitting(true)
     try {
-      await eliminarVehiculo(selectedVehicle.id);
-      setIsDeleteDialogOpen(false);
+      await eliminarVehiculo(selectedVehicle.id)
+      setIsDeleteDialogOpen(false)
     } catch (err) {
-      setFormError(err.message || "Error al eliminar el vehículo");
+      setFormError(err.message || "Error al eliminar el vehículo")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <LayoutGroup>
@@ -132,9 +132,9 @@ export default function Vehiculos() {
               <EmptyVehiclesState onAddVehicle={handleAddClick} />
             ) : (
               vehiculos.map((vehicle, index) => (
-                <VehicleCard 
+                <VehicleCard
                   key={vehicle.id}
-                  vehicle={vehicle} 
+                  vehicle={vehicle}
                   onEdit={handleEditClick}
                   onDelete={handleDeleteClick}
                   index={index}
@@ -153,10 +153,10 @@ export default function Vehiculos() {
                 Añade un nuevo vehículo a tu cuenta
               </DialogDescription>
             </DialogHeader>
-            
-            <VehicleForm 
-              onSubmit={handleAddSubmit} 
-              isSubmitting={submitting} 
+
+            <VehicleForm
+              onSubmit={handleAddSubmit}
+              isSubmitting={submitting}
               error={formError}
             />
           </DialogContent>
@@ -171,11 +171,11 @@ export default function Vehiculos() {
                 Modifica los datos de tu vehículo
               </DialogDescription>
             </DialogHeader>
-            
-            <VehicleForm 
+
+            <VehicleForm
               vehicle={selectedVehicle}
-              onSubmit={handleEditSubmit} 
-              isSubmitting={submitting} 
+              onSubmit={handleEditSubmit}
+              isSubmitting={submitting}
               error={formError}
             />
           </DialogContent>
@@ -213,17 +213,17 @@ export default function Vehiculos() {
             )}
 
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
                 disabled={submitting}
               >
                 Cancelar
               </Button>
-              <Button 
-                type="button" 
-                variant="destructive" 
+              <Button
+                type="button"
+                variant="destructive"
                 onClick={handleDelete}
                 disabled={submitting}
               >
@@ -239,7 +239,7 @@ export default function Vehiculos() {
         </Dialog>
       </div>
     </LayoutGroup>
-  );
+  )
 }
 
 /**
@@ -264,7 +264,7 @@ function EmptyVehiclesState({ onAddVehicle }) {
         Añadir Vehículo
       </Button>
     </motion.div>
-  );
+  )
 }
 
 /**
@@ -272,9 +272,9 @@ function EmptyVehiclesState({ onAddVehicle }) {
  */
 function getVehicleTypeDisplay(tipo) {
   switch(tipo) {
-    case 'Coche': return 'Turismo Standard';
-    case 'Moto': return 'Motocicleta';
-    case 'Especial': return 'Vehículo Especial';
-    default: return 'Vehículo';
+  case 'Coche': return 'Turismo Standard'
+  case 'Moto': return 'Motocicleta'
+  case 'Especial': return 'Vehículo Especial'
+  default: return 'Vehículo'
   }
 }

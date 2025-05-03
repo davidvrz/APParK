@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [expandedReservation, setExpandedReservation] = useState(null)
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0)
   const isExpanded = !!expandedReservation
-  
+
   // Detectar ancho de pantalla para vista responsive
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth)
@@ -29,9 +29,9 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <ReservasActivas 
-            onExpandReservation={setExpandedReservation} 
-            expandedReservationId={expandedReservation} 
+          <ReservasActivas
+            onExpandReservation={setExpandedReservation}
+            expandedReservationId={expandedReservation}
           />
         </motion.div>
 

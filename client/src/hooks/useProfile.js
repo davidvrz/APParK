@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getProfile, updateProfile, deleteAccount } from '@/api/profile'
 
 export const useProfile = () => {
@@ -8,7 +8,7 @@ export const useProfile = () => {
 
   const clearError = () => setError(null)
 
-  const refetchPerfil = async () => {
+  const refetchPerfil = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
@@ -20,7 +20,7 @@ export const useProfile = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const actualizarPerfil = async (data) => {
     clearError()
@@ -49,7 +49,7 @@ export const useProfile = () => {
 
   useEffect(() => {
     refetchPerfil()
-  }, [])
+  }, [refetchPerfil])
 
   return {
     perfil,

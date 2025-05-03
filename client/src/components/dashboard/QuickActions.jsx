@@ -1,12 +1,12 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/Button";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/Button"
+import { Link } from "react-router-dom"
 
 // Importamos las ilustraciones
-import mapIllustration from "@/assets/Paper map-cuate.svg";
-import timeIllustration from "@/assets/time flies-rafiki.svg";
-import carIllustration from "@/assets/By my car-rafiki.svg";
-import cityIllustration from "@/assets/City driver-rafiki.svg";
+import mapIllustration from "@/assets/Paper map-cuate.svg"
+import timeIllustration from "@/assets/time flies-rafiki.svg"
+import carIllustration from "@/assets/By my car-rafiki.svg"
+import cityIllustration from "@/assets/City driver-rafiki.svg"
 
 export function QuickActions() {
   const actions = [
@@ -30,7 +30,7 @@ export function QuickActions() {
       label: "Mi Historial",
       link: "/parking/history",
     },
-  ];
+  ]
 
   return (
     <div className="grid grid-cols-2 gap-5 h-full">
@@ -40,7 +40,7 @@ export function QuickActions() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          whileHover={{ 
+          whileHover={{
             scale: 1.06,
             boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08)"
           }}
@@ -52,10 +52,10 @@ export function QuickActions() {
               className="w-full h-full flex flex-col items-center justify-between p-4 text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               <div className="flex-grow flex items-center justify-center w-full mb-2 p-2 overflow-hidden">
-                <img 
-                  src={action.image} 
-                  alt={action.label} 
-                  className="h-36 w-36 object-contain" 
+                <img
+                  src={action.image}
+                  alt={action.label}
+                  className="h-36 w-36 object-contain"
                 />
               </div>
               <div className="text-center">
@@ -66,5 +66,5 @@ export function QuickActions() {
         </motion.div>
       ))}
     </div>
-  );
+  )
 }

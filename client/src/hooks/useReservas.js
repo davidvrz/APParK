@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   crearReserva,
   getReservasActivas,
@@ -17,7 +17,7 @@ export const useReservas = () => {
 
   const clearError = () => setError(null)
 
-  const refetchReservas = async () => {
+  const refetchReservas = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
@@ -29,9 +29,9 @@ export const useReservas = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const refetchHistorial = async () => {
+  const refetchHistorial = useCallback(async () => {
     setLoadingHistorial(true)
     clearError()
     try {
@@ -43,7 +43,7 @@ export const useReservas = () => {
     } finally {
       setLoadingHistorial(false)
     }
-  }
+  }, [])
 
   const crear = async (data) => {
     clearError()
@@ -100,7 +100,7 @@ export const useReservas = () => {
   useEffect(() => {
     refetchReservas()
     refetchHistorial() // Cargamos también el historial al inicializar el componente
-  }, [])
+  }, [refetchReservas, refetchHistorial])
 
   return {
     reservas,

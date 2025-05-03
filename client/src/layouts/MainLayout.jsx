@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import HeaderBar from "@/components/layout/HeaderBar";
+import { Outlet } from "react-router-dom"
+import HeaderBar from "@/components/layout/HeaderBar"
 
 export default function MainLayout() {
   return (
@@ -11,5 +11,5 @@ export default function MainLayout() {
         </div>
       </main>
     </div>
-  );
+  )
 }

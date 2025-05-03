@@ -1,52 +1,47 @@
-import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { useReservas } from "@/hooks/useReservas";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { useState, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card"
+import { Button } from "@/components/ui/Button"
+import { Badge } from "@/components/ui/Badge"
+import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import { useReservas } from "@/hooks/useReservas"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 // Funciones para formatear fechas y horas
 function formatTime(dateString) {
-  if (!dateString) return "N/D";
-  return format(new Date(dateString), "HH:mm", { locale: es });
-}
-
-function formatDate(dateString) {
-  if (!dateString) return "N/D";
-  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es });
+  if (!dateString) return "N/D"
+  return format(new Date(dateString), "HH:mm", { locale: es })
 }
 
 function formatShortDate(dateString) {
-  if (!dateString) return "N/D";
-  return format(new Date(dateString), "d MMM yyyy", { locale: es });
+  if (!dateString) return "N/D"
+  return format(new Date(dateString), "d MMM yyyy", { locale: es })
 }
 
 function HistorialReservas() {
-  const { historial = [] } = useReservas();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const constraintsRef = useRef(null);
+  const { historial = [] } = useReservas()
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const constraintsRef = useRef(null)
 
   const nextCard = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % historial.length);
-  };
+    setDirection(1)
+    setCurrentIndex((prev) => (prev + 1) % historial.length)
+  }
 
   const prevCard = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + historial.length) % historial.length);
-  };
+    setDirection(-1)
+    setCurrentIndex((prev) => (prev - 1 + historial.length) % historial.length)
+  }
 
   const handleDragEnd = (event, info) => {
     if (info.offset.x < -100) {
-      nextCard();
+      nextCard()
     } else if (info.offset.x > 100) {
-      prevCard();
+      prevCard()
     }
-  };
+  }
 
   const variants = {
     enter: (direction) => ({
@@ -76,9 +71,9 @@ function HistorialReservas() {
         duration: 0.4,
       },
     }),
-  };
+  }
 
-  const current = historial[currentIndex];
+  const current = historial[currentIndex]
 
   return (
     <Card className="min-h-[500px] h-full overflow-hidden bg-white border-2 border-blue-200 dark:border-blue-900/30 shadow-sm dark:bg-gray-800/60">
@@ -189,7 +184,7 @@ function HistorialReservas() {
                           <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex-1">
                             <p className="text-sm text-gray-500 font-medium mb-1">Ubicación</p>
                             <div className="text-sm font-normal">
-                              Plaza {current.plaza?.numero || "N/D"} · 
+                              Plaza {current.plaza?.numero || "N/D"} ·
                               Planta {current.planta?.numero || current.plaza?.planta?.numero || "N/D"}
                             </div>
                           </div>
@@ -227,8 +222,8 @@ function HistorialReservas() {
                   <button
                     key={index}
                     onClick={() => {
-                      setDirection(index > currentIndex ? 1 : -1);
-                      setCurrentIndex(index);
+                      setDirection(index > currentIndex ? 1 : -1)
+                      setCurrentIndex(index)
                     }}
                     className={`h-2 w-${index === currentIndex ? '6' : '2'} rounded-full transition-all duration-300 ${
                       index === currentIndex ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400"
@@ -242,7 +237,7 @@ function HistorialReservas() {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export default HistorialReservas;
+export default HistorialReservas

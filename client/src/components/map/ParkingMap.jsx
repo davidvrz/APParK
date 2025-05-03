@@ -20,19 +20,19 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
     // 1. Either store lat/lng in your parking model
     // 2. Or use a geocoding service (Google Maps, Mapbox, etc.) to convert addresses to coordinates
     // For this example, we'll create random locations around Spain
-    
+
     // Create deterministic "random" positions based on parking ID for demo
     const id = parking.id || 0
     const latOffset = (id * 0.05) % 2 - 1
     const lngOffset = (id * 0.07) % 2 - 1
-    
+
     return [defaultCenter[0] + latOffset, defaultCenter[1] + lngOffset]
   }
 
   return (
-    <MapContainer 
-      center={defaultCenter} 
-      zoom={6} 
+    <MapContainer
+      center={defaultCenter}
+      zoom={6}
       style={{ height: '100%', width: '100%' }}
       whenCreated={(mapInstance) => {
         // Optional: store map instance in state if needed
@@ -42,10 +42,10 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      
+
       {parkings.map((parking) => {
         const position = getGeocodeForParking(parking)
-        
+
         return (
           <Marker
             key={parking.id}
@@ -58,7 +58,7 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
               <div>
                 <h3 className="font-bold">{parking.nombre}</h3>
                 <p>{parking.ubicacion}</p>
-                <button 
+                <button
                   className="text-blue-600 hover:underline mt-2"
                   onClick={(e) => {
                     e.preventDefault()

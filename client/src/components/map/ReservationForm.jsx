@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -37,13 +37,13 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
 
   const { vehiculos, loading: loadingVehiculos } = useVehiculos()
   const { crearReserva, error: reservaError, clearError } = useReservas()
-  
+
   // Plazas filtradas por tipo de vehículo
-  const plazasDisponibles = plantas.flatMap(planta => 
+  const plazasDisponibles = plantas.flatMap(planta =>
     planta.plazas
-      .filter(plaza => 
-        plaza.estado === 'Libre' && 
-        plaza.reservable && 
+      .filter(plaza =>
+        plaza.estado === 'Libre' &&
+        plaza.reservable &&
         (!selectedTipoVehiculo || plaza.tipo === selectedTipoVehiculo)
       )
       .map(plaza => ({
@@ -62,14 +62,14 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
 
   const handleSelectVehicle = (value) => {
     setForm(prev => ({ ...prev, vehicleId: value }))
-    
+
     // Actualizar tipo de vehículo para filtrar plazas
     const vehiculo = vehiculos.find(v => String(v.id) === value)
     setSelectedTipoVehiculo(vehiculo ? vehiculo.tipo : null)
-    
+
     // Limpiar plaza seleccionada si cambia el tipo de vehículo
     setForm(prev => ({ ...prev, plazaId: '' }))
-    
+
     if (errors.vehicleId) setErrors(prev => ({ ...prev, vehicleId: undefined }))
   }
 
@@ -93,12 +93,12 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
       if (end <= start) {
         errs.endTime = "La fecha de fin debe ser posterior a la de inicio"
       }
-      
+
       const diffMin = (end - start) / 60000
       if (diffMin < RESERVA_TIEMPO_MIN || diffMin > RESERVA_TIEMPO_MAX) {
         errs.duration = `La reserva debe durar entre ${RESERVA_TIEMPO_MIN} y ${RESERVA_TIEMPO_MAX} minutos`
       }
-      
+
       const now = new Date()
       const diffAhead = (start - now) / 60000
       if (diffAhead < RESERVA_ANTICIPACION_MIN) {
@@ -115,9 +115,9 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
     e.preventDefault()
     clearError()
     setSuccess(false)
-    
+
     if (!validate()) return
-    
+
     setSubmitting(true)
     try {
       await crearReserva({
@@ -126,7 +126,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
         startTime: new Date(form.startTime).toISOString(),
         endTime: new Date(form.endTime).toISOString()
       })
-      
+
       setSuccess(true)
       setTimeout(() => {
         onCancel()
@@ -144,7 +144,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
     const now = new Date()
     const startDefault = new Date(now.getTime() + RESERVA_ANTICIPACION_MIN * 60000)
     const endDefault = new Date(startDefault.getTime() + 60 * 60000) // +1 hora por defecto
-    
+
     setForm(prev => ({
       ...prev,
       startTime: startDefault.toISOString().slice(0, 16),
@@ -191,7 +191,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
         <CardTitle>Realizar Reserva</CardTitle>
         <CardDescription>Completa el formulario para reservar una plaza</CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           {/* Mensaje de error general */}
@@ -261,8 +261,8 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
                   ))
                 ) : (
                   <SelectItem value="none" disabled>
-                    {selectedTipoVehiculo 
-                      ? `No hay plazas disponibles para vehículos tipo ${selectedTipoVehiculo}` 
+                    {selectedTipoVehiculo
+                      ? `No hay plazas disponibles para vehículos tipo ${selectedTipoVehiculo}`
                       : "Selecciona primero un vehículo"}
                   </SelectItem>
                 )}
@@ -288,7 +288,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
               />
               {errors.ahead && <p className="text-red-500 text-xs mt-1">{errors.ahead}</p>}
             </div>
-            
+
             <div>
               <Label className={`${errors.endTime || errors.duration ? "text-red-500" : ""}`}>
                 Fin {errors.endTime && `(${errors.endTime})`}
@@ -303,13 +303,13 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
                 min={
                   form.startTime
                     ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60000)
-                        .toISOString().slice(0,16)
+                      .toISOString().slice(0,16)
                     : undefined
                 }
                 max={
                   form.startTime
                     ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60000)
-                        .toISOString().slice(0,16)
+                      .toISOString().slice(0,16)
                     : undefined
                 }
               />
@@ -317,17 +317,17 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel }) => {
             </div>
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex justify-end space-x-2 border-t p-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={submitting || success}
           >
             Cancelar
           </Button>
-          <Button 
+          <Button
             type="submit"
             disabled={submitting || success}
             className="gap-2"

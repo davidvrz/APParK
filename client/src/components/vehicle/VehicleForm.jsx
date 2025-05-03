@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Alert, AlertDescription } from "@/components/ui/Alert";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/Select";
+import { useState, useEffect } from "react"
+import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/Button"
+import { Input } from "@/components/ui/Input"
+import { Label } from "@/components/ui/Label"
+import { Alert, AlertDescription } from "@/components/ui/Alert"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/Select"
 
 /**
  * Componente de formulario para añadir o editar un vehículo.
- * 
+ *
  * @param {Object} vehicle - Vehículo a editar (opcional, si es undefined se trata como nuevo vehículo)
  * @param {Function} onSubmit - Función que se ejecuta al enviar el formulario
  * @param {boolean} isSubmitting - Indica si el formulario está siendo enviado
@@ -25,9 +25,9 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
     matricula: "",
     modelo: "",
     tipo: ""
-  });
-  
-  const [validationErrors, setValidationErrors] = useState({});
+  })
+
+  const [validationErrors, setValidationErrors] = useState({})
 
   // Si se proporciona un vehículo, inicializamos el formulario con sus datos
   useEffect(() => {
@@ -36,54 +36,54 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
         matricula: vehicle.matricula || "",
         modelo: vehicle.modelo || "",
         tipo: vehicle.tipo || ""
-      });
+      })
     }
-  }, [vehicle]);
+  }, [vehicle])
 
   // Maneja cambios en los campos de texto
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+
     // Eliminar el error de validación cuando el usuario edita el campo
     if (validationErrors[name]) {
-      setValidationErrors(prev => ({ ...prev, [name]: undefined }));
+      setValidationErrors(prev => ({ ...prev, [name]: undefined }))
     }
-  };
+  }
 
   // Maneja cambios en el select de tipo
   const handleSelectChange = (value) => {
-    setFormData(prev => ({ ...prev, tipo: value }));
-    
+    setFormData(prev => ({ ...prev, tipo: value }))
+
     if (validationErrors.tipo) {
-      setValidationErrors(prev => ({ ...prev, tipo: undefined }));
+      setValidationErrors(prev => ({ ...prev, tipo: undefined }))
     }
-  };
+  }
 
   // Valida el formulario antes de enviar
   const validateForm = () => {
-    const errors = {};
-    
+    const errors = {}
+
     if (!formData.matricula) {
-      errors.matricula = "La matrícula es obligatoria";
+      errors.matricula = "La matrícula es obligatoria"
     } else if (!formData.matricula.match(/^[A-Z0-9]+$/)) {
-      errors.matricula = "Formato de matrícula inválido. Use solo letras mayúsculas y números";
+      errors.matricula = "Formato de matrícula inválido. Use solo letras mayúsculas y números"
     }
-    
+
     if (!formData.tipo) {
-      errors.tipo = "El tipo de vehículo es obligatorio";
+      errors.tipo = "El tipo de vehículo es obligatorio"
     }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   // Maneja el envío del formulario
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!validateForm()) return
+    onSubmit(formData)
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,8 +127,8 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
         <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500 font-medium" : "font-medium"}>
           Tipo de vehículo {validationErrors.tipo && `(${validationErrors.tipo})`}
         </Label>
-        <Select 
-          value={formData.tipo} 
+        <Select
+          value={formData.tipo}
           onValueChange={handleSelectChange}
           disabled={isSubmitting}
         >
@@ -143,8 +143,8 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
         </Select>
       </div>
 
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         className="w-full font-medium mt-4"
         disabled={isSubmitting}
       >
@@ -156,5 +156,5 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
         ) : vehicle ? "Actualizar Vehículo" : "Guardar Vehículo"}
       </Button>
     </form>
-  );
+  )
 }

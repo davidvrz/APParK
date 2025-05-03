@@ -10,11 +10,11 @@ import { generateParkingToken } from '../libs/jwt.js'
 export const getAllParkings = async (req, res) => {
   try {
     const parkings = await Parking.findAll({
-      attributes: ['id', 'nombre', 'ubicacion']
+      attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud']
     })
 
     const formattedParkings = parkings.map(parking =>
-      pick(parking.get(), ['id', 'nombre', 'ubicacion'])
+      pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud'])
     )
 
     res.status(200).json({ parkings: formattedParkings })

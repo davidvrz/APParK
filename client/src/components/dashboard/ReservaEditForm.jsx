@@ -46,22 +46,22 @@ export default function ReservaEditForm({
   // 1) Inicializar formulario al montar o cambiar reserva
   useEffect(() => {
     if (!reserva) return
-    
+
     // Extraer IDs de vehículo y plaza, teniendo en cuenta diferentes estructuras posibles
-    const vid = reserva.vehicle?.id || reserva.vehiculo_id || reserva.vehicleId;
-    const pid = reserva.plaza?.id || reserva.plaza_id || reserva.plazaId;
-    
+    const vid = reserva.vehicle?.id || reserva.vehiculo_id || reserva.vehicleId
+    const pid = reserva.plaza?.id || reserva.plaza_id || reserva.plazaId
+
     // Convertir a string y asegurar que no sea undefined
-    const vehicleId = vid !== undefined ? String(vid) : "";
-    const plazaId = pid !== undefined ? String(pid) : "";
-    
+    const vehicleId = vid !== undefined ? String(vid) : ""
+    const plazaId = pid !== undefined ? String(pid) : ""
+
     setForm({
       vehicleId,
       plazaId,
       startTime: new Date(reserva.startTime).toISOString().slice(0, 16),
       endTime: new Date(reserva.endTime).toISOString().slice(0, 16),
     })
-    
+
     setErrors({})
     setSuccess(false)
   }, [reserva, vehiculos, plazasDisponibles])
@@ -239,13 +239,13 @@ export default function ReservaEditForm({
             min={
               form.startTime
                 ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60000)
-                    .toISOString().slice(0,16)
+                  .toISOString().slice(0,16)
                 : undefined
             }
             max={
               form.startTime
                 ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60000)
-                    .toISOString().slice(0,16)
+                  .toISOString().slice(0,16)
                 : undefined
             }
           />

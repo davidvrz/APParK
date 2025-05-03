@@ -1,7 +1,7 @@
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useCallback } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { loginUser, registerUser, logoutUser } from "@/api/auth"
-import axios, { setAccessToken as syncAxiosToken } from '@/api/axios.js'
+import { setAccessToken as syncAxiosToken } from '@/api/axios.js'
 
 export const AuthContext = createContext()
 
@@ -27,36 +27,35 @@ export const AuthProvider = ({ children }) => {
           nombreCompleto: decoded.nombreCompleto
         })
         setAccessTokenState(token)
-        syncAxiosToken(token) 
+        syncAxiosToken(token)
         clearError()
-      } catch (err) {
-        console.error('Token inválido, eliminando...', err)
+      } catch (_err) {
+        console.error('Token inválido, eliminando...', _err)
         setError('Sesión expirada o inválida')
         localStorage.removeItem('accessToken')
       }
     }
   }, [])
 
-  // Si el accessToken cambia, actualizamos usuario
-  useEffect(() => {
-    if (accessTokenState) {
-      try {
-        const decoded = jwtDecode(accessTokenState)
-        setUser({
-          id: decoded.id,
-          email: decoded.email,
-          rol: decoded.rol,
-          nombreCompleto: decoded.nombreCompleto
-        })
-        clearError()
-      } catch (err) {
-        setError('Error al decodificar token')
-        logout()
-      }
+  // Usamos useCallback para evitar dependencias circulares en useEffect
+  const logout = useCallback(async () => {
+    setLoading(true)
+    clearError()
+    try {
+      await logoutUser()
+    } catch (_err) {
+      console.error("Error al cerrar sesión:", _err)
+      setError(_err.message)
+    } finally {
+      localStorage.removeItem('accessToken')
+      setAccessTokenState(null)
+      syncAxiosToken(null)
+      setUser(null)
+      setLoading(false)
     }
-  }, [accessTokenState])
+  }, [])
 
-  const login = async (email, password) => {    
+  const login = async (email, password) => {
     setLoading(true)
     clearError()
     try {
@@ -75,12 +74,12 @@ export const AuthProvider = ({ children }) => {
       })
 
       return { ok: true }
-    } catch (err) {
-      console.error("Error al iniciar sesión:", err)
-      setError(err.message)
+    } catch (_err) {
+      console.error("Error al iniciar sesión:", _err)
+      setError(_err.message)
       return {
         ok: false,
-        error: err.message
+        error: _err.message
       }
     } finally {
       setLoading(false)
@@ -93,34 +92,36 @@ export const AuthProvider = ({ children }) => {
     try {
       await registerUser(nombre, email, password)
       return await login(email, password)
-    } catch (err) {
-      console.error("Error al registrarse:", err)
-      setError(err.message)
+    } catch (_err) {
+      console.error("Error al registrarse:", _err)
+      setError(_err.message)
       return {
         ok: false,
-        error: err.message
+        error: _err.message
       }
     } finally {
       setLoading(false)
     }
   }
 
-  const logout = async () => {
-    setLoading(true)
-    clearError()
-    try {
-      await logoutUser()
-    } catch (err) {
-      console.error("Error al cerrar sesión:", err)
-      setError(err.message)
-    } finally {
-      localStorage.removeItem('accessToken')
-      setAccessTokenState(null)
-      syncAxiosToken(null)
-      setUser(null)
-      setLoading(false)
+  // Si el accessToken cambia, actualizamos usuario
+  useEffect(() => {
+    if (accessTokenState) {
+      try {
+        const decoded = jwtDecode(accessTokenState)
+        setUser({
+          id: decoded.id,
+          email: decoded.email,
+          rol: decoded.rol,
+          nombreCompleto: decoded.nombreCompleto
+        })
+        clearError()
+      } catch (_err) {
+        setError('Error al decodificar token')
+        logout()
+      }
     }
-  }
+  }, [accessTokenState, logout])
 
   return (
     <AuthContext.Provider

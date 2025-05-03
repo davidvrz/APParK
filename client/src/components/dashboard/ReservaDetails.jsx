@@ -1,35 +1,24 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import {
-  Clock,
-  MapPin,
-  Calendar,
-  Car,
-  Ticket,
-  ChevronUp,
-  Navigation,
-  X,
-  Edit,
-  Trash2
-} from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Clock, MapPin, Calendar, Car, Ticket, ChevronUp, Navigation, X, Edit, Trash2 } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 function formatTime(dateString) {
-  return format(new Date(dateString), "HH:mm", { locale: es });
+  return format(new Date(dateString), "HH:mm", { locale: es })
 }
 
 function formatDate(dateString) {
-  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es });
+  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es })
 }
 
 function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
-  const parkingName = reservation.parking?.nombre || "Parking desconocido";
-  const parkingAddress = reservation.parking?.ubicacion || "Ubicación no disponible";
-  const parkingSpot = reservation.plaza?.numero || "N/D";
-  const floor = reservation.planta?.numero || "N/D";
-  const carPlate = reservation.vehicle?.matricula || "Vehículo";
-  const price = reservation.precioTotal ? `${reservation.precioTotal} €` : "Precio N/D";
+  const parkingName = reservation.parking?.nombre || "Parking desconocido"
+  const parkingAddress = reservation.parking?.ubicacion || "Ubicación no disponible"
+  const parkingSpot = reservation.plaza?.numero || "N/D"
+  const floor = reservation.planta?.numero || "N/D"
+  const carPlate = reservation.vehicle?.matricula || "Vehículo"
+  const price = reservation.precioTotal ? `${reservation.precioTotal} €` : "Precio N/D"
 
   return (
     <motion.div
@@ -37,11 +26,11 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
       initial={{ opacity: 0, height: 300, scale: 0.98 }}
       animate={{ opacity: 1, height: "auto", scale: 1 }}
       exit={{ opacity: 0, height: 300, scale: 0.98 }}
-      transition={{ 
-        type: "spring", 
-        damping: 20, 
-        stiffness: 150, 
-        duration: 0.3 
+      transition={{
+        type: "spring",
+        damping: 20,
+        stiffness: 150,
+        duration: 0.3
       }}
       className="rounded-xl overflow-hidden relative bg-white dark:bg-gray-800 shadow-md"
     >
@@ -56,7 +45,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
       </div>
 
       {/* Contenido con detalles y mapa */}
-      <div className="flex flex-col lg:flex-row"> 
+      <div className="flex flex-col lg:flex-row">
         {/* Columna de detalles (izquierda) */}
         <div className="flex-1 p-6 space-y-6">
           {/* Información principal */}
@@ -105,13 +94,13 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
               {price}
             </div>
             <div className="flex space-x-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
+              <Button
+                size="sm"
+                variant="outline"
                 className="h-8 px-3 rounded-full font-medium"
                 onClick={(e) => {
-                  e.stopPropagation();
-                  if (onEdit) onEdit(e);
+                  e.stopPropagation()
+                  if (onEdit) onEdit(e)
                 }}
               >
                 <Edit className="h-3.5 w-3.5 mr-1" />
@@ -119,24 +108,24 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
               </Button>
               <Button
                 size="sm"
-                variant="outline" 
+                variant="outline"
                 className="h-8 w-8 rounded-full text-red-500 hover:text-red-600 p-0"
                 onClick={(e) => {
-                  e.stopPropagation();
-                  if (onDelete) onDelete(e);
+                  e.stopPropagation()
+                  if (onDelete) onDelete(e)
                 }}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
-          
+
           <div className="text-lg font-display font-bold tracking-tight flex items-center text-green-500">
             <Clock className="h-5 w-5 mr-2" />
             <span>Reserva Activa</span>
           </div>
         </div>
-        
+
         {/* Mapa (derecha) */}
         <div className="flex-1 bg-gray-100 dark:bg-gray-700 relative min-h-[300px]">
           <div className="absolute inset-0 flex items-center justify-center flex-col">
@@ -162,7 +151,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
         </Button>
       </div>
     </motion.div>
-  );
+  )
 }
 
 function InfoCard({ icon: Icon, title, content }) {
@@ -174,7 +163,7 @@ function InfoCard({ icon: Icon, title, content }) {
       </h4>
       <p className="text-sm font-normal">{content}</p>
     </div>
-  );
+  )
 }
 
-export default ReservaDetails;
+export default ReservaDetails
