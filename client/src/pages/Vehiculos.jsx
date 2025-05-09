@@ -25,7 +25,6 @@ export default function Vehiculos() {
     eliminarVehiculo
   } = useVehiculos()
 
-  // Estados para gestionar los diálogos
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -33,27 +32,23 @@ export default function Vehiculos() {
   const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Abrir diálogo para añadir vehículo
   const handleAddClick = () => {
     setFormError(null)
     setIsAddDialogOpen(true)
   }
 
-  // Abrir diálogo para editar vehículo
   const handleEditClick = (vehicle) => {
     setSelectedVehicle(vehicle)
     setFormError(null)
     setIsEditDialogOpen(true)
   }
 
-  // Abrir diálogo para eliminar vehículo
   const handleDeleteClick = (vehicle) => {
     setSelectedVehicle(vehicle)
     setFormError(null)
     setIsDeleteDialogOpen(true)
   }
 
-  // Guardar nuevo vehículo
   const handleAddSubmit = async (formData) => {
     setSubmitting(true)
     try {
@@ -66,7 +61,6 @@ export default function Vehiculos() {
     }
   }
 
-  // Actualizar vehículo existente
   const handleEditSubmit = async (formData) => {
     if (!selectedVehicle) return
 
@@ -81,7 +75,6 @@ export default function Vehiculos() {
     }
   }
 
-  // Eliminar vehículo
   const handleDelete = async () => {
     if (!selectedVehicle) return
 

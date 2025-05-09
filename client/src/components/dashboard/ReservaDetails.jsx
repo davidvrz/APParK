@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Clock, MapPin, Calendar, Car, Ticket, ChevronUp, Navigation, X, Edit, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { useEffect } from "react"
+import MiniMap from "@/components/map/MiniMap"
 
 function formatTime(dateString) {
   return format(new Date(dateString), "HH:mm", { locale: es })
@@ -19,6 +21,18 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
   const floor = reservation.planta?.numero || "N/D"
   const carPlate = reservation.vehicle?.matricula || "Vehículo"
   const price = reservation.precioTotal ? `${reservation.precioTotal} €` : "Precio N/D"
+
+  // Obtener las coordenadas del parking para el mapa
+  const latitude = reservation.parking?.latitud
+  const longitude = reservation.parking?.longitud
+  const hasCoords = Boolean(latitude && longitude)
+
+  // Cuando el componente se monta, forzar un redimensionamiento para que el mapa se renderice correctamente
+  useEffect(() => {
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'))
+    }, 300)
+  }, [])
 
   return (
     <motion.div
@@ -127,14 +141,28 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
         </div>
 
         {/* Mapa (derecha) */}
-        <div className="flex-1 bg-gray-100 dark:bg-gray-700 relative min-h-[300px]">
-          <div className="absolute inset-0 flex items-center justify-center flex-col">
-            <Navigation className="h-10 w-10 text-blue-500 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Mapa de ubicación</p>
-            <div className="text-xs text-center text-gray-400 mt-2 font-normal">
-              Parking {parkingName}<br />
-              Plaza {parkingSpot}
-            </div>
+        <div className="flex-1 lg:max-w-[45%] min-h-[300px] relative border-l border-gray-100 dark:border-gray-700">
+          <div className="absolute inset-0 z-0">
+            {hasCoords ? (
+              <div className="h-full w-full relative">
+                <div className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs rounded-md shadow-sm">
+                  <p className="font-medium text-gray-700 dark:text-gray-200">Mapa de ubicación</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{parkingName} - Plaza {parkingSpot}</p>
+                </div>
+                <MiniMap latitude={latitude} longitude={longitude} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-700">
+                <div className="text-center">
+                  <Navigation className="h-10 w-10 text-blue-500 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">Mapa de ubicación</p>
+                  <div className="text-xs text-center text-gray-400 mt-2 font-normal">
+                    No hay coordenadas disponibles<br />
+                    Parking {parkingName} - Plaza {parkingSpot}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

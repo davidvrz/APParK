@@ -7,13 +7,12 @@ export const useProfile = () => {
   const [error, setError] = useState(null)
 
   const clearError = () => setError(null)
-
   const refetchPerfil = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
-      const { usuario } = await getProfile()
-      setPerfil(usuario || null)
+      const { profile } = await getProfile()
+      setPerfil(profile || null)
     } catch (err) {
       console.error('Error al obtener perfil:', err)
       setError(err.message)

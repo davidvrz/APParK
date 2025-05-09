@@ -29,7 +29,6 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
 
   const [validationErrors, setValidationErrors] = useState({})
 
-  // Si se proporciona un vehículo, inicializamos el formulario con sus datos
   useEffect(() => {
     if (vehicle) {
       setFormData({
@@ -40,18 +39,15 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
     }
   }, [vehicle])
 
-  // Maneja cambios en los campos de texto
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
 
-    // Eliminar el error de validación cuando el usuario edita el campo
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: undefined }))
     }
   }
 
-  // Maneja cambios en el select de tipo
   const handleSelectChange = (value) => {
     setFormData(prev => ({ ...prev, tipo: value }))
 
@@ -60,7 +56,6 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
     }
   }
 
-  // Valida el formulario antes de enviar
   const validateForm = () => {
     const errors = {}
 
@@ -78,7 +73,6 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
     return Object.keys(errors).length === 0
   }
 
-  // Maneja el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validateForm()) return

@@ -38,7 +38,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
   const { vehiculos, loading: loadingVehiculos } = useVehiculos()
   const { crearReserva, error: reservaError, clearError } = useReservas()
 
-  // Plazas filtradas por tipo de vehículo o la plaza preseleccionada
   const plazasDisponibles = plantas.flatMap(planta =>
     planta.plazas
       .filter(plaza =>
@@ -55,7 +54,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
       }))
   )
 
-  // Manejadores de eventos
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
@@ -65,11 +63,9 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
   const handleSelectVehicle = (value) => {
     setForm(prev => ({ ...prev, vehicleId: value }))
 
-    // Actualizar tipo de vehículo para filtrar plazas
     const vehiculo = vehiculos.find(v => String(v.id) === value)
     setSelectedTipoVehiculo(vehiculo ? vehiculo.tipo : null)
 
-    // Si no hay plaza preseleccionada, limpiar la selección
     if (!preselectedPlazaId) {
       setForm(prev => ({ ...prev, plazaId: '' }))
     }
@@ -82,7 +78,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     if (errors.plazaId) setErrors(prev => ({ ...prev, plazaId: undefined }))
   }
 
-  // Validación
   const validate = () => {
     const errs = {}
     const start = new Date(form.startTime)
@@ -124,7 +119,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     return Object.keys(errs).length === 0
   }
 
-  // Envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault()
     clearError()
@@ -166,7 +160,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     }))
   }, [])
 
-  // Si hay un vehículo compatible con la plaza preseleccionada, seleccionarlo automáticamente
   useEffect(() => {
     if (preselectedPlazaId && vehiculos.length > 0 && !form.vehicleId) {
       const plaza = plazasDisponibles.find(p => String(p.id) === String(preselectedPlazaId))

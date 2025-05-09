@@ -5,43 +5,34 @@ import ParkingPlan from './ParkingPlan'
 import ReservationForm from './ReservationForm'
 import { ArrowLeft, Map, ClipboardCheck } from 'lucide-react'
 
-/**
- * Componente de flujo de reserva que integra el plano del parking y el formulario de reserva
- */
 const ParkingReservationFlow = ({ parking, onCancel, skipPlano = false }) => {
   const [selectedPlaza, setSelectedPlaza] = useState(null)
   const [showPlano, setShowPlano] = useState(!skipPlano)
 
-  // Inicializar el estado cuando cambia la prop skipPlano
   useEffect(() => {
     if (skipPlano) {
       setShowPlano(false)
     }
   }, [skipPlano])
 
-  // Manejar la selección de una plaza del plano
   const handlePlazaSelect = (plaza) => {
     setSelectedPlaza(plaza)
     setShowPlano(false)
   }
 
-  // Volver al plano sin selección
   const handleBackToPlano = () => {
     setShowPlano(true)
   }
 
-  // Crear una estructura de plantas compatible con el formulario que incluya solo la plaza seleccionada
   const getPlantasWithSelectedPlaza = () => {
     if (!selectedPlaza) return parking?.plantas || []
 
-    // Encontrar la planta que contiene la plaza seleccionada
     const planta = parking?.plantas?.find(p =>
       p.plazas.some(pz => pz.id === selectedPlaza.id)
     )
 
     if (!planta) return []
 
-    // Crear una versión de la planta que solo incluye la plaza seleccionada
     return [{
       ...planta,
       plazas: [selectedPlaza]

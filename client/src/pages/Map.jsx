@@ -12,14 +12,11 @@ const Map = () => {
   useEffect(() => {
     fetchParkings()
   }, [fetchParkings])
-
-  // Función para manejar la selección de un parking desde el mapa
   const handleParkingSelect = (parking) => {
     setSelectedParking(parking)
     setIsDetailExpanded(true)
   }
 
-  // Función para volver al mapa
   const handleCloseDetails = () => {
     setIsDetailExpanded(false)
   }
@@ -48,12 +45,11 @@ const Map = () => {
       </div>
 
       <div className="h-[700px] w-full rounded-lg overflow-hidden">
-        {isDetailExpanded && selectedParking ? (
-          <ParkingDetails
-            parking={selectedParking}
-            onClose={handleCloseDetails}
-            initialSection="info"
-          />
+        {isDetailExpanded && selectedParking ? (          <ParkingDetails
+          parking={selectedParking}
+          onClose={handleCloseDetails}
+          initialSection="plan"
+        />
         ) : (
           <Card className="h-full w-full">
             <CardContent className="p-0 h-full">

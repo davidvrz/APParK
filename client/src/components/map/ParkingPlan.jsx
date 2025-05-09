@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, Wifi, WifiOff, Car, Bike } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// Iconos para los diferentes tipos de plaza
 const TipoPlazaIcon = ({ tipo }) => {
   switch (tipo) {
   case 'Coche':
@@ -24,9 +23,7 @@ const TipoPlazaIcon = ({ tipo }) => {
   }
 }
 
-// Componente para cada plaza individual
 const Plaza = ({ plaza, onSelect }) => {
-  // Determinar el estado visual de la plaza
   const getEstadoClasses = () => {
     if (!plaza.reservable) {
       return 'bg-gray-200 border-gray-300 text-gray-600 cursor-not-allowed'
@@ -44,10 +41,8 @@ const Plaza = ({ plaza, onSelect }) => {
     }
   }
 
-  // Animar la plaza recién actualizada
   const [isRecent, setIsRecent] = useState(false)
 
-  // Efecto para animar cuando una plaza se actualiza
   useEffect(() => {
     setIsRecent(true)
     const timeout = setTimeout(() => {
@@ -100,7 +95,6 @@ const Plaza = ({ plaza, onSelect }) => {
   )
 }
 
-// Componente para cada planta
 const Planta = ({ planta, onSelectPlaza }) => {
   return (
     <div className="space-y-3">
@@ -124,14 +118,12 @@ const Planta = ({ planta, onSelectPlaza }) => {
   )
 }
 
-// Componente principal del plano de parking
 const ParkingPlan = ({ parking, onSelectPlaza }) => {
   const [activePlanta, setActivePlanta] = useState(null)
   const [plantas, setPlantas] = useState([])
 
   const { connected, plazasActualizadas, actualizarEstadoPlaza, clearUpdates } = useSocketParking(parking?.id)
 
-  // Inicializar planta activa
   useEffect(() => {
     if (parking && parking.plantas && parking.plantas.length > 0) {
       setPlantas(parking.plantas)
@@ -139,7 +131,6 @@ const ParkingPlan = ({ parking, onSelectPlaza }) => {
     }
   }, [parking])
 
-  // Procesar actualizaciones de plazas en tiempo real
   useEffect(() => {
     if (plazasActualizadas.length > 0) {
       plazasActualizadas.forEach(update => {

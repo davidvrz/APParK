@@ -7,6 +7,7 @@ import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar } from "lucide-
 import { useReservas } from "@/hooks/useReservas"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { Link } from "react-router-dom"
 
 // Funciones para formatear fechas y horas
 function formatTime(dateString) {
@@ -84,9 +85,11 @@ function HistorialReservas() {
             <CardDescription className="text-gray-500 dark:text-gray-400 font-normal">Tus reservas anteriores</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="link" size="sm" className="text-blue-500 font-medium">
-              Ver completo
-            </Button>
+            <Link to="/reservas/historial">
+              <Button variant="link" size="sm" className="text-blue-500 font-medium">
+                Ver completo
+              </Button>
+            </Link>
             <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
               {historial.length} Reservas
             </Badge>
@@ -104,7 +107,9 @@ function HistorialReservas() {
             <p className="text-gray-500 dark:text-gray-400 font-normal mb-4">
               Cuando realices una reserva y se complete, aparecerá aquí tu historial.
             </p>
-            <Button className="font-medium">Crear Reserva</Button>
+            <Link to="/map">
+              <Button className="font-medium">Crear Reserva</Button>
+            </Link>
           </div>
         ) : (
           <div className="flex justify-center items-center h-[380px] px-8" ref={constraintsRef}>

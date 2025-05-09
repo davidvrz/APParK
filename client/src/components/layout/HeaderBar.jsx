@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bell, Map, Menu, User, LogOut, Home, Clock, Car, PlusCircle, LayoutDashboard } from "lucide-react"
+import { Map, Menu, User, LogOut, Car, LayoutDashboard } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -12,6 +12,10 @@ function HeaderBar() {
   const [isScrolled, setIsScrolled] = useState(false)
 
   const currentPath = location.pathname
+
+  // Determinar si la ruta actual está relacionada con dashboard
+  const isDashboardPath = currentPath === "/dashboard" ||
+                          currentPath.startsWith("/reservas/")
 
   const handleLogout = async () => {
     await logout()
@@ -30,7 +34,7 @@ function HeaderBar() {
   const activeGradient = "from-purple-500 to-pink-600"
 
   const navItems = [
-    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && currentPath === "/dashboard" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && isDashboardPath ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Map className={`h-5 w-5 ${isScrolled && currentPath === "/map" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Mapa", path: "/map" },
     { icon: <Car className={`h-5 w-5 ${isScrolled && currentPath === "/vehiculos" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, label: "Mis Vehículos", path: "/vehiculos" },
   ]
@@ -71,7 +75,7 @@ function HeaderBar() {
         transition={{ duration: 0.3 }}
       >
         {navItems.map((item) => {
-          const isActive = currentPath === item.path
+          const isActive = item.path === "/dashboard" ? isDashboardPath : currentPath === item.path
           return (
             <Link key={item.path} to={item.path} className="relative">
               <motion.div
@@ -103,9 +107,7 @@ function HeaderBar() {
             </Link>
           )
         })}
-      </motion.div>
-
-      {/* Isla derecha: notificaciones y perfil sticky */}
+      </motion.div>      {/* Isla derecha: perfil sticky */}
       <motion.div
         className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 backdrop-blur-lg shadow text-gray-800 dark:text-gray-200 sticky top-4 z-40"
         animate={{
@@ -115,21 +117,6 @@ function HeaderBar() {
         }}
         transition={{ duration: 0.3 }}
       >
-        <motion.div className="relative" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          <Bell className="h-5 w-5" />
-          <motion.div
-            className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 500,
-              damping: 15,
-              delay: 1,
-            }}
-          />
-        </motion.div>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <motion.button
@@ -140,7 +127,13 @@ function HeaderBar() {
               <User className="h-5 w-5" />
             </motion.button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+          <DropdownMenuContent align="end" className="w-48 rounded-xl">
+            <DropdownMenuItem asChild className="cursor-pointer font-medium">
+              <Link to="/perfil">
+                <User className="h-4 w-4 mr-2" />
+                <span>Configurar perfil</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium">
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>
@@ -162,14 +155,25 @@ function HeaderBar() {
             </motion.button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 rounded-xl">
-            {navItems.map((item) => (
-              <DropdownMenuItem key={item.path} asChild>
-                <Link to={item.path} className="cursor-pointer font-medium">
-                  <div className="mr-2">{item.icon}</div>
-                  <span>{item.label}</span>
-                </Link>
-              </DropdownMenuItem>
-            ))}
+            {navItems.map((item) => {
+              const isActive = item.path === "/dashboard" ? isDashboardPath : currentPath === item.path
+              return (
+                <DropdownMenuItem key={item.path} asChild>
+                  <Link
+                    to={item.path}
+                    className={`cursor-pointer font-medium ${isActive ? "text-purple-600 dark:text-purple-400" : ""}`}
+                  >
+                    <div className="mr-2">{item.icon}</div>
+                    <span>{item.label}</span>
+                  </Link>
+                </DropdownMenuItem>
+              )            })}
+            <DropdownMenuItem asChild className="cursor-pointer font-medium">
+              <Link to="/perfil">
+                <User className="h-4 w-4 mr-2" />
+                <span>Configurar perfil</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium">
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>

@@ -4,6 +4,7 @@ import ParkingReservationFlow from './ParkingReservationFlow'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import {
   ChevronLeftIcon,
   MapPinIcon,
@@ -11,17 +12,16 @@ import {
   BellIcon,
   Loader2,
   Layout,
-  InfoIcon
+  CircleDashed
 } from 'lucide-react'
 
-const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'info' }) => {
+const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'plan' }) => {
   const [activeTab, setActiveTab] = useState(initialSection)
   const [loadingAnuncios, setLoadingAnuncios] = useState(false)
   const anunciosLoadedRef = useRef(false)
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
 
   useEffect(() => {
-    // Fetch complete parking details when a parking is selected
     if (parkingPreview?.id) {
       fetchParkingById(parkingPreview.id)
       // Resetear el estado de carga de anuncios cuando cambia el parking
@@ -31,11 +31,10 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'in
 
   // Cargar anuncios solo cuando se selecciona la pestaña de anuncios y no se han cargado ya
   useEffect(() => {
-    if (activeTab === 'info' && parking?.id && !loadingAnuncios && !anunciosLoadedRef.current) {
+    if (activeTab === 'anuncios' && parking?.id && !loadingAnuncios && !anunciosLoadedRef.current) {
       setLoadingAnuncios(true)
       fetchAnuncios(parking.id)
         .then(() => {
-          // Marcar que los anuncios ya se han cargado
           anunciosLoadedRef.current = true
         })
         .finally(() => {
@@ -80,122 +79,83 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'in
       </Card>
     )
   }
-
   return (
-    <Card className="h-full w-full overflow-auto">
-      <CardHeader className="bg-slate-50 sticky top-0 z-10">
-        <div className="flex items-start">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2 -ml-2 h-8 w-8"
-            onClick={onClose}
-            title="Volver al mapa"
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </Button>
+    <div className="h-full w-full overflow-auto flex flex-col">
+      {/* Cabecera fija */}
+      <div className="sticky top-0 z-10 bg-white shadow-sm p-3 border-b">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2 -ml-2 h-8 w-8 flex-shrink-0"
+              onClick={onClose}
+              title="Volver al mapa"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </Button>
 
-          <div>
-            <CardTitle className="text-xl">{parking.nombre}</CardTitle>
-            <CardDescription className="flex items-center mt-1">
-              <MapPinIcon className="h-3.5 w-3.5 mr-1 text-slate-500" />
-              {parking.ubicacion}
-            </CardDescription>
+            <div>
+              <h1 className="text-xl font-semibold">{parking.nombre}</h1>
+              <div className="flex items-center mt-1 text-sm text-slate-500">
+                <MapPinIcon className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                <span className="line-clamp-1">{parking.ubicacion}</span>
+              </div>
+              <div className="flex flex-wrap items-center mt-2 text-xs text-slate-600 gap-x-3 gap-y-1">
+                <div>
+                  <span className="font-semibold">{parking.capacidad}</span> plazas
+                </div>
+                <div className="hidden sm:block w-0.5 h-3 bg-slate-200"></div>
+                <div className="text-green-600">
+                  <span className="font-semibold">{parking.plazasLibres}</span> libres
+                </div>
+                <div className="hidden sm:block w-0.5 h-3 bg-slate-200"></div>
+                <div className="text-red-600">
+                  <span className="font-semibold">{parking.plazasOcupadas}</span> ocupadas
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="p-0">
-        <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab}>
-          <div className="px-4 border-b">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="info" className="flex items-center gap-1.5">
-                <InfoIcon className="h-4 w-4" />
-                <span>Información</span>
-              </TabsTrigger>
-              <TabsTrigger value="plan" className="flex items-center gap-1.5">
-                <Layout className="h-4 w-4" />
-                <span>Plano y Reservas</span>
-              </TabsTrigger>
-              <TabsTrigger value="reservation" className="flex items-center gap-1.5">
-                <CalendarIcon className="h-4 w-4" />
-                <span>Reservar</span>
-              </TabsTrigger>
-            </TabsList>
+          <Badge
+            variant="outline"
+            className={`flex-shrink-0 ${parking.estado === 'Operativo' ? 'text-green-600 border-green-200' :
+              parking.estado === 'Cerrado' ? 'text-red-600 border-red-200' :
+                'text-amber-600 border-amber-200'}`}
+          >
+            {parking.estado}
+          </Badge>
+        </div>
+      </div>      {/* Contenido principal con tabs */}
+      <div className="flex-grow">
+        <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+          <div className="flex justify-center border-b">
+            <div className="bg-slate-50 px-2 rounded-t-lg">
+              <TabsList className="bg-transparent">
+                <TabsTrigger value="plan" className="flex items-center gap-1.5 data-[state=active]:bg-white">
+                  <Layout className="h-4 w-4" />
+                  <span className="hidden sm:inline">Plano y Reservas</span>
+                  <span className="sm:hidden">Plano</span>
+                </TabsTrigger>
+                <TabsTrigger value="reservation" className="flex items-center gap-1.5 data-[state=active]:bg-white">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Crear Reserva</span>
+                  <span className="sm:hidden">Reservar</span>
+                </TabsTrigger>
+                <TabsTrigger value="anuncios" className="flex items-center gap-1.5 data-[state=active]:bg-white">
+                  <BellIcon className="h-4 w-4" />
+                  <span>Anuncios</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <div className="p-4">
-            {/* SECCIÓN DE INFORMACIÓN */}
-            <TabsContent value="info" className="m-0">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-50 p-3 rounded-md">
-                    <p className="text-sm text-slate-500">Estado</p>
-                    <p className="font-medium">{parking.estado}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-md">
-                    <p className="text-sm text-slate-500">Capacidad Total</p>
-                    <p className="font-medium">{parking.capacidad} plazas</p>
-                  </div>
-                  <div className="bg-green-50 p-3 rounded-md">
-                    <p className="text-sm text-green-600">Plazas Libres</p>
-                    <p className="font-medium">{parking.plazasLibres} plazas</p>
-                  </div>
-                  <div className="bg-red-50 p-3 rounded-md">
-                    <p className="text-sm text-red-600">Plazas Ocupadas</p>
-                    <p className="font-medium">{parking.plazasOcupadas} plazas</p>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="font-medium mb-3">Anuncios</h3>
-                  {loadingAnuncios ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span>Cargando anuncios...</span>
-                    </div>
-                  ) : anuncios.length > 0 ? (
-                    <div className="space-y-3">
-                      {anuncios.map(anuncio => (
-                        <Card key={anuncio.id} className="overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-2.5">
-                              <div className="mt-0.5">
-                                <BellIcon className="h-5 w-5 text-blue-500" />
-                              </div>
-                              <div>
-                                <p className="text-sm">{anuncio.contenido}</p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                  {new Date(anuncio.created_at).toLocaleDateString('es-ES', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-4">
-                        <p className="italic text-slate-500">
-                          No hay anuncios en este momento.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
             {/* SECCIÓN DEL PLANO Y RESERVAS */}
             <TabsContent value="plan" className="m-0">
               <ParkingReservationFlow
                 parking={parking}
-                onCancel={() => setActiveTab('info')}
+                onCancel={onClose}
               />
             </TabsContent>
 
@@ -210,14 +170,63 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'in
 
               <ParkingReservationFlow
                 parking={parking}
-                onCancel={() => setActiveTab('info')}
+                onCancel={() => setActiveTab('plan')}
                 skipPlano={true}
               />
             </TabsContent>
+
+            {/* SECCIÓN DE ANUNCIOS */}
+            <TabsContent value="anuncios" className="m-0">
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg flex items-center gap-2">
+                  <CircleDashed className="h-5 w-5 text-blue-500" />
+                  Anuncios y Notificaciones
+                </h3>
+
+                {loadingAnuncios ? (
+                  <div className="flex items-center justify-center p-8">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2 text-blue-500" />
+                    <span>Cargando anuncios...</span>
+                  </div>
+                ) : anuncios.length > 0 ? (
+                  <div className="space-y-3">
+                    {anuncios.map(anuncio => (
+                      <Card key={anuncio.id} className="overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              <BellIcon className="h-5 w-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm">{anuncio.contenido}</p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {new Date(anuncio.created_at).toLocaleDateString('es-ES', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <p className="italic text-slate-500">
+                        No hay anuncios o notificaciones en este momento.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
           </div>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

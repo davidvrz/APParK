@@ -5,6 +5,9 @@ import Register from '../pages/Register'
 import Dashboard from '../pages/Dashboard'
 import Vehiculos from '../pages/Vehiculos'
 import Map from '../pages/Map'
+import Perfil from '../pages/Perfil'
+import HistorialReservasPage from '../pages/reservas/HistorialReservasPage'
+import ReservasActivasPage from '../pages/reservas/ReservasActivasPage'
 import PrivateRoute from './PrivateRoute'
 import NotFound from '../pages/NotFound'
 
@@ -20,6 +23,9 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/vehiculos" element={<Vehiculos />} />
         <Route path="/map" element={<Map />} />
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/reservas/historial" element={<HistorialReservasPage />} />
+        <Route path="/reservas/activas" element={<ReservasActivasPage />} />
 
         {/* Página 404 para rutas desconocidas */}
         <Route path="*" element={<NotFound />} />

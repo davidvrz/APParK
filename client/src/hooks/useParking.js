@@ -83,7 +83,6 @@ export const useParking = (parkingId = null) => {
     }
   }
 
-  // Cargar el parking específico cuando se proporciona un ID
   useEffect(() => {
     if (parkingId) {
       fetchParkingById(parkingId)

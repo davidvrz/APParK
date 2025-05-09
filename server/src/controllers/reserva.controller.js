@@ -182,7 +182,7 @@ export const getReservasByUser = async (req, res) => {
             include: {
               model: Parking,
               as: 'parking',
-              attributes: ['id', 'nombre', 'ubicacion']
+              attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud']
             }
           }
         }
@@ -198,7 +198,7 @@ export const getReservasByUser = async (req, res) => {
         vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo']),
         plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'precioHora']),
         planta: pick(reserva.plaza.planta, ['numero']),
-        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion'])
+        parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion', 'latitud', 'longitud'])
       }
     })
 

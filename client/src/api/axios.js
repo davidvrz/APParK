@@ -14,7 +14,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true // ✅ usamos cookies para el refreshToken
+  withCredentials: true // cookies para el refreshToken
 })
 
 // 👉 Interceptor: añadir Authorization en cada request
@@ -51,14 +51,13 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`
         return axiosInstance(originalRequest)
       } catch (refreshError) {
-        // 🔒 Logout forzado si no se puede renovar
+        // Logout forzado si no se puede renovar
         localStorage.removeItem('accessToken')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       }
     }
 
-    // Personalizar el manejo de errores para facilitar el acceso al mensaje del backend
     if (error.response?.data?.error) {
       // Si el backend devuelve un objeto con la propiedad 'error', la extraemos
       error.message = error.response.data.error

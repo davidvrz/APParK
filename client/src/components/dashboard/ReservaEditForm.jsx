@@ -24,7 +24,7 @@ export default function ReservaEditForm({
   onCancel,
   onSave,
   apiError = null,    // Error proveniente del hook useReservas
-  isLoading = false   // Estado de carga general
+  isLoading = false
 }) {
   const [form, setForm] = useState({
     vehicleId: "",
@@ -43,15 +43,13 @@ export default function ReservaEditForm({
     return plazasDisponibles.filter(p => p.tipo === vehiculoSeleccionado.tipo)
   }, [form.vehicleId, vehiculos, plazasDisponibles])
 
-  // 1) Inicializar formulario al montar o cambiar reserva
+  // Inicializar formulario al montar o cambiar reserva
   useEffect(() => {
     if (!reserva) return
 
-    // Extraer IDs de vehículo y plaza, teniendo en cuenta diferentes estructuras posibles
     const vid = reserva.vehicle?.id || reserva.vehiculo_id || reserva.vehicleId
     const pid = reserva.plaza?.id || reserva.plaza_id || reserva.plazaId
 
-    // Convertir a string y asegurar que no sea undefined
     const vehicleId = vid !== undefined ? String(vid) : ""
     const plazaId = pid !== undefined ? String(pid) : ""
 
@@ -66,14 +64,14 @@ export default function ReservaEditForm({
     setSuccess(false)
   }, [reserva, vehiculos, plazasDisponibles])
 
-  // 2) Capturar errores de la API
+  // Capturar errores de la API
   useEffect(() => {
     if (apiError) {
       setErrors(prev => ({ ...prev, server: apiError }))
     }
   }, [apiError])
 
-  // 3) Validaciones básicas
+  // Validaciones básicas
   const validate = () => {
     const errs = {}
     const start = new Date(form.startTime)
@@ -128,7 +126,6 @@ export default function ReservaEditForm({
         endTime: new Date(form.endTime).toISOString()
       })
       setSuccess(true)
-      // Cerramos tras un momento para que se vea el mensaje
       setTimeout(onCancel, 1500)
     } catch (err) {
       const msg = err.response?.data?.error || "Error al modificar la reserva"

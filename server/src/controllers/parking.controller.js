@@ -10,11 +10,12 @@ import { generateParkingToken } from '../libs/jwt.js'
 export const getAllParkings = async (req, res) => {
   try {
     const parkings = await Parking.findAll({
-      attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud']
+      attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado']
     })
 
+    // Incluir todos los atributos necesarios, incluyendo capacidad y estado
     const formattedParkings = parkings.map(parking =>
-      pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud'])
+      pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
     )
 
     res.status(200).json({ parkings: formattedParkings })
@@ -56,7 +57,7 @@ export const getParkingById = async (req, res) => {
     })
 
     const formattedParking = {
-      ...pick(parking.get(), ['id', 'nombre', 'ubicacion', 'capacidad', 'estado']),
+      ...pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado']),
       plantas: parking.plantas.map(planta => ({
         id: planta.id,
         numero: planta.numero,
@@ -135,14 +136,14 @@ export const createParking = async (req, res) => {
   const transaction = await sequelize.transaction()
 
   try {
-    const { nombre, ubicacion, capacidad, estado, plantas } = req.body
+    const { nombre, ubicacion, latitud, longitud, capacidad, estado, plantas } = req.body
 
     const parking = await Parking.create(
-      { nombre, ubicacion, capacidad, estado },
+      { nombre, ubicacion, latitud, longitud, capacidad, estado },
       { transaction }
     )
 
-    let createdParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'capacidad', 'estado'])
+    let createdParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
 
     if (plantas && plantas.length > 0) {
       const createdPlantas = await Promise.all(
@@ -210,7 +211,7 @@ export const createParking = async (req, res) => {
 export const updateParking = async (req, res) => {
   try {
     const { parkingId } = req.params
-    const { nombre, ubicacion, capacidad, estado } = req.body
+    const { nombre, ubicacion, latitud, longitud, capacidad, estado } = req.body
 
     const parking = await Parking.findByPk(parkingId)
 
@@ -220,12 +221,14 @@ export const updateParking = async (req, res) => {
 
     parking.nombre = nombre ?? parking.nombre
     parking.ubicacion = ubicacion ?? parking.ubicacion
+    parking.latitud = latitud ?? parking.latitud
+    parking.longitud = longitud ?? parking.longitud
     parking.capacidad = capacidad ?? parking.capacidad
     parking.estado = estado ?? parking.estado
 
     await parking.save()
 
-    const updatedParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'capacidad', 'estado'])
+    const updatedParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
 
     res.status(200).json({ message: 'Parking actualizado correctamente', parking: updatedParking })
   } catch (error) {

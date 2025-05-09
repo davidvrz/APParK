@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-// Fix for default marker icons in Leaflet with webpack/vite
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -11,7 +10,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
 })
 
-// Default center coordinates (España)
+// Default coordenadas (España)
 const defaultCenter = [40.416775, -3.70379]
 
 // Componente para actualizar la vista del mapa cuando cambian los parkings
@@ -44,6 +43,15 @@ function MapUpdater({ parkings }) {
 const ParkingMap = ({ parkings = [], onSelectParking }) => {
   const [mapReady, setMapReady] = useState(false)
 
+  const getEstadoColor = (estado) => {
+    switch(estado) {
+    case 'Operativo': return 'text-green-600'
+    case 'Cerrado': return 'text-red-600'
+    case 'Mantenimiento': return 'text-amber-600'
+    default: return 'text-slate-600'
+    }
+  }
+
   return (
     <div className="relative h-full w-full">
       <MapContainer
@@ -58,7 +66,6 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
         />
 
         {parkings.map((parking) => {
-          // Usar las coordenadas reales del parking desde la base de datos
           const position = [
             Number(parking.latitud) || defaultCenter[0],
             Number(parking.longitud) || defaultCenter[1]
@@ -72,15 +79,23 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
                 click: () => onSelectParking(parking)
               }}
             >
-              <Popup>
-                <div className="text-center">
-                  <strong>{parking.nombre}</strong>
-                  <p className="text-sm">{parking.ubicacion}</p>
-                  <p className="text-sm mt-1">
-                    <span className="text-green-600">{parking.plazasLibres}</span> plazas libres
-                  </p>
+              <Tooltip
+                direction="top"
+                offset={[0, -32]}
+                opacity={1}
+                className="custom-tooltip"
+              >
+                <div className="p-3">
+                  <h3 className="font-semibold text-sm text-primary">{parking.nombre}</h3>
+                  <p className="text-xs mt-1 text-slate-600">{parking.ubicacion}</p>
+                  <div className="flex justify-between items-center mt-2 text-xs">
+                    <span className="text-slate-700">Capacidad: <span className="font-medium">{parking.capacidad}</span></span>
+                    <span className={getEstadoColor(parking.estado)}>
+                      <span className="font-medium">{parking.estado || 'Operativo'}</span>
+                    </span>
+                  </div>
                 </div>
-              </Popup>
+              </Tooltip>
             </Marker>
           )
         })}
