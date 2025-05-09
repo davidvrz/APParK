@@ -16,16 +16,28 @@ reservaQueue.process('completar-reserva', async job => {
     reserva.estado = 'completada'
     await reserva.save()
 
+    // Liberar plaza
     await Plaza.update(
       { estado: 'Libre' },
       { where: { id: reserva.plaza_id } }
     )
 
-    getIO().emit('parking:update', {
-      plazaId: reserva.plaza_id,
-      nuevoEstado: 'Libre',
-      tipo: 'reserva_completada'
-    })
+    // Obtener plaza para acceder a parking_id
+    const plaza = await Plaza.findByPk(reserva.plaza_id)
+
+    if (!plaza || !plaza.parking_id) {
+      console.warn(`⚠️ No se pudo emitir socket: plaza ${reserva.plaza_id} no tiene parking asociado`)
+      return
+    }
+
+    // Emitir solo a la sala del parking correspondiente
+    getIO()
+      .to(`parking:${plaza.parking_id}`)
+      .emit('parking:update', {
+        plazaId: reserva.plaza_id,
+        nuevoEstado: 'Libre',
+        tipo: 'reserva_completada'
+      })
 
     console.log(`✅ Reserva completada automáticamente: Reserva #${reserva.id}`)
   } catch (err) {

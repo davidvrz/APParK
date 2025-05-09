@@ -17,13 +17,31 @@ export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, 
       mensaje
     })
 
-    getIO().emit('evento:registrado', {
-      plazaId,
-      matricula,
-      tipoEvento,
-      mensaje,
-      fecha: evento.fecha
+    // Obtener el parking asociado
+    const plaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      }
     })
+
+    const parkingId = plaza?.planta?.parking?.id
+    if (parkingId) {
+      getIO()
+        .to(`parking:${parkingId}`)
+        .emit('evento:registrado', {
+          plazaId,
+          matricula,
+          tipoEvento,
+          mensaje,
+          fecha: evento.fecha
+        })
+    }
 
     console.log(`✅ Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
   } catch (error) {
@@ -90,10 +108,26 @@ export const procesarEventoSensor = async (req, res) => {
   const now = new Date()
 
   try {
-    const plaza = await Plaza.findByPk(plazaId)
-    if (!plaza) {
-      await registrarEventos({ plazaId, matricula, tipoEvento: 'anomalia', mensaje: 'Plaza no encontrada' })
-      return res.status(404).json({ error: 'Plaza no encontrada' })
+    const plaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      }
+    })
+
+    if (!plaza || !plaza.planta?.parking) {
+      await registrarEventos({
+        plazaId,
+        matricula,
+        tipoEvento: 'anomalia',
+        mensaje: 'Plaza no encontrada o sin parking asociado'
+      })
+      return res.status(404).json({ error: 'Plaza no encontrada o sin parking asociado' })
     }
 
     const reserva = await Reserva.findOne({
@@ -144,7 +178,9 @@ export const procesarEventoSensor = async (req, res) => {
 
         await Plaza.update({ estado: 'Libre' }, { where: { id: plazaId } })
 
-        getIO().emit('parking:update', {
+        const parkingId = plaza.planta.parking.id
+
+        getIO().to(`parking:${parkingId}`).emit('parking:update', {
           plazaId,
           nuevoEstado: 'Libre',
           tipo: 'reserva_rapida_completada'

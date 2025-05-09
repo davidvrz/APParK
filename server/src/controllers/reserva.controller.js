@@ -53,10 +53,27 @@ export const createReserva = async (req, res) => {
       return res.status(403).json({ error: 'Vehículo no válido para este usuario' })
     }
 
-    const plaza = await Plaza.findByPk(plazaId, { transaction })
+    const plaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      },
+      transaction
+    })
+
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
+    }
+
+    if (!plaza.planta || !plaza.planta.parking) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'No se pudo encontrar el parking asociado a la plaza' })
     }
 
     if (!plaza.reservable) {
@@ -146,11 +163,16 @@ export const createReserva = async (req, res) => {
       'id', 'user_id', 'vehiculo_id', 'plaza_id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
 
-    getIO().emit('parking:update', {
-      plazaId,
-      nuevoEstado: 'Reservado',
-      tipo: 'reserva_creada'
-    })
+    // Emitimos al room del parking correspondiente
+    const parkingId = plaza.planta.parking.id
+
+    getIO()
+      .to(`parking:${parkingId}`)
+      .emit('parking:update', {
+        plazaId,
+        nuevoEstado: 'Reservado',
+        tipo: 'reserva_creada'
+      })
 
     res.status(201).json({ reserva: createdReserva })
   } catch (error) {
@@ -216,7 +238,22 @@ export const updateReserva = async (req, res) => {
     const { startTime, endTime, vehicleId, plazaId } = req.body
     const { id: userId } = req.user
 
-    const reserva = await Reserva.findByPk(reservaId, { transaction })
+    const reserva = await Reserva.findByPk(reservaId, {
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        include: {
+          model: Planta,
+          as: 'planta',
+          include: {
+            model: Parking,
+            as: 'parking',
+            attributes: ['id']
+          }
+        }
+      },
+      transaction
+    })
     if (!reserva) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Reserva no encontrada' })
@@ -262,21 +299,33 @@ export const updateReserva = async (req, res) => {
       return res.status(403).json({ error: 'Vehículo no válido para este usuario' })
     }
 
-    const plaza = await Plaza.findByPk(plazaId, { transaction })
-    if (!plaza) {
+    const nuevaPlaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      },
+      transaction
+    })
+
+    if (!nuevaPlaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
-    if (!plaza.reservable) {
+    if (!nuevaPlaza.reservable) {
       await transaction.rollback()
       return res.status(400).json({ error: 'Esta plaza no está disponible para reservas normales' })
     }
 
-    if (vehicle.tipo !== plaza.tipo) {
+    if (vehicle.tipo !== nuevaPlaza.tipo) {
       await transaction.rollback()
       return res.status(400).json({
-        error: `Una plaza de tipo ${plaza.tipo} no es compatible con un vehículo de tipo ${vehicle.tipo}`
+        error: `Una plaza de tipo ${nuevaPlaza.tipo} no es compatible con un vehículo de tipo ${vehicle.tipo}`
       })
     }
 
@@ -324,9 +373,17 @@ export const updateReserva = async (req, res) => {
       return res.status(400).json({ error: 'Este vehículo ya tiene una reserva en ese horario' })
     }
 
-    if (reserva.plaza_id !== plazaId) {
+    const durationHours = (end - start) / (1000 * 60 * 60)
+    const precioTotal = durationHours * nuevaPlaza.precioHora
+
+    const plazaAnteriorId = reserva.plaza_id
+    const parkingIdAnterior = reserva.plaza?.planta?.parking?.id
+
+    const seCambiaDePlaza = plazaAnteriorId !== plazaId
+
+    if (seCambiaDePlaza) {
       await Plaza.update({ estado: 'Libre' }, {
-        where: { id: reserva.plaza_id },
+        where: { id: plazaAnteriorId },
         transaction
       })
 
@@ -335,9 +392,6 @@ export const updateReserva = async (req, res) => {
         transaction
       })
     }
-
-    const durationHours = (new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60)
-    const precioTotal = durationHours * plaza.precioHora
 
     await reserva.update({
       vehiculo_id: vehicleId,
@@ -349,16 +403,10 @@ export const updateReserva = async (req, res) => {
 
     await reservaQueue.removeJobs(`${reserva.id}`)
 
-    const delay = new Date(endTime).getTime() - Date.now()
-
-    await reservaQueue.add(
-      'completar-reserva',
-      { reservaId: reserva.id },
-      {
-        delay,
-        jobId: `${reserva.id}`
-      }
-    )
+    await reservaQueue.add('completar-reserva', { reservaId: reserva.id }, {
+      delay: end.getTime() - Date.now(),
+      jobId: `${reserva.id}`
+    })
 
     await transaction.commit()
 
@@ -366,15 +414,20 @@ export const updateReserva = async (req, res) => {
       'id', 'user_id', 'vehiculo_id', 'plaza_id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
 
-    if (reserva.plaza_id !== plazaId) {
-      getIO().emit('parking:update', {
-        plazaId: reserva.plaza_id, // plaza anterior
-        nuevoEstado: 'Libre',
-        tipo: 'reserva_modificada'
-      })
+    // Emitimos al room del parking correspondiente
+    if (seCambiaDePlaza) {
+      const parkingIdNuevo = nuevaPlaza.planta.parking.id
 
-      getIO().emit('parking:update', {
-        plazaId, // nueva plaza
+      if (parkingIdAnterior) {
+        getIO().to(`parking:${parkingIdAnterior}`).emit('parking:update', {
+          plazaId: plazaAnteriorId,
+          nuevoEstado: 'Libre',
+          tipo: 'reserva_modificada'
+        })
+      }
+
+      getIO().to(`parking:${parkingIdNuevo}`).emit('parking:update', {
+        plazaId,
         nuevoEstado: 'Reservado',
         tipo: 'reserva_modificada'
       })
@@ -393,7 +446,23 @@ export const cancelReserva = async (req, res) => {
   try {
     const { reservaId } = req.params
 
-    const reserva = await Reserva.findByPk(reservaId, { transaction })
+    const reserva = await Reserva.findByPk(reservaId, {
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        include: {
+          model: Planta,
+          as: 'planta',
+          include: {
+            model: Parking,
+            as: 'parking',
+            attributes: ['id']
+          }
+        }
+      },
+      transaction
+    })
+
     if (!reserva) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Reserva no encontrada' })
@@ -403,6 +472,13 @@ export const cancelReserva = async (req, res) => {
       await transaction.rollback()
       return res.status(400).json({ error: 'Solo se pueden cancelar reservas activas' })
     }
+
+    if (!reserva.plaza || !reserva.plaza.planta || !reserva.plaza.planta.parking) {
+      await transaction.rollback()
+      return res.status(500).json({ error: 'No se pudo determinar el parking de la plaza asociada' })
+    }
+
+    const parkingId = reserva.plaza.planta.parking.id
 
     await Plaza.update({ estado: 'Libre' }, {
       where: { id: reserva.plaza_id },
@@ -415,7 +491,8 @@ export const cancelReserva = async (req, res) => {
     await reservaQueue.removeJobs(`${reserva.id}`)
     await transaction.commit()
 
-    getIO().emit('parking:update', {
+    // Emitimos al room del parking correspondiente
+    getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId: reserva.plaza_id,
       nuevoEstado: 'Libre',
       tipo: 'reserva_cancelada'
@@ -434,10 +511,31 @@ export const deleteReserva = async (req, res) => {
   try {
     const { reservaId } = req.params
 
-    const reserva = await Reserva.findByPk(reservaId, { transaction })
+    const reserva = await Reserva.findByPk(reservaId, {
+      include: {
+        model: Plaza,
+        as: 'plaza',
+        include: {
+          model: Planta,
+          as: 'planta',
+          include: {
+            model: Parking,
+            as: 'parking',
+            attributes: ['id']
+          }
+        }
+      },
+      transaction
+    })
+
     if (!reserva) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Reserva no encontrada' })
+    }
+
+    if (!reserva.plaza || !reserva.plaza.planta || !reserva.plaza.planta.parking) {
+      await transaction.rollback()
+      return res.status(500).json({ error: 'No se pudo determinar el parking de la plaza asociada' })
     }
 
     if (reserva.estado === 'activa') {
@@ -450,7 +548,9 @@ export const deleteReserva = async (req, res) => {
     await reserva.destroy({ transaction })
     await transaction.commit()
 
-    getIO().emit('parking:update', {
+    const parkingId = reserva.plaza.planta.parking.id
+
+    getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId: reserva.plaza_id,
       nuevoEstado: 'Libre',
       tipo: 'reserva_eliminada'
@@ -595,10 +695,27 @@ export const createReservaRapida = async (req, res) => {
   try {
     const { plazaId, matricula, tipoVehiculo } = req.body
 
-    const plaza = await Plaza.findByPk(plazaId, { transaction })
+    const plaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      },
+      transaction
+    })
+
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
+    }
+
+    if (!plaza.planta || !plaza.planta.parking) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'No se pudo determinar el parking de la plaza' })
     }
 
     if (plaza.reservable) {
@@ -651,7 +768,9 @@ export const createReservaRapida = async (req, res) => {
       'id', 'plaza_id', 'startTime', 'estado', 'matricula'
     ])
 
-    getIO().emit('parking:update', {
+    const parkingId = plaza.planta.parking.id
+
+    getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId,
       nuevoEstado: 'Ocupado',
       tipo: 'reserva_rapida_creada'
@@ -687,14 +806,30 @@ export const completeReservaRapida = async (req, res) => {
       return res.status(404).json({ error: 'Reserva activa no encontrada' })
     }
 
-    const now = new Date()
+    const plaza = await Plaza.findByPk(plazaId, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      },
+      transaction
+    })
 
-    const plaza = await Plaza.findByPk(plazaId, { transaction })
     if (!plaza) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Plaza no encontrada' })
     }
 
+    if (!plaza.planta || !plaza.planta.parking) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'No se pudo determinar el parking de la plaza' })
+    }
+
+    const now = new Date()
     const durationHours = (now - new Date(reserva.startTime)) / (1000 * 60 * 60)
     const precioTotal = parseFloat((durationHours * plaza.precioHora).toFixed(2))
 
@@ -714,7 +849,9 @@ export const completeReservaRapida = async (req, res) => {
       'id', 'startTime', 'endTime', 'estado', 'precioTotal'
     ])
 
-    getIO().emit('parking:update', {
+    const parkingId = plaza.planta.parking.id
+
+    getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId,
       nuevoEstado: 'Libre',
       tipo: 'reserva_rapida_completada'

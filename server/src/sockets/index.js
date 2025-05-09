@@ -13,6 +13,18 @@ export const initSocket = (server) => {
   io.on('connection', (socket) => {
     console.log(`📡 Cliente conectado: ${socket.id}`)
 
+    // Unirse a una sala de parking
+    socket.on('join:parking', (parkingId) => {
+      socket.join(`parking:${parkingId}`)
+      console.log(`🔵 Cliente ${socket.id} unido a sala parking:${parkingId}`)
+    })
+
+    // Salir de la sala
+    socket.on('leave:parking', (parkingId) => {
+      socket.leave(`parking:${parkingId}`)
+      console.log(`🔴 Cliente ${socket.id} salió de sala parking:${parkingId}`)
+    })
+
     socket.on('disconnect', () => {
       console.log(`❌ Cliente desconectado: ${socket.id}`)
     })
