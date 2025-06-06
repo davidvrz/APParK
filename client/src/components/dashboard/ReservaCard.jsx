@@ -18,26 +18,22 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
   const startDate = formatDate(reservation.startTime)
   const parkingName = reservation.parking?.nombre || "Parking desconocido"
   const parkingAddress = reservation.parking?.ubicacion || "Ubicación no disponible"
-  const carPlate = reservation.vehicle?.matricula || "Vehículo"
   const plazaNumber = reservation.plaza?.numero || "N/A"
   const price = reservation.precioTotal ? `${reservation.precioTotal} €` : "0.00 €"
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{
-        type: "spring",
-        damping: 15,
-        stiffness: 300,
-        duration: 0.2
+      whileHover={{
+        scale: 1.02,
       }}
-      className="h-full flex flex-col cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+      transition={{
+        duration: 0.3,
+        ease: "easeOut"
+      }}
+      className="h-full flex flex-col cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
       onClick={onExpand}
-      whileHover={{ scale: 1.02 }}
     >
-      {/* Cabecera con gradiente */}
+      {/* Cabecera */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-500 py-3 px-4 text-white">
         <div className="flex items-center justify-between">
           <h3 className="font-display font-medium tracking-tight">{parkingName}</h3>
@@ -67,7 +63,7 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
         <div className="flex items-center text-sm">
           <Car className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
           <span className="font-normal">
-            {carPlate} · Plaza {plazaNumber}
+            {reservation.vehicle?.modelo || "Vehículo"} — {reservation.vehicle?.matricula || "N/A"} · Plaza {plazaNumber}
           </span>
         </div>
       </div>
@@ -78,49 +74,35 @@ function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
           {price}
         </div>
         <div className="flex space-x-2">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 px-3 rounded-full font-medium"
-              onClick={(e) => {
-                e.stopPropagation()
-                onEdit(e)
-              }}
-            >
-              <Edit className="h-3.5 w-3.5 mr-1" />
-              Editar
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 w-8 rounded-full text-red-500 hover:text-red-600 p-0"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCancel(e)
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </motion.div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 rounded-full font-medium hover:scale-105 active:scale-95 transition-transform duration-150"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit(e)
+            }}
+          >
+            <Edit className="h-3.5 w-3.5 mr-1" />
+            Editar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 w-8 rounded-full text-red-500 hover:text-red-600 hover:scale-105 active:scale-95 transition-all duration-150 p-0"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCancel(e)
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
 
       {/* Indicador de expandir */}
       <div className="flex justify-center py-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-        <motion.div
-          animate={{ y: [0, 2, 0] }}
-          transition={{
-            repeat: Infinity,
-            repeatType: "reverse",
-            duration: 1,
-            ease: "easeInOut",
-          }}
-        >
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </motion.div>
+        <ChevronDown className="h-4 w-4 text-gray-400" />
       </div>
     </motion.div>
   )

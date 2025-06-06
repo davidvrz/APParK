@@ -42,6 +42,26 @@ function MapUpdater({ parkings }) {
 
 const ParkingMap = ({ parkings = [], onSelectParking }) => {
   const [mapReady, setMapReady] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Detectar el tema oscuro
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark')
+    setIsDarkMode(isDark)
+
+    // Observar cambios en el tema
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          setIsDarkMode(document.documentElement.classList.contains('dark'))
+        }
+      }
+    })
+
+    observer.observe(document.documentElement, { attributes: true })
+
+    return () => observer.disconnect()
+  }, [])
 
   const getEstadoColor = (estado) => {
     switch(estado) {
@@ -59,10 +79,12 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
         zoom={6}
         style={{ height: '100%', width: '100%', minHeight: '500px' }}
         whenReady={() => setMapReady(true)}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      >        <TileLayer
+          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+          url={isDarkMode
+            ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+            : "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+          }
         />
 
         {parkings.map((parking) => {

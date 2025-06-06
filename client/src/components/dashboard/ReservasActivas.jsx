@@ -1,82 +1,20 @@
 import { useState } from "react"
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent
-} from "@/components/ui/Card"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/Badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/Dialog"
-import { AlertCircle, Car, PlusCircle } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/Dialog"
+import { AlertCircle } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import ReservaCard from "./ReservaCard"
 import ReservaDetails from "./ReservaDetails"
 import ReservaEditForm from "./ReservaEditForm"
+import NewReservaCard from "./NewReservaCard"
 
 import { useReservas } from "@/hooks/useReservas"
 import { useVehiculos } from "@/hooks/useVehiculos"
 import { useParking } from "@/hooks/useParking"
-
-const transitionConfig = {
-  type: "spring",
-  stiffness: 280,
-  damping: 20,
-  duration: 0.2
-}
-
-const NewReservaCard = () => (
-  <Link to="/map" className="h-full">
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={transitionConfig}
-      whileHover={{
-        scale: 1.02,
-        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)"
-      }}
-      className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm h-full flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-200 dark:border-gray-700"
-    >
-      <div className="text-center p-8">
-        <motion.div
-          className="mx-auto w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut"
-          }}
-        >
-          <PlusCircle className="h-7 w-7 text-blue-500 dark:text-blue-400" />
-        </motion.div>
-        <h3 className="font-display text-lg font-medium tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-          Nueva Reserva
-        </h3>
-        <p className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4">
-          Programa una nueva reserva de aparcamiento
-        </p>
-        <Button
-          size="sm"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-medium"
-        >
-          Crear Reserva
-        </Button>
-      </div>
-    </motion.div>
-  </Link>
-)
 
 export default function ReservasActivas() {
   const {
@@ -140,7 +78,6 @@ export default function ReservasActivas() {
       setEditOpen(false)
       setSelectedReservation(null)
     } catch (err) {
-      console.error("Error al modificar reserva:", err)
     } finally {
       setEditLoading(false)
     }
@@ -151,125 +88,108 @@ export default function ReservasActivas() {
     setSelectedReservation(null)
     clearError()
   }
-
   return (
-    <LayoutGroup>
+    <div>
       <Card className="bg-gray-100 dark:bg-gray-800/90 border-none shadow-sm rounded-xl overflow-hidden">
-        <motion.div layout transition={transitionConfig}>
-          <CardHeader className="border-b border-gray-100 dark:border-gray-700 pb-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="font-display text-xl font-semibold tracking-tight text-gray-800 dark:text-gray-100">Mis Reservas</CardTitle>
-                <CardDescription className="font-normal text-gray-500 dark:text-gray-400 mt-1">
-                  Gestiona tus reservas de aparcamiento actuales
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                {reservas.length > 3 && !isExpanded && (
-                  <Link to="/reservas/activas">
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-blue-500 dark:text-blue-400 font-medium tracking-tight"
-                    >
-                      Ver completo
-                    </Button>
-                  </Link>
-                )}
-                <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
-                  {reservas.length} Activas
-                </Badge>
-              </div>
+        <CardHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="font-display text-xl font-semibold tracking-tight text-gray-800 dark:text-gray-100">Mis Reservas</CardTitle>
+              <CardDescription className="font-normal text-gray-500 dark:text-gray-400 mt-1">
+                Gestiona tus reservas de aparcamiento actuales
+              </CardDescription>
             </div>
-          </CardHeader>
-        </motion.div>
+            <div className="flex items-center gap-2">
+              {reservas.length > 3 && !isExpanded && (
+                <Link to="/reservas/activas">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-blue-500 dark:text-blue-400 font-medium tracking-tight"
+                  >
+                    Ver completo
+                  </Button>
+                </Link>
+              )}
+              <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
+                {reservas.length} Activas
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
 
-        <motion.div layout transition={transitionConfig}>
-          <CardContent className="p-6">
-            {loading ? (
-              <div className="h-56 flex items-center justify-center">
+        <CardContent className="p-6">
+          {loading ? (
+            <div className="h-56 flex items-center justify-center">
+              <div className="rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-100 animate-spin"></div>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              {isExpanded ? (
                 <motion.div
-                  className="rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-100"
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    ease: "linear",
-                    duration: 0.8,
-                    repeat: Infinity,
-                  }}
-                />
-              </div>
-            ) : (
-              <AnimatePresence mode="wait" initial={false}>
-                {isExpanded ? (
-                  <motion.div
-                    key="expanded-view"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={transitionConfig}
-                    layout
-                    className="overflow-hidden rounded-xl"
-                  >
-                    {expandedReservation && (
-                      <ReservaDetails
-                        reservation={expandedReservation}
-                        onClose={() => setExpandedId(null)}
-                        onDelete={() => {
-                          setSelectedReservation(expandedReservation)
-                          setCancelOpen(true)
-                        }}
-                        onEdit={() => {
-                          clearError()
-                          setSelectedReservation(expandedReservation)
-                          setEditOpen(true)
-                        }}
-                      />
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="grid-view"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={transitionConfig}
-                    layout
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  >
-                    {reservasSlots.map((reserva, index) => (
-                      <motion.div
-                        key={reserva ? reserva.id : `empty-${index}`}
-                        layout
-                        className="rounded-xl overflow-hidden shadow-sm h-full"
-                        transition={transitionConfig}
-                      >
-                        {reserva ? (
-                          <ReservaCard
-                            reservation={reserva}
-                            onExpand={() => setExpandedId(reserva.id)}
-                            onEdit={(e) => {
-                              e.stopPropagation()
-                              clearError()
-                              setSelectedReservation(reserva)
-                              setEditOpen(true)
-                            }}
-                            onCancel={(e) => {
-                              e.stopPropagation()
-                              setSelectedReservation(reserva)
-                              setCancelOpen(true)
-                            }}
-                          />
-                        ) : (
-                          <NewReservaCard />
-                        )}
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            )}
-          </CardContent>
-        </motion.div>
+                  key="expanded-view"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="rounded-xl"
+                >
+                  {expandedReservation && (
+                    <ReservaDetails
+                      reservation={expandedReservation}
+                      onClose={() => setExpandedId(null)}
+                      onDelete={() => {
+                        setSelectedReservation(expandedReservation)
+                        setCancelOpen(true)
+                      }}
+                      onEdit={() => {
+                        clearError()
+                        setSelectedReservation(expandedReservation)
+                        setEditOpen(true)
+                      }}
+                    />
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="grid-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                  {reservasSlots.map((reserva, index) => (
+                    <div
+                      key={reserva ? reserva.id : `empty-${index}`}
+                      className="rounded-xl shadow-sm h-full"
+                    >
+                      {reserva ? (
+                        <ReservaCard
+                          reservation={reserva}
+                          onExpand={() => setExpandedId(reserva.id)}
+                          onEdit={(e) => {
+                            e.stopPropagation()
+                            clearError()
+                            setSelectedReservation(reserva)
+                            setEditOpen(true)
+                          }}
+                          onCancel={(e) => {
+                            e.stopPropagation()
+                            setSelectedReservation(reserva)
+                            setCancelOpen(true)
+                          }}
+                        />
+                      ) : (
+                        <NewReservaCard />
+                      )}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+        </CardContent>
       </Card>
 
       {/* — Confirmación de cancelación — */}
@@ -328,9 +248,8 @@ export default function ReservasActivas() {
               apiError={error}
               isLoading={loading || editLoading}
             />
-          )}
-        </DialogContent>
+          )}        </DialogContent>
       </Dialog>
-    </LayoutGroup>
+    </div>
   )
 }

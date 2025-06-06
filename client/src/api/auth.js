@@ -10,4 +10,4 @@ export const logoutUser = () =>
   axios.post('/auth/logout')
 
 export const refreshToken = () =>
-  axios.post('/auth/refresh', null, { withCredentials: true })
+  axios.post('/auth/refresh', {}, { withCredentials: true })

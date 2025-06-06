@@ -4,22 +4,8 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
 import { Alert, AlertDescription } from "@/components/ui/Alert"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/Select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 
-/**
- * Componente de formulario para añadir o editar un vehículo.
- *
- * @param {Object} vehicle - Vehículo a editar (opcional, si es undefined se trata como nuevo vehículo)
- * @param {Function} onSubmit - Función que se ejecuta al enviar el formulario
- * @param {boolean} isSubmitting - Indica si el formulario está siendo enviado
- * @param {string} error - Error del formulario si existe
- */
 export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, error = null }) {
   const [formData, setFormData] = useState({
     matricula: "",

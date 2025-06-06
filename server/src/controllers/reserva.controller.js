@@ -81,7 +81,7 @@ export const createReserva = async (req, res) => {
       return res.status(400).json({ error: 'Esta plaza no está disponible para reservas normales' })
     }
 
-    const overlapping = await Reserva.findOne({
+    const overlappingPlaza = await Reserva.findOne({
       where: {
         plaza_id: plazaId,
         estado: 'activa',
@@ -97,7 +97,7 @@ export const createReserva = async (req, res) => {
       transaction
     })
 
-    if (overlapping) {
+    if (overlappingPlaza) {
       await transaction.rollback()
       return res.status(400).json({ error: 'La plaza ya está reservada en ese horario' })
     }
@@ -142,7 +142,6 @@ export const createReserva = async (req, res) => {
 
     await reservaQueue.removeJobs(`${reserva.id}`)
     const delay = new Date(endTime).getTime() - Date.now()
-    console.log(`\n\nReserva ${reserva.id} programada para completarse en ${delay} ms\n\n`)
     await reservaQueue.add(
       'completar-reserva',
       { reservaId: reserva.id },
@@ -187,27 +186,26 @@ export const getReservasByUser = async (req, res) => {
 
     const reservas = await Reserva.findAll({
       where: { user_id: userId, estado: 'activa' },
-      include: [
-        {
-          model: Vehicle,
-          as: 'vehicle',
-          attributes: ['id', 'matricula', 'tipo']
-        },
-        {
-          model: Plaza,
-          as: 'plaza',
-          attributes: ['id', 'numero', 'tipo', 'precioHora'],
+      include: [{
+        model: Vehicle,
+        as: 'vehicle',
+        attributes: ['id', 'matricula', 'tipo', 'modelo']
+      },
+      {
+        model: Plaza,
+        as: 'plaza',
+        attributes: ['id', 'numero', 'tipo', 'precioHora'],
+        include: {
+          model: Planta,
+          as: 'planta',
+          attributes: ['numero'],
           include: {
-            model: Planta,
-            as: 'planta',
-            attributes: ['numero'],
-            include: {
-              model: Parking,
-              as: 'parking',
-              attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud']
-            }
+            model: Parking,
+            as: 'parking',
+            attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud']
           }
         }
+      }
       ],
       order: [['startTime', 'ASC']]
     })
@@ -217,7 +215,7 @@ export const getReservasByUser = async (req, res) => {
 
       return {
         ...base,
-        vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo']),
+        vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo', 'modelo']),
         plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'precioHora']),
         planta: pick(reserva.plaza.planta, ['numero']),
         parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion', 'latitud', 'longitud'])
@@ -573,7 +571,7 @@ export const getHistorialReservasByUser = async (req, res) => {
         {
           model: Vehicle,
           as: 'vehicle',
-          attributes: ['id', 'matricula', 'tipo']
+          attributes: ['id', 'matricula', 'tipo', 'modelo']
         },
         {
           model: Plaza,
@@ -596,7 +594,7 @@ export const getHistorialReservasByUser = async (req, res) => {
 
     const formattedHistorial = reservas.map(reserva => ({
       ...pick(reserva.get(), ['id', 'startTime', 'endTime', 'estado', 'precioTotal']),
-      vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo']),
+      vehicle: pick(reserva.vehicle, ['id', 'matricula', 'tipo', 'modelo']),
       plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'precioHora']),
       planta: pick(reserva.plaza.planta, ['numero']),
       parking: pick(reserva.plaza.planta.parking, ['id', 'nombre', 'ubicacion'])

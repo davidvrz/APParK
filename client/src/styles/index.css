@@ -87,38 +87,65 @@
     }
 
     .dark {
-        --background: 240 10% 3.9%;
-        --foreground: 210 40% 98%;
+        /* Base OneDarkPro inspirado con grises oscuros */
+        --background: 220 13% 15%;
+        /* #1e222a - fondo principal más oscuro */
+        --foreground: 220 14% 98%;
+        /* #f8f9fc - texto principal más claro para mejor contraste */
 
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 210 40% 98%;
+        --card: 218 13% 23%;
+        /* #323842 - fondo de tarjetas */
+        --card-foreground: 220 14% 98%;
+        /* #f8f9fc - texto en tarjetas más claro */
 
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
+        --popover: 218 13% 23%;
+        /* #323842 - fondos emergentes */
+        --popover-foreground: 220 14% 98%;
+        /* #f8f9fc - texto en emergentes más claro */
 
-        --primary: 210 40% 98%;
-        --primary-foreground: 222.2 47.4% 11.2%;
+        /* Color primario más azul para destacar en modo oscuro */
+        --primary: 218 100% 65%;
+        /* #61afef - azul destacado */
+        --primary-foreground: 220 13% 18%;
+        /* #282c34 - texto sobre azul */
+        --secondary: 220 13% 25%;
+        /* #373d49 - fondo secundario */
+        --secondary-foreground: 220 14% 98%;
+        /* #f8f9fc - texto secundario más claro */
 
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
+        --muted: 218 13% 20%;
+        /* #2d323b - fondos atenuados */
+        --muted-foreground: 220 14% 70%;
+        /* #9ba3b3 - texto atenuado más claro para mejor legibilidad */
 
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 220 13% 28%;
+        /* Cambiado a un gris neutro */
+        --accent-foreground: 220 14% 96%;
+        /* Texto claro sobre el gris neutro */
 
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
+        --destructive: 5 80% 60%;
+        /* #e06c75 - color para errores/destructivo */
+        --destructive-foreground: 220 14% 96%;
+        /* #abb2bf - texto sobre destructivo */
 
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
+        --border: 218 13% 30%;
+        /* #3e4451 - bordes */
+        --input: 218 13% 30%;
+        /* #3e4451 - fondos de inputs */
+        --ring: 218 100% 65%;
+        /* #61afef - anillos de focus */
 
-        --border: 217.2 32.6% 17.5%;
-        --input: 217.2 32.6% 17.5%;
-        --ring: hsl(212.7, 26.8%, 83.9);
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+        /* Colores para gráficos en modo oscuro */
+        --chart-1: 218 100% 65%;
+        /* #61afef - azul */
+        --chart-2: 180 80% 45%;
+        /* #56b6c2 - cyan */
+        --chart-3: 35 80% 60%;
+        /* #e5c07b - amarillo */
+        --chart-4: 5 80% 60%;
+        /* #e06c75 - rojo */
+        --chart-5: 300 65% 65%;
+        /* #c678dd - púrpura */
     }
 }
 
@@ -298,7 +325,139 @@
     overflow: hidden;
 }
 
+/* Tooltips en modo oscuro */
+.dark .leaflet-tooltip.custom-tooltip {
+    background-color: hsl(var(--card));
+    border-color: hsl(var(--border));
+    color: hsl(var(--card-foreground));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
 /* Ocultar la flecha del tooltip */
 .leaflet-tooltip.custom-tooltip:before {
     display: none;
+}
+
+/* Estilos para componentes específicos en modo oscuro */
+.dark .card {
+    background-color: hsl(var(--card));
+    border-color: hsl(var(--border));
+    color: hsl(var(--card-foreground));
+}
+
+.dark .leaflet-container {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Estilos para los controles del mapa en modo oscuro */
+.dark .leaflet-control-zoom a {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
+}
+
+.dark .leaflet-control-zoom a:hover {
+    background-color: hsl(var(--secondary));
+}
+
+.dark .custom-tooltip {
+    background-color: hsl(var(--card));
+    border-color: hsl(var(--border));
+    color: hsl(var(--card-foreground));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Estilos específicos para el componente ParkingPlan en modo oscuro */
+.dark .plaza-libre {
+    background-color: rgba(56, 189, 114, 0.1);
+    border-color: rgba(56, 189, 114, 0.3);
+    color: #4ade80;
+}
+
+.dark .plaza-ocupada {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.dark .plaza-reservada {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+}
+
+.dark .badge {
+    border-color: transparent;
+}
+
+/* Efectos de hover para botones en modo oscuro */
+.dark button:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+/* Mejora del contraste entre las secciones y las tarjetas */
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+    background-color: hsl(220, 13%, 18%);
+    /* Fondo de sección ligeramente más claro que el fondo principal */
+}
+
+.dark .bg-white {
+    background-color: hsl(218, 13%, 23%);
+    /* Tarjetas más claras que el fondo de sección */
+}
+
+/* Mantener la misma relación visual de contraste que en modo claro */
+.dark [class*="card"],
+.dark [class*="Card"] {
+    background-color: hsl(218, 13%, 23%);
+    border-color: hsl(218, 13%, 30%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilizar bordes y sombras */
+.dark .border,
+.dark [class*="border"] {
+    border-color: hsl(218, 13%, 30%);
+}
+
+.dark .shadow,
+.dark [class*="shadow"] {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos específicos para tarjetas de reservas en modo oscuro */
+.dark .ReservaCard,
+.dark [class*="reserva-card"] {
+    background-color: hsl(220, 13%, 22%);
+    border-color: hsl(220, 13%, 30%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Mejorar gradientes en modo oscuro */
+.dark .bg-gradient-to-r.from-blue-600.to-cyan-500 {
+    background-image: linear-gradient(to right, rgb(37, 99, 235), rgb(8, 145, 178));
+}
+
+/* Ajustar contraste y colores de fondo para las tarjetas de ReservaCard */
+.dark .rounded-2xl.overflow-hidden.shadow-md:not(.border-dashed) {
+    background-color: hsl(220, 13%, 22%);
+    border: 1px solid hsl(220, 13%, 28%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Mejorar visibilidad de los íconos en modo oscuro */
+.dark .text-blue-500 {
+    color: hsl(218, 100%, 65%);
+}
+
+/* Estilo para botones ghost en modo oscuro */
+.dark .bg-white\/20 {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Mejorar los estilos de los popups y diálogos */
+.dark .bg-gray-50.dark\:bg-gray-700\/50 {
+    background-color: hsl(220, 13%, 25%);
 }

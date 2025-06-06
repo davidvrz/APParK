@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { loginUser, registerUser, logoutUser } from "@/api/auth"
+import { loginUser, registerUser, logoutUser, refreshToken } from "@/api/auth"
 import { setAccessToken as syncAxiosToken } from '@/api/axios.js'
 
 export const AuthContext = createContext()
@@ -10,32 +10,75 @@ export const AuthProvider = ({ children }) => {
   const [accessTokenState, setAccessTokenState] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [isAuthChecked, setIsAuthChecked] = useState(false) // clave para evitar redirecciones antes de tiempo
 
   const clearError = () => setError(null)
 
-  // Podriamos hacer una peticion a la API para obtener el usuario
   // Al montar, intentamos recuperar token del localStorage
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
+
     if (token) {
       try {
         const decoded = jwtDecode(token)
-        setUser({
-          id: decoded.id,
-          email: decoded.email,
-          rol: decoded.rol,
-          nombreCompleto: decoded.nombreCompleto
-        })
-        setAccessTokenState(token)
-        syncAxiosToken(token)
-        clearError()
+
+        if (decoded.exp * 1000 > Date.now()) {
+        // Token válido
+          setUser({
+            id: decoded.id,
+            email: decoded.email,
+            rol: decoded.rol,
+            nombreCompleto: decoded.nombreCompleto
+          })
+          setAccessTokenState(token)
+          syncAxiosToken(token)
+          clearError()
+          setIsAuthChecked(true)
+        } else {
+        // Token expirado
+          console.log('Token expirado, eliminando...')
+          localStorage.removeItem('accessToken')
+          attemptTokenRefresh()
+        }
       } catch (_err) {
         console.error('Token inválido, eliminando...', _err)
-        setError('Sesión expirada o inválida')
         localStorage.removeItem('accessToken')
+        attemptTokenRefresh()
       }
+    } else {
+      attemptTokenRefresh()
     }
   }, [])
+
+  const attemptTokenRefresh = () => {
+    const hasRefreshCookie = document.cookie.includes('refreshToken')
+
+    if (hasRefreshCookie) {
+      refreshToken()
+        .then(res => {
+          const { token } = res.data.accessToken
+          const decoded = jwtDecode(token)
+
+          setAccessTokenState(token)
+          syncAxiosToken(token)
+          localStorage.setItem('accessToken', token)
+          setUser({
+            id: decoded.id,
+            email: decoded.email,
+            rol: decoded.rol,
+            nombreCompleto: decoded.nombreCompleto
+          })
+        })
+        .catch(err => {
+          console.warn('No se pudo renovar el token:', err.message)
+        })
+        .finally(() => {
+          setIsAuthChecked(true)
+        })
+    } else {
+      setIsAuthChecked(true)
+    }
+  }
 
   // Usamos useCallback para evitar dependencias circulares en useEffect
   const logout = useCallback(async () => {
@@ -129,6 +172,7 @@ export const AuthProvider = ({ children }) => {
         user,
         accessToken: accessTokenState,
         isAuthenticated: !!user,
+        isAuthChecked,
         loading,
         error,
         clearError,

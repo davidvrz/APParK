@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
-import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import { Clock, MapPin, Car, ChevronLeft, ChevronRight, Calendar, Layers, Square } from "lucide-react"
 import { useReservas } from "@/hooks/useReservas"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -148,49 +148,51 @@ function HistorialReservas() {
                             </div>
                           </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-2">
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                            <p className="text-sm text-gray-500 font-medium mb-1">Entrada</p>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1.5 text-blue-500" />
-                              <span className="text-sm font-normal">{formatShortDate(current.startTime)}</span>
-                            </div>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1.5 text-blue-500" />
-                              <span className="text-sm font-medium">{formatTime(current.startTime)}</span>
-                            </div>
+                        <div className="grid grid-cols-2 grid-rows-2 gap-4 flex-grow">
+                          {/* Vehículo */}
+                          <div className="bg-gray-50 dark:bg-gray-700/30 p-2 rounded-lg flex flex-col items-center justify-center">
+                            <Car className="h-6 w-6 mb-1 text-blue-500" />
+                            <p className="text-base font-medium text-center leading-tight">{current.vehicle?.matricula || "Matrícula N/D"}</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 text-center leading-tight">
+                              {current.vehicle?.modelo || "Modelo N/D"}
+                            </p>
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                            <p className="text-sm text-gray-500 font-medium mb-1">Salida</p>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1.5 text-blue-500" />
-                              <span className="text-sm font-normal">{formatShortDate(current.endTime)}</span>
-                            </div>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-4 w-4 mr-1.5 text-blue-500" />
-                              <span className="text-sm font-medium">{formatTime(current.endTime)}</span>
-                            </div>
-                          </div>
-                        </div>
 
-                        <div className="flex gap-4 mt-4">
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex-1">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                <Car className="h-4 w-4 mr-1.5 text-blue-500" />
-                                <span className="text-sm font-medium">{current.vehicle?.matricula || "Matrícula N/D"}</span>
+                          {/* Ubicación */}
+                          <div className="bg-gray-50 dark:bg-gray-700/30 p-2 rounded-lg flex flex-col items-center justify-center">
+                            <div className="flex items-center gap-4">
+                              <div className="flex flex-col items-center">
+                                <Square className="h-5 w-5 mb-0.5 text-blue-500" />
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">Plaza</span>
+                                <p className="text-base font-medium leading-tight">{current.plaza?.numero || "N/D"}</p>
                               </div>
-                              <span className="text-xs text-gray-500 font-normal">
-                                {current.vehicle?.modelo || ""}
-                              </span>
+                              <div className="flex flex-col items-center">
+                                <Layers className="h-5 w-5 mb-0.5 text-blue-500" />
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">Planta</span>
+                                <p className="text-base font-medium leading-tight">P{current.planta?.numero || current.plaza?.planta?.numero || "N/D"}</p>
+                              </div>
                             </div>
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex-1">
-                            <p className="text-sm text-gray-500 font-medium mb-1">Ubicación</p>
-                            <div className="text-sm font-normal">
-                              Plaza {current.plaza?.numero || "N/D"} ·
-                              Planta {current.planta?.numero || current.plaza?.planta?.numero || "N/D"}
+
+                          {/* Entrada */}
+                          <div className="bg-gray-50 dark:bg-gray-700/30 p-2 rounded-lg flex flex-col items-center justify-center">
+                            <Clock className="h-5 w-5 mb-0.5 text-blue-500" />
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium leading-tight">Entrada</span>
+                            <p className="text-base font-medium leading-tight">{formatTime(current.startTime)}</p>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-gray-400" />
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatShortDate(current.startTime)}</p>
+                            </div>
+                          </div>
+
+                          {/* Salida */}
+                          <div className="bg-gray-50 dark:bg-gray-700/30 p-2 rounded-lg flex flex-col items-center justify-center">
+                            <Clock className="h-5 w-5 mb-0.5 text-blue-500" />
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium leading-tight">Salida</span>
+                            <p className="text-base font-medium leading-tight">{formatTime(current.endTime)}</p>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-gray-400" />
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatShortDate(current.endTime)}</p>
                             </div>
                           </div>
                         </div>

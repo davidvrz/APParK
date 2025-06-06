@@ -4,18 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/Label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/Select"
-import {
-  RESERVA_ANTICIPACION_MIN,
-  RESERVA_TIEMPO_MIN,
-  RESERVA_TIEMPO_MAX
-} from "@/config"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
+import { RESERVA_ANTICIPACION_MIN, RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX } from "@/config"
 
 export default function ReservaEditForm({
   reserva,
@@ -43,15 +33,11 @@ export default function ReservaEditForm({
     return plazasDisponibles.filter(p => p.tipo === vehiculoSeleccionado.tipo)
   }, [form.vehicleId, vehiculos, plazasDisponibles])
 
-  // Inicializar formulario al montar o cambiar reserva
   useEffect(() => {
     if (!reserva) return
 
-    const vid = reserva.vehicle?.id || reserva.vehiculo_id || reserva.vehicleId
-    const pid = reserva.plaza?.id || reserva.plaza_id || reserva.plazaId
-
-    const vehicleId = vid !== undefined ? String(vid) : ""
-    const plazaId = pid !== undefined ? String(pid) : ""
+    const vehicleId = reserva.vehicle?.id ? String(reserva.vehicle.id) : ""
+    const plazaId = reserva.plaza?.id ? String(reserva.plaza.id) : ""
 
     setForm({
       vehicleId,
@@ -64,36 +50,50 @@ export default function ReservaEditForm({
     setSuccess(false)
   }, [reserva, vehiculos, plazasDisponibles])
 
-  // Capturar errores de la API
   useEffect(() => {
     if (apiError) {
       setErrors(prev => ({ ...prev, server: apiError }))
     }
   }, [apiError])
 
-  // Validaciones básicas
   const validate = () => {
     const errs = {}
-    const start = new Date(form.startTime)
-    const end   = new Date(form.endTime)
 
     if (!form.startTime) errs.startTime = "La fecha de inicio es obligatoria"
-    if (!form.endTime)   errs.endTime   = "La fecha de fin es obligatoria"
+    if (!form.endTime) errs.endTime = "La fecha de fin es obligatoria"
     if (!form.vehicleId) errs.vehicleId = "Debes seleccionar un vehículo"
-    if (!form.plazaId)   errs.plazaId   = "Debes seleccionar una plaza"
+    if (!form.plazaId) errs.plazaId = "Debes seleccionar una plaza"
 
     if (form.startTime && form.endTime) {
-      if (end <= start) {
-        errs.endTime = "La fecha de fin debe ser posterior a la de inicio"
-      }
-      const diffMin = (end - start) / 60000
-      if (diffMin < RESERVA_TIEMPO_MIN || diffMin > RESERVA_TIEMPO_MAX) {
-        errs.duration = `La reserva debe durar entre ${RESERVA_TIEMPO_MIN} y ${RESERVA_TIEMPO_MAX} minutos`
-      }
+      const start = new Date(form.startTime)
+      const end = new Date(form.endTime)
       const now = new Date()
-      const diffAhead = (start - now) / 60000
-      if (diffAhead < RESERVA_ANTICIPACION_MIN) {
-        errs.ahead = `La reserva debe hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
+
+      if (isNaN(start.getTime())) {
+        errs.startTime = "Fecha de inicio inválida"
+      }
+      if (isNaN(end.getTime())) {
+        errs.endTime = "Fecha de fin inválida"
+      }
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        if (end <= start) {
+          errs.endTime = "La fecha de fin debe ser posterior a la de inicio"
+        } else {
+          const diffMin = (end - start) / (1000 * 60)
+          if (diffMin < RESERVA_TIEMPO_MIN) {
+            errs.duration = `La reserva debe durar al menos ${RESERVA_TIEMPO_MIN} minutos`
+          } else if (diffMin > RESERVA_TIEMPO_MAX) {
+            errs.duration = `La reserva no puede durar más de ${RESERVA_TIEMPO_MAX} minutos`
+          }
+        }
+
+        if (!isNaN(start.getTime())) {
+          const diffAhead = (start - now) / (1000 * 60)
+          if (diffAhead < RESERVA_ANTICIPACION_MIN) {
+            errs.ahead = `La reserva debe hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
+          }
+        }
       }
     }
 
@@ -137,7 +137,6 @@ export default function ReservaEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Mensaje de error general */}
       {(errors.server || apiError) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -148,7 +147,6 @@ export default function ReservaEditForm({
         </Alert>
       )}
 
-      {/* Mensaje de éxito */}
       {success && (
         <Alert variant="success" className="bg-green-50 text-green-800">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -157,7 +155,6 @@ export default function ReservaEditForm({
         </Alert>
       )}
 
-      {/* Selección de vehículo y plaza */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label className={`${errors.vehicleId ? "text-red-500" : ""} font-medium`}>
@@ -174,7 +171,7 @@ export default function ReservaEditForm({
             <SelectContent>
               {vehiculos.map(v => (
                 <SelectItem key={v.id} value={String(v.id)}>
-                  {v.matricula} — {v.tipo}
+                  {v.modelo} - {v.matricula}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -204,7 +201,6 @@ export default function ReservaEditForm({
         </div>
       </div>
 
-      {/* Fechas y horas con rangos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label className={`${errors.startTime || errors.ahead ? "text-red-500" : ""} font-medium`}>
@@ -217,8 +213,7 @@ export default function ReservaEditForm({
             onChange={handleChange}
             disabled={isLoading || submitting}
             className={`w-full ${errors.startTime || errors.ahead ? "border-red-500" : ""}`}
-            min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60000)
-              .toISOString().slice(0,16)}
+            min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60 * 1000).toISOString().slice(0,16)}
           />
           {errors.ahead && <p className="text-red-500 text-xs font-normal">{errors.ahead}</p>}
         </div>
@@ -235,14 +230,12 @@ export default function ReservaEditForm({
             className={`w-full ${errors.endTime || errors.duration ? "border-red-500" : ""}`}
             min={
               form.startTime
-                ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60000)
-                  .toISOString().slice(0,16)
+                ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60 * 1000).toISOString().slice(0,16)
                 : undefined
             }
             max={
               form.startTime
-                ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60000)
-                  .toISOString().slice(0,16)
+                ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60 * 1000).toISOString().slice(0,16)
                 : undefined
             }
           />
@@ -250,7 +243,6 @@ export default function ReservaEditForm({
         </div>
       </div>
 
-      {/* Botones */}
       <div className="flex justify-end space-x-2 pt-4 border-t">
         <Button
           type="button"
@@ -277,8 +269,7 @@ export default function ReservaEditForm({
               Cargando...
             </>
           ) : "Guardar cambios"}
-        </Button>
-      </div>
+        </Button>      </div>
     </form>
   )
 }

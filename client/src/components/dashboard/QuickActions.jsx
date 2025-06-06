@@ -16,7 +16,7 @@ export function QuickActions() {  const actions = [
   },
   {
     image: timeIllustration,
-    label: "Extender Tiempo",
+    label: "Mis Reservas",
     link: "/reservas/activas",
   },
   {
@@ -43,7 +43,7 @@ return (
           scale: 1.06,
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08)"
         }}
-        className="bg-white dark:bg-gray-800/60 rounded-2xl shadow-lg overflow-hidden h-full border border-gray-100 dark:border-gray-700"
+        className="bg-white dark:bg-gray-800/60 rounded-2xl shadow-lg overflow-hidden h-full border border-gray-100 dark:border-gray-700/50"
       >
         <Link to={action.link} className="h-full">
           <Button

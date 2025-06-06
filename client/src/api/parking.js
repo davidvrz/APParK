@@ -1,6 +1,6 @@
 import axios from './axios'
 
-// 🔓 Accesibles para usuario autenticado
+// Accesibles para usuario autenticado
 export const getAllParkings = async () => {
   const res = await axios.get('/parking')
   return res.data
@@ -26,7 +26,7 @@ export const getAnunciosByParkingId = async (parkingId) => {
   return res.data
 }
 
-// 🔐 Admin
+// Admin
 export const createParking = (data) => axios.post('/parking', data)
 export const updateParking = (id, data) => axios.put(`/parking/${id}`, data)
 export const deleteParking = (id) => axios.delete(`/parking/${id}`)
@@ -51,7 +51,7 @@ export const completeReservaRapida = (parkingId) => axios.patch(`/parking/${park
 
 export const getEventosByParkingId = (parkingId) => axios.get(`/parking/${parkingId}/eventos`)
 
-// 🔒 Sistema interno (token de parking)
+// Sistema interno (token de parking)
 export const enviarEventoSensor = (parkingId, evento) =>
   axios.post(`/parking/${parkingId}/sensor`, evento)
 

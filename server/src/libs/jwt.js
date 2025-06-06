@@ -14,7 +14,6 @@ export const generateAccessToken = (payload) => {
   }
 }
 
-// Refresh Token → Expira en 7 días
 export const generateRefreshToken = (payload) => {
   const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: '7d' })
   const decoded = jwt.decode(token)

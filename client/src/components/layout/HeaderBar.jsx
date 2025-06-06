@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Map, Menu, User, LogOut, Car, LayoutDashboard } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu"
 import { useAuth } from "@/hooks/useAuth"
+import ThemeToggle from "../ui/ThemeToggle"
 
 function HeaderBar() {
   const { logout } = useAuth()
@@ -13,9 +14,8 @@ function HeaderBar() {
 
   const currentPath = location.pathname
 
-  // Determinar si la ruta actual está relacionada con dashboard
-  const isDashboardPath = currentPath === "/dashboard" ||
-                          currentPath.startsWith("/reservas/")
+  // Comprobar si la ruta actual está relacionada con dashboard
+  const isDashboardPath = currentPath === "/dashboard" || currentPath.startsWith("/reservas/")
 
   const handleLogout = async () => {
     await logout()
@@ -30,7 +30,7 @@ function HeaderBar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // Usamos el mismo gradiente para todas las secciones
+  // Mismo gradiente para todas las secciones
   const activeGradient = "from-purple-500 to-pink-600"
 
   const navItems = [
@@ -41,6 +41,7 @@ function HeaderBar() {
 
   return (
     <div className="sticky top-0 z-50 flex justify-between items-start w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-3">
+
       {/* Isla izquierda: logo */}
       <motion.div
         className="px-4 py-2"
@@ -63,7 +64,7 @@ function HeaderBar() {
 
       {/* Isla central: navegación sticky */}
       <motion.div
-        className="hidden md:flex gap-1 px-4 py-2 rounded-full bg-white/60 backdrop-blur-lg shadow-md text-sm font-medium text-gray-800 dark:text-gray-200"
+        className="hidden md:flex gap-1 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg shadow-md text-sm font-medium text-gray-800 dark:text-gray-200"
         initial={{ y: -20, opacity: 0 }}
         animate={{
           y: 0,
@@ -79,7 +80,7 @@ function HeaderBar() {
           return (
             <Link key={item.path} to={item.path} className="relative">
               <motion.div
-                className="flex items-center px-3 py-1.5 transition-all duration-300 relative overflow-hidden"
+                className="flex items-center px-3 py-1.5 overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 animate={{
@@ -87,29 +88,29 @@ function HeaderBar() {
                   paddingRight: "0.3rem",
                 }}
               >
-                <div className="flex items-center relative z-10">
-                  {item.icon}
-                  <AnimatePresence>
-                    {(!isScrolled || isActive) && (
-                      <motion.span
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: "auto", opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`${isActive ? `font-display font-medium tracking-tight bg-gradient-to-r ${activeGradient} bg-clip-text text-transparent` : "font-medium"} whitespace-nowrap overflow-hidden`}
-                      >
-                        {isScrolled && isActive ? item.label : !isScrolled ? item.label : ""}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
+                {item.icon}
+                <AnimatePresence>
+                  {(!isScrolled || isActive) && (
+                    <motion.span
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: "auto", opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`${isActive ? `font-display font-medium tracking-tight bg-gradient-to-r ${activeGradient} bg-clip-text text-transparent` : "font-medium"} whitespace-nowrap overflow-hidden`}
+                    >
+                      {isScrolled && isActive ? item.label : !isScrolled ? item.label : ""}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </Link>
           )
         })}
-      </motion.div>      {/* Isla derecha: perfil sticky */}
+      </motion.div>
+
+      {/* Isla derecha: perfil sticky */}
       <motion.div
-        className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 backdrop-blur-lg shadow text-gray-800 dark:text-gray-200 sticky top-4 z-40"
+        className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/70 backdrop-blur-lg shadow text-gray-800 dark:text-gray-200 sticky top-4 z-40"
         animate={{
           scale: isScrolled ? 0.9 : 1,
           paddingLeft: isScrolled ? "0.75rem" : "1rem",
@@ -117,6 +118,9 @@ function HeaderBar() {
         }}
         transition={{ duration: 0.3 }}
       >
+        {/* Botón de cambio de tema */}
+        <ThemeToggle />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <motion.button
@@ -167,7 +171,8 @@ function HeaderBar() {
                     <span>{item.label}</span>
                   </Link>
                 </DropdownMenuItem>
-              )            })}
+              )
+            })}
             <DropdownMenuItem asChild className="cursor-pointer font-medium">
               <Link to="/perfil">
                 <User className="h-4 w-4 mr-2" />
@@ -178,6 +183,12 @@ function HeaderBar() {
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>
+            <div className="px-2 py-1 border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-700 dark:text-gray-300">Modo oscuro</span>
+                <ThemeToggle />
+              </div>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

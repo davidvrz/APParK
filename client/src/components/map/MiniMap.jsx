@@ -24,6 +24,26 @@ const MiniMap = ({ latitude, longitude }) => {
   const hasValidCoords = !isNaN(lat) && !isNaN(lng)
 
   const [mapReady, setMapReady] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Detectar el tema oscuro
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark')
+    setIsDarkMode(isDark)
+
+    // Observar cambios en el tema
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          setIsDarkMode(document.documentElement.classList.contains('dark'))
+        }
+      }
+    })
+
+    observer.observe(document.documentElement, { attributes: true })
+
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,11 +79,14 @@ const MiniMap = ({ latitude, longitude }) => {
         attributionControl={false}
         className="map-container z-0"
         whenReady={() => setMapReady(true)}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      >        <TileLayer
+          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+          url={isDarkMode
+            ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+            : "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+          }
         />
+
         <Marker position={position} />
         <ZoomControl position="bottomright" />
       </MapContainer>
