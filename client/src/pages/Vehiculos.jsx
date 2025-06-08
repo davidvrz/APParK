@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useVehiculos } from "@/hooks/useVehiculos"
 import VehicleCard from "@/components/vehicle/VehicleCard"
 import VehicleForm from "@/components/vehicle/VehicleForm"
+import EmptyVehiclesState from "@/components/vehicle/EmptyVehiclesState"
 
 export default function Vehiculos() {
   const {
@@ -186,16 +187,10 @@ export default function Vehiculos() {
                 <div>
                   <h3 className="font-medium">{selectedVehicle.matricula}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedVehicle.modelo || getVehicleTypeDisplay(selectedVehicle.tipo)} ({selectedVehicle.tipo})
+                    {selectedVehicle.modelo || selectedVehicle.tipo} ({selectedVehicle.tipo})
                   </p>
                 </div>
               </div>
-            )}
-
-            {formError && (
-              <Alert variant="destructive">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
             )}
 
             <DialogFooter>
@@ -226,41 +221,4 @@ export default function Vehiculos() {
       </div>
     </LayoutGroup>
   )
-}
-
-/**
- * Componente que muestra un estado vacío cuando no hay vehículos.
- */
-function EmptyVehiclesState({ onAddVehicle }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="col-span-full bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center"
-    >
-      <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
-        <Car className="h-8 w-8 text-gray-500" />
-      </div>
-      <h3 className="text-xl font-semibold mb-2">No tienes vehículos registrados</h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-6">
-        Añade un vehículo para poder realizar reservas de aparcamiento
-      </p>
-      <Button onClick={onAddVehicle}>
-        <Plus className="h-4 w-4 mr-2" />
-        Añadir Vehículo
-      </Button>
-    </motion.div>
-  )
-}
-
-/**
- * Función para obtener un nombre de modelo predeterminado según el tipo.
- */
-function getVehicleTypeDisplay(tipo) {
-  switch(tipo) {
-  case 'Coche': return 'Turismo Standard'
-  case 'Moto': return 'Motocicleta'
-  case 'Especial': return 'Vehículo Especial'
-  default: return 'Vehículo'
-  }
 }

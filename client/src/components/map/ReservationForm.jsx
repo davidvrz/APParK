@@ -1,27 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useVehiculos } from '@/hooks/useVehiculos'
 import { useReservas } from '@/hooks/useReservas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarIcon, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '@/config'
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+
+function formatTime(dateString) {
+  return format(new Date(dateString), "yyyy-MM-dd'T'HH:mm", { locale: es })
+}
 
 const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId }) => {
   const [form, setForm] = useState({
@@ -60,7 +53,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }))
   }
 
-  const handleSelectVehicle = (value) => {
+  const handleSelectVehicle = useCallback((value) => {
     setForm(prev => ({ ...prev, vehicleId: value }))
 
     const vehiculo = vehiculos.find(v => String(v.id) === value)
@@ -71,7 +64,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     }
 
     if (errors.vehicleId) setErrors(prev => ({ ...prev, vehicleId: undefined }))
-  }
+  }, [vehiculos, preselectedPlazaId, errors.vehicleId])
 
   const handleSelectPlaza = (value) => {
     setForm(prev => ({ ...prev, plazaId: value }))
@@ -105,7 +98,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
       }
     }
 
-    // Verificar compatibilidad de vehículo con plaza (solo si ambos están seleccionados)
     if (form.vehicleId && form.plazaId && !errs.vehicleId && !errs.plazaId) {
       const vehiculo = vehiculos.find(v => String(v.id) === form.vehicleId)
       const plaza = plazasDisponibles.find(p => String(p.id) === form.plazaId)
@@ -155,8 +147,8 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
 
     setForm(prev => ({
       ...prev,
-      startTime: startDefault.toISOString().slice(0, 16),
-      endTime: endDefault.toISOString().slice(0, 16)
+      startTime: formatTime(startDefault),
+      endTime: formatTime(endDefault)
     }))
   }, [])
 
@@ -171,7 +163,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
         }
       }
     }
-  }, [preselectedPlazaId, vehiculos, plazasDisponibles, form.vehicleId])
+  }, [preselectedPlazaId, vehiculos, plazasDisponibles, form.vehicleId, handleSelectVehicle])
 
   if (loadingVehiculos) {
     return (
@@ -224,10 +216,10 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
         <div className="space-y-6">
           {/* Mensaje de error general */}
           {(errors.server || reservaError) && (
-            <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-200">
+            <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>
+              <AlertTitle className="font-display font-medium">Error</AlertTitle>
+              <AlertDescription className="font-normal">
                 {errors.server || reservaError}
               </AlertDescription>
             </Alert>
@@ -246,10 +238,10 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
 
           {/* Mensaje de éxito */}
           {success && (
-            <Alert className="bg-green-50 text-green-800 border-green-200">
-              <CheckCircle2 className="h-4 w-4" />
-              <AlertTitle>¡Reserva creada!</AlertTitle>
-              <AlertDescription>
+            <Alert variant="success" className="bg-green-50 text-green-800">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertTitle className="font-display font-medium">¡Reserva creada!</AlertTitle>
+              <AlertDescription className="font-normal">
                 Tu reserva ha sido creada correctamente.
               </AlertDescription>
             </Alert>
@@ -258,7 +250,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
           {/* Selección de vehículo */}
           <div>
             <Label className={`${errors.vehicleId ? "text-red-500" : ""}`}>
-              Vehículo {errors.vehicleId && `(${errors.vehicleId})`}
+              Vehículo
             </Label>
             <Select
               value={form.vehicleId}
@@ -276,12 +268,13 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
                 ))}
               </SelectContent>
             </Select>
+            {errors.vehicleId && <p className="text-red-500 text-xs font-normal mt-1">{errors.vehicleId}</p>}
           </div>
 
           {/* Selección de plaza */}
           <div>
             <Label className={`${errors.plazaId ? "text-red-500" : ""}`}>
-              Plaza {errors.plazaId && `(${errors.plazaId})`}
+              Plaza
             </Label>
             <Select
               value={form.plazaId}
@@ -307,13 +300,14 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
                 )}
               </SelectContent>
             </Select>
+            {errors.plazaId && <p className="text-red-500 text-xs font-normal mt-1">{errors.plazaId}</p>}
           </div>
 
           {/* Fechas y horas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className={`${errors.startTime || errors.ahead ? "text-red-500" : ""}`}>
-                Inicio {errors.startTime && `(${errors.startTime})`}
+                Inicio
               </Label>
               <Input
                 type="datetime-local"
@@ -325,12 +319,13 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
                 min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60000)
                   .toISOString().slice(0,16)}
               />
+              {errors.startTime && <p className="text-red-500 text-xs mt-1">{errors.startTime}</p>}
               {errors.ahead && <p className="text-red-500 text-xs mt-1">{errors.ahead}</p>}
             </div>
 
             <div>
               <Label className={`${errors.endTime || errors.duration ? "text-red-500" : ""}`}>
-                Fin {errors.endTime && `(${errors.endTime})`}
+                Fin
               </Label>
               <Input
                 type="datetime-local"
@@ -352,6 +347,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
                     : undefined
                 }
               />
+              {errors.endTime && <p className="text-red-500 text-xs mt-1">{errors.endTime}</p>}
               {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
             </div>
           </div>

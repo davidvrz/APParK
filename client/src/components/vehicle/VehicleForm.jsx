@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/Label"
 import { Alert, AlertDescription } from "@/components/ui/Alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 
-export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, error = null }) {
+export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = false, error = null }) {
   const [formData, setFormData] = useState({
     matricula: "",
     modelo: "",
@@ -47,8 +47,14 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
 
     if (!formData.matricula) {
       errors.matricula = "La matrícula es obligatoria"
-    } else if (!formData.matricula.match(/^[A-Z0-9]+$/)) {
-      errors.matricula = "Formato de matrícula inválido. Use solo letras mayúsculas y números"
+    } else {
+      const normalizedMatricula = formData.matricula.trim().toUpperCase()
+      if (normalizedMatricula.length < 7 || normalizedMatricula.length > 10) {
+        errors.matricula = "La matrícula debe tener entre 7 y 10 caracteres"
+      }
+      else if (!normalizedMatricula.match(/^[A-Z0-9]+$/)) {
+        errors.matricula = "La matrícula solo puede contener letras y números"
+      }
     }
 
     if (!formData.tipo) {
@@ -107,20 +113,22 @@ export default function VehicleForm({ vehicle, onSubmit, isSubmitting = false, e
         <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500 font-medium" : "font-medium"}>
           Tipo de vehículo {validationErrors.tipo && `(${validationErrors.tipo})`}
         </Label>
-        <Select
-          value={formData.tipo}
-          onValueChange={handleSelectChange}
-          disabled={isSubmitting}
-        >
-          <SelectTrigger className={validationErrors.tipo ? "border-red-500 mt-1" : "mt-1"}>
-            <SelectValue placeholder="Selecciona un tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Coche">Coche</SelectItem>
-            <SelectItem value="Moto">Moto</SelectItem>
-            <SelectItem value="Especial">Especial</SelectItem>
-          </SelectContent>
-        </Select>
+        {formData.tipo !== "" && (
+          <Select
+            value={formData.tipo}
+            onValueChange={handleSelectChange}
+            disabled={isSubmitting}
+          >
+            <SelectTrigger className={validationErrors.tipo ? "border-red-500 mt-1" : "mt-1"}>
+              <SelectValue placeholder="Selecciona un tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Coche">Coche</SelectItem>
+              <SelectItem value="Moto">Moto</SelectItem>
+              <SelectItem value="Especial">Especial</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <Button

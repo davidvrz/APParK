@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import { Clock, MapPin, Calendar, Car, Edit, Trash2, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/Button"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 

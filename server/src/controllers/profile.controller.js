@@ -76,9 +76,38 @@ export const addVehicle = async (req, res) => {
     const { matricula, modelo, tipo } = req.body
     const { id: userId } = req.user
 
+    // Validaciones manuales
+    if (!matricula || matricula.trim() === '') {
+      return res.status(400).json({ error: 'La matrícula es obligatoria' })
+    }
+
+    if (!tipo || tipo.trim() === '') {
+      return res.status(400).json({ error: 'El tipo de vehículo es obligatorio' })
+    }
+
+    // Normalizar matrícula (mayúsculas y sin espacios)
+    const normalizedMatricula = matricula.trim().toUpperCase()
+
+    // Validar formato de matrícula (longitud y regex)
+    if (normalizedMatricula.length < 7 || normalizedMatricula.length > 10) {
+      return res.status(400).json({ error: 'La matrícula debe tener entre 7 y 10 caracteres' })
+    }
+    if (!/^[A-Z0-9]+$/.test(normalizedMatricula)) {
+      return res.status(400).json({ error: 'Formato de matrícula inválido. Use solo letras mayúsculas y números.' })
+    }
+
+    // Verificar si la matrícula ya existe
+    const existingVehicle = await Vehicle.findOne({
+      where: { matricula: normalizedMatricula }
+    })
+
+    if (existingVehicle) {
+      return res.status(400).json({ error: 'Esta matrícula ya está registrada en el sistema' })
+    }
+
     const vehicle = await Vehicle.create({
-      matricula,
-      modelo,
+      matricula: normalizedMatricula,
+      modelo: modelo?.trim() || '',
       tipo,
       usuario_id: userId
     })
@@ -87,7 +116,8 @@ export const addVehicle = async (req, res) => {
 
     res.status(201).json({ vehicle: createdVehicle })
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    console.error('Error creating vehicle:', error)
+    res.status(500).json({ error: 'Error interno del servidor al añadir el vehículo' })
   }
 }
 
@@ -102,12 +132,50 @@ export const updateVehicle = async (req, res) => {
     })
 
     if (!vehicle) {
-      return res.status(404).json({ error: 'Matrícula no encontrada' })
+      return res.status(404).json({ error: 'Vehículo no encontrado' })
     }
 
-    vehicle.matricula = matricula ?? vehicle.matricula
-    vehicle.modelo = modelo ?? vehicle.modelo
-    vehicle.tipo = tipo ?? vehicle.tipo
+    // Validaciones manuales si se está actualizando
+    if (matricula !== undefined) {
+      if (!matricula || matricula.trim() === '') {
+        return res.status(400).json({ error: 'La matrícula es obligatoria' })
+      }
+
+      // Normalizar matrícula
+      const normalizedMatricula = matricula.trim().toUpperCase()
+
+      // Validar formato de matrícula (longitud y regex)
+      if (normalizedMatricula.length < 7 || normalizedMatricula.length > 10) {
+        return res.status(400).json({ error: 'La matrícula debe tener entre 7 y 10 caracteres' })
+      }
+      if (!/^[A-Z0-9]+$/.test(normalizedMatricula)) {
+        return res.status(400).json({ error: 'Formato de matrícula inválido. Use solo letras mayúsculas y números.' })
+      }
+
+      // Verificar si la matrícula ya existe (excepto si es la misma del vehículo actual)
+      if (normalizedMatricula !== vehicle.matricula) {
+        const existingVehicle = await Vehicle.findOne({
+          where: { matricula: normalizedMatricula }
+        })
+
+        if (existingVehicle) {
+          return res.status(400).json({ error: 'Esta matrícula ya está registrada en el sistema' })
+        }
+      }
+
+      vehicle.matricula = normalizedMatricula
+    }
+
+    if (tipo !== undefined) {
+      if (!tipo || tipo.trim() === '') {
+        return res.status(400).json({ error: 'El tipo de vehículo es obligatorio' })
+      }
+      vehicle.tipo = tipo
+    }
+
+    if (modelo !== undefined) {
+      vehicle.modelo = modelo?.trim() || ''
+    }
 
     await vehicle.save()
 
@@ -115,7 +183,8 @@ export const updateVehicle = async (req, res) => {
 
     res.status(200).json({ message: 'Vehículo actualizado correctamente', vehicle: updatedVehicle })
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    console.error('Error updating vehicle:', error)
+    res.status(500).json({ error: 'Error interno del servidor al actualizar el vehículo' })
   }
 }
 

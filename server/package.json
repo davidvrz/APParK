@@ -44,7 +44,7 @@
         "nodemon": "3.1.9",
         "standard": "17.1.2"
     },
-    "eslintConfig": {
+     "eslintConfig": {
         "extends": "./node_modules/standard/eslintrc.json"
     }
 }

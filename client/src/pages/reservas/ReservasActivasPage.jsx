@@ -1,31 +1,19 @@
 import { useState } from "react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Badge } from "@/components/ui/Badge"
-import { Search, ArrowLeft } from "lucide-react"
-import { useReservas } from "@/hooks/useReservas"
-import { Input } from "@/components/ui/Input"
 import { Link } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import ReservaCard from "@/components/dashboard/ReservaCard"
-import ReservaDetails from "@/components/dashboard/ReservaDetails"
-import { Dialog, DialogContent } from "@/components/ui/Dialog"
-import ReservaEditForm from "@/components/dashboard/ReservaEditForm"
+import { ArrowLeft, Search, AlertCircle } from "lucide-react"
 
-const transitionConfig = {
-  type: "spring",
-  stiffness: 280,
-  damping: 20,
-}
+import { useReservas } from "@/hooks/useReservas"
+import ReservasActivas from "@/components/dashboard/ReservasActivas"
+
+import { Button } from "@/components/ui/Button"
+import { Input } from "@/components/ui/input"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function ReservasActivasPage() {
-  const { reservas = [], cancelarReserva, modificarReserva } = useReservas()
+  const { reservas = [], loading, error, clearError } = useReservas()
   const [searchTerm, setSearchTerm] = useState("")
-  const [expandedId, setExpandedId] = useState(null)
-  const [selectedReservation, setSelectedReservation] = useState(null)
-  const [cancelOpen, setCancelOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const [error, setError] = useState("")
 
   const filteredReservas = reservas.filter(reserva => {
     if (!searchTerm) return true
@@ -35,46 +23,11 @@ export default function ReservasActivasPage() {
     return (
       reserva.parking?.nombre?.toLowerCase().includes(searchLower) ||
       reserva.parking?.ubicacion?.toLowerCase().includes(searchLower) ||
-      reserva.plaza?.numero?.toString().includes(searchLower) ||
-      reserva.vehicle?.matricula?.toLowerCase().includes(searchLower) ||
-      reserva.vehicle?.modelo?.toLowerCase().includes(searchLower)
+      reserva.plaza?.numero?.toString().toLowerCase().includes(searchLower) ||
+      reserva.vehiculo?.matricula?.toLowerCase().includes(searchLower) ||
+      reserva.vehiculo?.modelo?.toLowerCase().includes(searchLower)
     )
   })
-
-  const handleCancelReserva = async () => {
-    if (!selectedReservation) return
-
-    try {
-      await cancelarReserva(selectedReservation.id)
-      setCancelOpen(false)
-      setSelectedReservation(null)
-
-      if (expandedId === selectedReservation.id) {
-        setExpandedId(null)
-      }
-    } catch (err) {
-      setError("No se pudo cancelar la reserva. Inténtalo de nuevo.")
-    }
-  }
-
-  const handleEditSubmit = async (data) => {
-    if (!selectedReservation) return
-
-    try {
-      await modificarReserva(selectedReservation.id, data)
-      setEditOpen(false)
-      setSelectedReservation(null)
-    } catch (err) {
-      setError("Error al actualizar la reserva. Inténtalo de nuevo.")
-      return false
-    }
-
-    return true
-  }
-
-  const clearError = () => setError("")
-
-  const expandedReservation = reservas.find(r => r.id === expandedId)
 
   return (
     <div className="space-y-6">
@@ -118,13 +71,28 @@ export default function ReservasActivasPage() {
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
-              {filteredReservas.length} Reservas
+              <span className="sm:hidden">{filteredReservas.length}</span>
+              <span className="hidden sm:inline">{filteredReservas.length} Reservas</span>
             </Badge>
           </div>
         </CardHeader>
 
         <CardContent className="p-6">
-          {filteredReservas.length === 0 ? (
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error al Cargar Reservas</AlertTitle>
+              <AlertDescription>
+                {typeof error === 'string' ? error : JSON.stringify(error)}
+                <Button variant="link" onClick={() => clearError && clearError()} className="p-0 h-auto ml-2">Reintentar</Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          {!error && loading && filteredReservas.length === 0 ? (
+            <div className="h-[200px] flex items-center justify-center">
+              <div className="rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-100 animate-spin"></div>
+            </div>
+          ) : !error && !loading && filteredReservas.length === 0 ? (
             <div className="h-[200px] flex flex-col items-center justify-center text-center px-8">
               <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
                 <Search className="h-6 w-6 text-blue-500" />
@@ -134,10 +102,9 @@ export default function ReservasActivasPage() {
               </h3>
               <p className="text-gray-500 dark:text-gray-400 font-normal">
                 {searchTerm
-                  ? 'Prueba con otros términos de búsqueda'
+                  ? 'Prueba con otros términos de búsqueda.'
                   : 'Cuando realices una reserva, aparecerá aquí.'}
               </p>
-
               {!searchTerm && (
                 <Link to="/map">
                   <Button className="mt-4">
@@ -146,114 +113,15 @@ export default function ReservasActivasPage() {
                 </Link>
               )}
             </div>
-          ) : (
-            <AnimatePresence initial={false} mode="popLayout">
-              {expandedId ? (
-                <motion.div
-                  key="expanded-view"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={transitionConfig}
-                  layout
-                  className="overflow-hidden rounded-xl"
-                >
-                  {expandedReservation && (
-                    <ReservaDetails
-                      reservation={expandedReservation}
-                      onClose={() => setExpandedId(null)}
-                      onDelete={() => {
-                        setSelectedReservation(expandedReservation)
-                        setCancelOpen(true)
-                      }}
-                      onEdit={() => {
-                        clearError()
-                        setSelectedReservation(expandedReservation)
-                        setEditOpen(true)
-                      }}
-                    />
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="grid-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={transitionConfig}
-                  layout
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                >
-                  {filteredReservas.map((reserva) => (
-                    <motion.div
-                      key={reserva.id}
-                      layout
-                      className="rounded-xl overflow-hidden shadow-sm h-full"
-                      transition={transitionConfig}
-                    >
-                      <ReservaCard
-                        reservation={reserva}
-                        onExpand={() => setExpandedId(reserva.id)}
-                        onEdit={(e) => {
-                          e.stopPropagation()
-                          clearError()
-                          setSelectedReservation(reserva)
-                          setEditOpen(true)
-                        }}
-                        onCancel={(e) => {
-                          e.stopPropagation()
-                          setSelectedReservation(reserva)
-                          setCancelOpen(true)
-                        }}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          ) : !error && (
+            <ReservasActivas
+              reservas={filteredReservas}
+              isLoading={loading}
+              isEmbedded={true}
+            />
           )}
         </CardContent>
       </Card>
-
-      {/* Diálogo de cancelación */}
-      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <CardHeader>
-            <CardTitle>Cancelar Reserva</CardTitle>
-            <CardDescription>
-              ¿Estás seguro de que quieres cancelar esta reserva? Esta acción no se puede deshacer.
-            </CardDescription>
-          </CardHeader>
-          <div className="flex justify-end gap-3 px-6 pb-6">
-            <Button variant="outline" onClick={() => setCancelOpen(false)}>
-              Mantener Reserva
-            </Button>
-            <Button variant="destructive" onClick={handleCancelReserva}>
-              Cancelar Reserva
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Diálogo de edición */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <CardHeader>
-            <CardTitle>Editar Reserva</CardTitle>
-            <CardDescription>
-              Modifica los detalles de tu reserva según necesites.
-            </CardDescription>
-          </CardHeader>
-          {selectedReservation && (
-            <ReservaEditForm
-              reserva={selectedReservation}
-              onSubmit={handleEditSubmit}
-              error={error}
-              onCancel={() => setEditOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

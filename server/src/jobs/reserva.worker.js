@@ -1,6 +1,8 @@
 import { reservaQueue } from './reserva.queue.js'
 import Reserva from '../models/reserva.model.js'
 import Plaza from '../models/plaza.model.js'
+import Planta from '../models/planta.model.js'
+import Parking from '../models/parking.model.js'
 import { getIO } from '../sockets/index.js'
 
 reservaQueue.process('completar-reserva', async job => {
@@ -23,16 +25,26 @@ reservaQueue.process('completar-reserva', async job => {
     )
 
     // Obtener plaza para acceder a parking_id
-    const plaza = await Plaza.findByPk(reserva.plaza_id)
+    const plaza = await Plaza.findByPk(reserva.plaza_id, {
+      include: {
+        model: Planta,
+        as: 'planta',
+        include: {
+          model: Parking,
+          as: 'parking',
+          attributes: ['id']
+        }
+      }
+    })
 
-    if (!plaza || !plaza.parking_id) {
+    if (!plaza || !plaza.planta || !plaza.planta.parking) {
       console.warn(`⚠️ No se pudo emitir socket: plaza ${reserva.plaza_id} no tiene parking asociado`)
       return
     }
 
     // Emitir solo a la sala del parking correspondiente
     getIO()
-      .to(`parking:${plaza.parking_id}`)
+      .to(`parking:${plaza.planta.parking.id}`)
       .emit('parking:update', {
         plazaId: reserva.plaza_id,
         nuevoEstado: 'Libre',

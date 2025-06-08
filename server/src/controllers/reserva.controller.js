@@ -471,6 +471,22 @@ export const cancelReserva = async (req, res) => {
       return res.status(400).json({ error: 'Solo se pueden cancelar reservas activas' })
     }
 
+    const now = new Date()
+    const start = new Date(reserva.startTime)
+
+    if (start <= now) {
+      await transaction.rollback()
+      return res.status(400).json({ error: 'No se puede cancelar una reserva ya iniciada' })
+    }
+
+    const diffAntelacion = (start - now) / (1000 * 60)
+    if (diffAntelacion < RESERVA_ANTICIPACION_MIN) {
+      await transaction.rollback()
+      return res.status(400).json({
+        error: `Las reservas deben cancelarse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
+      })
+    }
+
     if (!reserva.plaza || !reserva.plaza.planta || !reserva.plaza.planta.parking) {
       await transaction.rollback()
       return res.status(500).json({ error: 'No se pudo determinar el parking de la plaza asociada' })

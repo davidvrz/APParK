@@ -1,30 +1,54 @@
 import { useState, useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/Label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 import { RESERVA_ANTICIPACION_MIN, RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX } from "@/config"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+
+function formatTime(dateString) {
+  return format(new Date(dateString), "yyyy-MM-dd'T'HH:mm", { locale: es })
+}
 
 export default function ReservaEditForm({
   reserva,
   vehiculos = [],
-  plazasDisponibles = [],
+  parking = null,
   onCancel,
   onSave,
-  apiError = null,    // Error proveniente del hook useReservas
+  apiError = null, // Error proveniente del hook useReservas
   isLoading = false
 }) {
+
   const [form, setForm] = useState({
     vehicleId: "",
     plazaId: "",
     startTime: "",
     endTime: ""
   })
+
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  // Obtener plazas disponibles
+  const plazasDisponibles = useMemo(() => {
+    if (!parking?.plantas) return []
+
+    return parking.plantas.flatMap(planta => {
+      return planta.plazas?.map(plaza => ({
+        ...plaza,
+        planta: {
+          id: planta.id,
+          numero: planta.numero,
+          parking_id: planta.parking_id
+        }
+      })) || []
+    })
+  }, [parking])
 
   // Filtrar plazas según el tipo de vehículo seleccionado
   const plazasFiltradas = useMemo(() => {
@@ -42,8 +66,8 @@ export default function ReservaEditForm({
     setForm({
       vehicleId,
       plazaId,
-      startTime: new Date(reserva.startTime).toISOString().slice(0, 16),
-      endTime: new Date(reserva.endTime).toISOString().slice(0, 16),
+      startTime: formatTime(reserva.startTime),
+      endTime: formatTime(reserva.endTime)
     })
 
     setErrors({})
@@ -91,7 +115,7 @@ export default function ReservaEditForm({
         if (!isNaN(start.getTime())) {
           const diffAhead = (start - now) / (1000 * 60)
           if (diffAhead < RESERVA_ANTICIPACION_MIN) {
-            errs.ahead = `La reserva debe hacerse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
+            errs.ahead = `La reserva debe modificarse con al menos ${RESERVA_ANTICIPACION_MIN} minutos de antelación`
           }
         }
       }
@@ -119,14 +143,15 @@ export default function ReservaEditForm({
 
     setSubmitting(true)
     try {
-      await onSave({
+      const result = await onSave({
         vehicleId: parseInt(form.vehicleId),
         plazaId: parseInt(form.plazaId),
         startTime: new Date(form.startTime).toISOString(),
         endTime: new Date(form.endTime).toISOString()
       })
-      setSuccess(true)
-      setTimeout(onCancel, 1500)
+      if (result !== false) {
+        setSuccess(true)
+      }
     } catch (err) {
       const msg = err.response?.data?.error || "Error al modificar la reserva"
       setErrors(prev => ({ ...prev, server: msg }))
@@ -157,8 +182,8 @@ export default function ReservaEditForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className={`${errors.vehicleId ? "text-red-500" : ""} font-medium`}>
-            Vehículo {errors.vehicleId && `(${errors.vehicleId})`}
+          <Label className="font-medium">
+            Vehículo
           </Label>
           <Select
             value={form.vehicleId}
@@ -176,11 +201,12 @@ export default function ReservaEditForm({
               ))}
             </SelectContent>
           </Select>
+          {errors.vehicleId && <p className="text-red-500 text-xs font-normal mt-1">{errors.vehicleId}</p>}
         </div>
 
         <div>
-          <Label className={`${errors.plazaId ? "text-red-500" : ""} font-medium`}>
-            Plaza {errors.plazaId && `(${errors.plazaId})`}
+          <Label className="font-medium">
+            Plaza
           </Label>
           <Select
             value={form.plazaId}
@@ -198,13 +224,14 @@ export default function ReservaEditForm({
               ))}
             </SelectContent>
           </Select>
+          {errors.plazaId && <p className="text-red-500 text-xs font-normal mt-1">{errors.plazaId}</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className={`${errors.startTime || errors.ahead ? "text-red-500" : ""} font-medium`}>
-            Inicio {errors.startTime && `(${errors.startTime})`}
+          <Label className="font-medium">
+            Inicio
           </Label>
           <Input
             type="datetime-local"
@@ -215,11 +242,12 @@ export default function ReservaEditForm({
             className={`w-full ${errors.startTime || errors.ahead ? "border-red-500" : ""}`}
             min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60 * 1000).toISOString().slice(0,16)}
           />
-          {errors.ahead && <p className="text-red-500 text-xs font-normal">{errors.ahead}</p>}
+          {errors.startTime && <p className="text-red-500 text-xs font-normal mt-1">{errors.startTime}</p>}
+          {errors.ahead && <p className="text-red-500 text-xs font-normal mt-1">{errors.ahead}</p>}
         </div>
         <div>
-          <Label className={`${errors.endTime || errors.duration ? "text-red-500" : ""} font-medium`}>
-            Fin {errors.endTime && `(${errors.endTime})`}
+          <Label className="font-medium">
+            Fin
           </Label>
           <Input
             type="datetime-local"
@@ -239,7 +267,8 @@ export default function ReservaEditForm({
                 : undefined
             }
           />
-          {errors.duration && <p className="text-red-500 text-xs font-normal">{errors.duration}</p>}
+          {errors.endTime && <p className="text-red-500 text-xs font-normal mt-1">{errors.endTime}</p>}
+          {errors.duration && <p className="text-red-500 text-xs font-normal mt-1">{errors.duration}</p>}
         </div>
       </div>
 
@@ -269,7 +298,8 @@ export default function ReservaEditForm({
               Cargando...
             </>
           ) : "Guardar cambios"}
-        </Button>      </div>
+        </Button>
+      </div>
     </form>
   )
 }
