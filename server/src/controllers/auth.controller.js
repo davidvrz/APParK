@@ -37,7 +37,8 @@ export const register = async (req, res) => {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN
       sameSite: 'Strict',
-      path: '/api/auth/refresh' // La cookie solo se enviará a esta ruta
+      path: '/api/auth/refresh', // La cookie solo se enviará a esta ruta
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en millisegundos
     })
 
     const createdUser = pick(newUser.get(), ['id', 'email', 'nombreCompleto', 'telefono', 'rol'])
@@ -84,7 +85,8 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: false, // CAMBIAR A true EN PRODUCCIÓN
       sameSite: 'Strict',
-      path: '/api/auth/refresh'
+      path: '/api/auth/refresh',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en millisegundos
     })
 
     const loggedUser = pick(user.get(), ['id', 'email', 'nombreCompleto', 'telefono', 'rol'])
@@ -102,7 +104,7 @@ export const login = async (req, res) => {
   }
 }
 
-export const refreshAccessToken = (req, res) => {
+export const refreshAccessToken = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken
 
@@ -112,12 +114,16 @@ export const refreshAccessToken = (req, res) => {
 
     const decoded = verifyUserToken(refreshToken)
 
-    // Genera un nuevo access token
+    const user = await User.findByPk(decoded.id)
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario no encontrado' })
+    }
+
     const { token: newAccessToken, expiresIn } = generateAccessToken({
-      id: decoded.id,
-      nombreCompleto: decoded.nombreCompleto,
-      email: decoded.email,
-      rol: decoded.rol
+      id: user.id,
+      nombreCompleto: user.nombreCompleto,
+      email: user.email,
+      rol: user.rol
     })
 
     res.status(200).json({

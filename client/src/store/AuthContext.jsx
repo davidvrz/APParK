@@ -50,32 +50,27 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  const attemptTokenRefresh = () => {
-    const hasRefreshCookie = document.cookie.includes('refreshToken')
+  const attemptTokenRefresh = async () => {
+    try {
+      // Intentar renovar token directamente (cookie path '/api/auth/refresh')
+      const res = await refreshToken()
+      const { token } = res.data.accessToken
+      const decoded = jwtDecode(token)
 
-    if (hasRefreshCookie) {
-      refreshToken()
-        .then(res => {
-          const { token } = res.data.accessToken
-          const decoded = jwtDecode(token)
+      setAccessTokenState(token)
+      syncAxiosToken(token)
+      localStorage.setItem('accessToken', token)
+      setUser({
+        id: decoded.id,
+        email: decoded.email,
+        rol: decoded.rol,
+        nombreCompleto: decoded.nombreCompleto
+      })
 
-          setAccessTokenState(token)
-          syncAxiosToken(token)
-          localStorage.setItem('accessToken', token)
-          setUser({
-            id: decoded.id,
-            email: decoded.email,
-            rol: decoded.rol,
-            nombreCompleto: decoded.nombreCompleto
-          })
-        })
-        .catch(err => {
-          console.warn('No se pudo renovar el token:', err.message)
-        })
-        .finally(() => {
-          setIsAuthChecked(true)
-        })
-    } else {
+      console.log('Token renovado exitosamente')
+    } catch (err) {
+      console.warn('No se pudo renovar el token:', err.message)
+    } finally {
       setIsAuthChecked(true)
     }
   }
@@ -116,7 +111,7 @@ export const AuthProvider = ({ children }) => {
         nombreCompleto: decoded.nombreCompleto
       })
 
-      return { ok: true }
+      return { ok: true, rol: decoded.rol }
     } catch (_err) {
       console.error("Error al iniciar sesión:", _err)
       setError(_err.message)

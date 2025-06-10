@@ -13,7 +13,7 @@ import ReservaDetails from "./ReservaDetails"
 import ReservaEditForm from "./ReservaEditForm"
 import NewReservaCard from "./NewReservaCard"
 
-import { useReservas } from "@/hooks/useReservas"
+import { useReserva } from "@/hooks/useReserva"
 import { useVehiculos } from "@/hooks/useVehiculos"
 import { useParking } from "@/hooks/useParking"
 
@@ -29,7 +29,7 @@ export default function ReservasActivas({
     cancelarReserva,
     modificarReserva,
     clearError
-  } = useReservas()
+  } = useReserva()
 
   const currentReservas = isEmbedded ? propReservas : hookReservas
   const currentLoading = isEmbedded ? propIsLoading : hookLoading

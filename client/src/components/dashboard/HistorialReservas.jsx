@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { useReservas } from "@/hooks/useReservas"
+import { useReserva } from "@/hooks/useReserva"
 import ReservaHistorialCard from "./ReservaHistorialCard"
 
 export default function HistorialReservas({ isEmbedded = false }) {
-  const { historial = [], loading } = useReservas()
+  const { historial = [], loading } = useReserva()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const constraintsRef = useRef(null)

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Search, AlertCircle } from "lucide-react"
 
-import { useReservas } from "@/hooks/useReservas"
+import { useReserva } from "@/hooks/useReserva"
 import ReservasActivas from "@/components/dashboard/ReservasActivas"
 
 import { Button } from "@/components/ui/Button"
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function ReservasActivasPage() {
-  const { reservas = [], loading, error, clearError } = useReservas()
+  const { reservas = [], loading, error, clearError } = useReserva()
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredReservas = reservas.filter(reserva => {

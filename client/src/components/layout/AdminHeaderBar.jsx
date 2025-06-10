@@ -1,32 +1,26 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, Menu, User, LogOut, Car, LayoutDashboard, Shield } from "lucide-react"
+import { Settings, Menu, User, LogOut, Database, Activity, Users, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu"
 import { useAuth } from "@/hooks/useAuth"
 import ThemeToggle from "../ui/ThemeToggle"
 
-function HeaderBar() {
-  const { logout, user } = useAuth()
+function AdminHeaderBar() {
+  const { logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [isScrolled, setIsScrolled] = useState(false)
 
   const currentPath = location.pathname
 
-  // Comprobar si la ruta actual está relacionada con dashboard
-  const isDashboardPath = currentPath === "/dashboard" || currentPath.startsWith("/reservas/")
-
-  // Verificar si el usuario es admin
-  const isAdmin = user?.rol === 'admin'
-
   const handleLogout = async () => {
     await logout()
     navigate("/login")
   }
 
-  const handleViewAsAdmin = () => {
-    navigate("/admin/dashboard")
+  const handleViewAsUser = () => {
+    navigate("/dashboard")
   }
 
   useEffect(() => {
@@ -37,18 +31,19 @@ function HeaderBar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // Mismo gradiente para todas las secciones
-  const activeGradient = "from-purple-500 to-pink-600"
+  // Gradiente azul para admin
+  const activeGradient = "from-blue-500 to-indigo-600"
   const navItems = [
-    { icon: <LayoutDashboard className={`h-5 w-5 ${isScrolled && isDashboardPath ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <LayoutDashboard className="h-4 w-4" />, label: "Dashboard", path: "/dashboard" },
-    { icon: <Map className={`h-5 w-5 ${isScrolled && currentPath === "/map" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Map className="h-4 w-4" />, label: "Mapa", path: "/map" },
-    { icon: <Car className={`h-5 w-5 ${isScrolled && currentPath === "/vehiculos" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Car className="h-4 w-4" />, label: "Mis Vehículos", path: "/vehiculos" },
+    { icon: <Settings className={`h-5 w-5 ${isScrolled && currentPath === "/admin/dashboard" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Settings className="h-4 w-4" />, label: "Panel Admin", path: "/admin/dashboard" },
+    { icon: <Database className={`h-5 w-5 ${isScrolled && currentPath === "/admin/parkings" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Database className="h-4 w-4" />, label: "Parkings", path: "/admin/parkings" },
+    { icon: <Activity className={`h-5 w-5 ${isScrolled && currentPath === "/admin/eventos" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Activity className="h-4 w-4" />, label: "Eventos", path: "/admin/eventos" },
+    { icon: <Users className={`h-5 w-5 ${isScrolled && currentPath === "/admin/usuarios" ? "mr-2" : isScrolled ? "mx-auto" : "mr-2"}`} />, mobileIcon: <Users className="h-4 w-4" />, label: "Usuarios", path: "/admin/usuarios" },
   ]
 
   return (
     <div className="sticky top-0 z-50 flex justify-between items-start w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-3">
 
-      {/* Isla izquierda: logo */}
+      {/* Isla izquierda: logo con badge admin */}
       <motion.div
         className="px-4 py-2"
         whileHover={{ scale: 1.05 }}
@@ -61,14 +56,17 @@ function HeaderBar() {
         }}
         transition={{ duration: 0.3 }}
       >
-        <Link to="/dashboard" className="flex items-center">
+        <Link to="/admin/dashboard" className="flex items-center gap-2">
           <span className="text-xl font-display font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             APParK
+          </span>
+          <span className="px-2 py-1 text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full">
+            Admin
           </span>
         </Link>
       </motion.div>
 
-      {/* Isla central: navegación sticky */}
+      {/* Isla central: navegación sticky admin */}
       <motion.div
         className="hidden md:flex gap-1 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg shadow-md text-sm font-medium text-gray-800 dark:text-gray-200"
         initial={{ y: -20, opacity: 0 }}
@@ -82,7 +80,7 @@ function HeaderBar() {
         }}
       >
         {navItems.map((item) => {
-          const isActive = item.path === "/dashboard" ? isDashboardPath : currentPath === item.path
+          const isActive = currentPath === item.path
           return (
             <Link key={item.path} to={item.path} className="relative">
               <motion.div
@@ -114,30 +112,25 @@ function HeaderBar() {
         })}
       </motion.div>
 
-      {/* Isla derecha: perfil sticky */}
+      {/* Isla derecha: perfil admin sticky */}
       <motion.div
         className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/70 backdrop-blur-lg shadow text-gray-800 dark:text-gray-200 sticky top-4 z-40"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        {/* Botón "Admin" - solo visible para usuarios admin */}
-        {isAdmin && (
-          <motion.button
-            onClick={handleViewAsAdmin}
-            className="flex items-center gap-1 px-1 py-1 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Admin"
-          >
-            <Shield className="h-5 w-5" />
-            <span className="hidden lg:inline">Admin</span>
-          </motion.button>
-        )}
+        <motion.button
+          onClick={handleViewAsUser}
+          className="flex items-center gap-1 px-1 py-1 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          title="Usuario"
+        >
+          <Eye className="h-5 w-5" />
+          <span className="hidden lg:inline">Usuario</span>
+        </motion.button>
 
-        {/* Botón de cambio de tema */}
         <ThemeToggle />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <motion.button
@@ -163,7 +156,7 @@ function HeaderBar() {
         </DropdownMenu>
       </motion.div>
 
-      {/* Mobile: menú hamburguesa */}
+      {/* Mobile: menú hamburguesa admin */}
       <div className="md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -177,13 +170,12 @@ function HeaderBar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
             {navItems.map((item) => {
-              const isActive = item.path === "/dashboard" ? isDashboardPath : currentPath === item.path
+              const isActive = currentPath === item.path
               return (
                 <DropdownMenuItem key={item.path} asChild>
                   <Link
                     to={item.path}
-                    className={`cursor-pointer font-medium ${isActive ? "text-purple-600 dark:text-purple-400" : ""}`}
-                  >
+                    className={`cursor-pointer font-medium ${isActive ? "text-blue-600 dark:text-blue-400" : ""}`}                  >
                     <div className="mr-2">
                       {item.mobileIcon}
                     </div>
@@ -202,15 +194,10 @@ function HeaderBar() {
               <LogOut className="h-4 w-4 mr-2" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>
-            {/* Botón Admin para móviles - solo visible para usuarios admin */}
-            {isAdmin && (
-              <DropdownMenuItem asChild className="cursor-pointer font-medium">
-                <Link to="/admin/dashboard" className="flex items-center">
-                  <Shield className="h-4 w-4 mr-2" />
-                  <span>Panel Admin</span>
-                </Link>
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={handleViewAsUser} className="cursor-pointer font-medium">
+              <Eye className="h-4 w-4 mr-2" />
+              <span>Ver como Usuario</span>
+            </DropdownMenuItem>
             <div className="flex items-center justify-between px-2 py-1 border-t border-gray-200 dark:border-gray-700 mt-1 pt-2">
               <span className="text-sm text-gray-700 dark:text-gray-300">Modo oscuro</span>
               <ThemeToggle />
@@ -222,4 +209,4 @@ function HeaderBar() {
   )
 }
 
-export default HeaderBar
+export default AdminHeaderBar

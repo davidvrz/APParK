@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useVehiculos } from '@/hooks/useVehiculos'
-import { useReservas } from '@/hooks/useReservas'
+import { useReserva } from '@/hooks/useReserva'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,12 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarIcon, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '@/config'
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-
-function formatTime(dateString) {
-  return format(new Date(dateString), "yyyy-MM-dd'T'HH:mm", { locale: es })
-}
+import { formatTimeForInput } from "@/lib/utils"
 
 const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId }) => {
   const [form, setForm] = useState({
@@ -29,7 +24,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
   const [selectedTipoVehiculo, setSelectedTipoVehiculo] = useState(null)
 
   const { vehiculos, loading: loadingVehiculos } = useVehiculos()
-  const { crearReserva, error: reservaError, clearError } = useReservas()
+  const { crearReserva, error: reservaError, clearError } = useReserva()
 
   const plazasDisponibles = plantas.flatMap(planta =>
     planta.plazas
@@ -147,8 +142,8 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
 
     setForm(prev => ({
       ...prev,
-      startTime: formatTime(startDefault),
-      endTime: formatTime(endDefault)
+      startTime: formatTimeForInput(startDefault),
+      endTime: formatTimeForInput(endDefault)
     }))
   }, [])
 

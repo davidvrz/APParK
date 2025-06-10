@@ -1,13 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getProfile, updateProfile, deleteAccount } from '@/api/profile'
+import {
+  getProfile,
+  updateProfile,
+  deleteAccount,
+  getAllUsers,
+  updateUserRole,
+  toggleUserStatus,
+  deleteUser
+} from '@/api/profile'
 
 export const useProfile = () => {
   const [perfil, setPerfil] = useState(null)
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const clearError = () => setError(null)
-  const refetchPerfil = useCallback(async () => {
+
+  const fetchPerfil = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
@@ -25,7 +35,7 @@ export const useProfile = () => {
     clearError()
     try {
       const res = await updateProfile(data)
-      await refetchPerfil()
+      await fetchPerfil()
       return res
     } catch (err) {
       console.error('Error al actualizar perfil:', err)
@@ -33,7 +43,6 @@ export const useProfile = () => {
       throw err
     }
   }
-
   const eliminarCuenta = async () => {
     clearError()
     try {
@@ -46,17 +55,87 @@ export const useProfile = () => {
     }
   }
 
+  // ============= ADMIN USER MANAGEMENT =============
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true)
+    clearError()
+    try {
+      const data = await getAllUsers()
+      setUsers(data.users || [])
+    } catch (err) {
+      console.error('Error al obtener usuarios:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleUpdateUserRole = useCallback(async (userId, newRole) => {
+    clearError()
+    try {
+      const res = await updateUserRole(userId, newRole)
+      await fetchUsers() // Refresh users list
+      return res
+    } catch (err) {
+      console.error('Error al actualizar rol:', err)
+      setError(err.message)
+      throw err
+    }
+  }, [fetchUsers])
+
+  const handleToggleUserStatus = useCallback(async (userId) => {
+    clearError()
+    try {
+      const res = await toggleUserStatus(userId)
+      await fetchUsers() // Refresh users list
+      return res
+    } catch (err) {
+      console.error('Error al cambiar estado:', err)
+      setError(err.message)
+      throw err
+    }
+  }, [fetchUsers])
+
+  const handleDeleteUser = useCallback(async (userId) => {
+    clearError()
+    try {
+      const res = await deleteUser(userId)
+      await fetchUsers() // Refresh users list
+      return res
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err)
+      setError(err.message)
+      throw err
+    }
+  }, [fetchUsers])
+
   useEffect(() => {
-    refetchPerfil()
-  }, [refetchPerfil])
+    fetchPerfil()
+    fetchUsers()  // Auto-fetch users for admin components
+  }, [fetchPerfil, fetchUsers])
 
   return {
+    // Profile state
     perfil,
     loading,
     error,
+
+    // Users state (for admin)
+    users,
+
+    // Utilities
     clearError,
+
+    // Profile operations
     actualizarPerfil,
     eliminarCuenta,
-    refetchPerfil,
+    fetchPerfil,
+
+    // Admin user operations
+    fetchUsers,
+    updateUserRole: handleUpdateUserRole,
+    toggleUserStatus: handleToggleUserStatus,
+    deleteUser: handleDeleteUser,
   }
 }

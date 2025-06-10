@@ -6,12 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 import { RESERVA_ANTICIPACION_MIN, RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX } from "@/config"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-
-function formatTime(dateString) {
-  return format(new Date(dateString), "yyyy-MM-dd'T'HH:mm", { locale: es })
-}
+import { formatTimeForInput } from "@/lib/utils"
 
 export default function ReservaEditForm({
   reserva,
@@ -19,7 +14,7 @@ export default function ReservaEditForm({
   parking = null,
   onCancel,
   onSave,
-  apiError = null, // Error proveniente del hook useReservas
+  apiError = null, // Error proveniente del hook useReserva
   isLoading = false
 }) {
 
@@ -66,8 +61,8 @@ export default function ReservaEditForm({
     setForm({
       vehicleId,
       plazaId,
-      startTime: formatTime(reserva.startTime),
-      endTime: formatTime(reserva.endTime)
+      startTime: formatTimeForInput(reserva.startTime),
+      endTime: formatTimeForInput(reserva.endTime)
     })
 
     setErrors({})

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/Button"
@@ -7,13 +7,23 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import FormError from "@/components/ui/FormError"
 
 function Login() {
-  const { login } = useAuth()
+  const { login, isAuthenticated, user, isAuthChecked } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (isAuthChecked && isAuthenticated) {
+      if (user?.rol === 'admin') {
+        navigate("/admin/dashboard", { replace: true })
+      } else {
+        navigate("/dashboard", { replace: true })
+      }
+    }
+  }, [isAuthChecked, isAuthenticated, user, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,10 +36,28 @@ function Login() {
     setError("")
 
     const result = await login(email, password)
-    if (result.ok) navigate("/dashboard")
-    else setError(result.error)
+    if (result.ok) {
+      // Redirección automática basada en el rol
+      if (result.rol === 'admin') {
+        navigate("/admin/dashboard", { replace: true })
+      } else {
+        navigate("/dashboard", { replace: true })
+      }
+    } else {
+      setError(result.error)
+    }
 
     setLoading(false)
+  }
+
+  if (!isAuthChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/50">
+        <div className="text-center">
+          <span className="text-gray-500">Verificando sesión...</span>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -6,9 +6,9 @@ import {
   cancelarReserva,
   eliminarReserva,
   getHistorialReservas
-} from "@/api/reservas"
+} from '@/api/reserva'
 
-export const useReservas = () => {
+export const useReserva = () => {
   const [reservas, setReservas] = useState([])
   const [historial, setHistorial] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,7 @@ export const useReservas = () => {
 
   const clearError = () => setError(null)
 
-  const refetchReservas = useCallback(async () => {
+  const fetchReservas = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
@@ -31,7 +31,7 @@ export const useReservas = () => {
     }
   }, [])
 
-  const refetchHistorial = useCallback(async () => {
+  const fetchHistorial = useCallback(async () => {
     setLoadingHistorial(true)
     clearError()
     try {
@@ -49,7 +49,7 @@ export const useReservas = () => {
     clearError()
     try {
       const res = await crearReserva(data)
-      await refetchReservas()
+      await fetchReservas()
       return res
     } catch (err) {
       console.error("Error al crear reserva", err)
@@ -62,7 +62,7 @@ export const useReservas = () => {
     clearError()
     try {
       const res = await modificarReserva(id, data)
-      await refetchReservas()
+      await fetchReservas()
       return res
     } catch (err) {
       console.error("Error al modificar reserva", err)
@@ -75,7 +75,7 @@ export const useReservas = () => {
     clearError()
     try {
       const res = await cancelarReserva(id)
-      await refetchReservas()
+      await fetchReservas()
       return res
     } catch (err) {
       console.error("Error al cancelar reserva", err)
@@ -88,7 +88,7 @@ export const useReservas = () => {
     clearError()
     try {
       const res = await eliminarReserva(id)
-      await refetchReservas()
+      await fetchReservas()
       return res
     } catch (err) {
       console.error("Error al eliminar reserva", err)
@@ -98,9 +98,9 @@ export const useReservas = () => {
   }
 
   useEffect(() => {
-    refetchReservas()
-    refetchHistorial() // Cargamos también el historial al inicializar el componente
-  }, [refetchReservas, refetchHistorial])
+    fetchReservas()
+    fetchHistorial() // Cargamos también el historial al inicializar el componente
+  }, [fetchReservas, fetchHistorial])
 
   return {
     reservas,
@@ -113,7 +113,7 @@ export const useReservas = () => {
     modificarReserva: modificar,
     cancelarReserva: cancelar,
     eliminarReserva: eliminar,
-    refetchReservas,
-    refetchHistorial
+    fetchReservas,
+    fetchHistorial
   }
 }

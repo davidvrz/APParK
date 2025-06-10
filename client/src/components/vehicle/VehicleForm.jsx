@@ -16,13 +16,14 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
   const [validationErrors, setValidationErrors] = useState({})
 
   useEffect(() => {
-    if (vehicle) {
-      setFormData({
-        matricula: vehicle.matricula || "",
-        modelo: vehicle.modelo || "",
-        tipo: vehicle.tipo || ""
-      })
-    }
+    if (!vehicle) return
+
+    setFormData({
+      matricula: vehicle.matricula || "",
+      modelo: vehicle.modelo || "",
+      tipo: vehicle.tipo || ""
+    })
+
   }, [vehicle])
 
   const handleInputChange = (e) => {
@@ -113,7 +114,7 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
         <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500 font-medium" : "font-medium"}>
           Tipo de vehículo {validationErrors.tipo && `(${validationErrors.tipo})`}
         </Label>
-        {formData.tipo !== "" && (
+        {(vehicle === null || formData.tipo) && (
           <Select
             value={formData.tipo}
             onValueChange={handleSelectChange}

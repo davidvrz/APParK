@@ -1,18 +1,9 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Clock, MapPin, Calendar, Car, Ticket, ChevronUp, Navigation, X, Edit, Trash2 } from "lucide-react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
+import { formatTime, formatDateLong } from "@/lib/utils"
 import { useEffect } from "react"
 import MiniMap from "@/components/map/MiniMap"
-
-function formatTime(dateString) {
-  return format(new Date(dateString), "HH:mm", { locale: es })
-}
-
-function formatDate(dateString) {
-  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es })
-}
 
 function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
   const parkingName = reservation.parking?.nombre || "Parking desconocido"
@@ -79,7 +70,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
                 </div>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-4 w-4 mr-1 text-blue-500" />
-                  <span className="text-sm font-normal">{formatDate(reservation.startTime)}</span>
+                  <span className="text-sm font-normal">{formatDateLong(reservation.startTime)}</span>
                 </div>
               </div>
               <div>
@@ -90,7 +81,7 @@ function ReservaDetails({ reservation, onClose, onDelete, onEdit }) {
                 </div>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-4 w-4 mr-1 text-blue-500" />
-                  <span className="text-sm font-normal">{formatDate(reservation.endTime)}</span>
+                  <span className="text-sm font-normal">{formatDateLong(reservation.endTime)}</span>
                 </div>
               </div>
             </div>

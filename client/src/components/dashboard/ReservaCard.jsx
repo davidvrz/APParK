@@ -1,21 +1,12 @@
 import { motion } from "framer-motion"
 import { Clock, MapPin, Calendar, Car, Edit, Trash2, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-
-function formatTime(dateString) {
-  return format(new Date(dateString), "HH:mm", { locale: es })
-}
-
-function formatDate(dateString) {
-  return format(new Date(dateString), "d 'de' MMMM 'de' yyyy", { locale: es })
-}
+import { formatTime, formatDateLong } from "@/lib/utils"
 
 function ReservaCard({ reservation, onExpand, onEdit, onCancel }) {
   const startTime = formatTime(reservation.startTime)
   const endTime = formatTime(reservation.endTime)
-  const startDate = formatDate(reservation.startTime)
+  const startDate = formatDateLong(reservation.startTime)
   const parkingName = reservation.parking?.nombre || "Parking desconocido"
   const parkingAddress = reservation.parking?.ubicacion || "Ubicación no disponible"
   const plazaNumber = reservation.plaza?.numero || "N/A"

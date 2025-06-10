@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Clock, Search, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
-import { useReservas } from "@/hooks/useReservas"
+import { useReserva } from "@/hooks/useReserva"
 import { Input } from "@/components/ui/Input"
 import { Link } from "react-router-dom"
 import ReservaHistorialCard from "@/components/dashboard/ReservaHistorialCard"
@@ -11,7 +11,7 @@ import ReservaHistorialCard from "@/components/dashboard/ReservaHistorialCard"
 const ITEMS_PER_PAGE = 9
 
 export default function HistorialReservasPage() {
-  const { historial = [], loading } = useReservas()
+  const { historial = [], loading } = useReserva()
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 

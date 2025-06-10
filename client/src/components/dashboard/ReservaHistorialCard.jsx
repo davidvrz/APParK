@@ -1,17 +1,6 @@
 import { Card, CardContent } from "@/components/ui/Card"
 import { Clock, MapPin, Car, Calendar, Layers, Square, CheckCircle } from "lucide-react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-
-function formatTime(dateString) {
-  if (!dateString) return "N/D"
-  return format(new Date(dateString), "HH:mm", { locale: es })
-}
-
-function formatShortDate(dateString) {
-  if (!dateString) return "N/D"
-  return format(new Date(dateString), "d MMM yyyy", { locale: es })
-}
+import { formatTime, formatDate } from "@/lib/utils"
 
 export default function ReservaHistorialCard({ reservation }) {
   return (
@@ -80,7 +69,7 @@ export default function ReservaHistorialCard({ reservation }) {
             <p className="text-base font-medium leading-tight">{formatTime(reservation.startTime)}</p>
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3 text-gray-400" />
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatShortDate(reservation.startTime)}</p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatDate(reservation.startTime)}</p>
             </div>
           </div>
 
@@ -91,7 +80,7 @@ export default function ReservaHistorialCard({ reservation }) {
             <p className="text-base font-medium leading-tight">{formatTime(reservation.endTime)}</p>
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3 text-gray-400" />
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatShortDate(reservation.endTime)}</p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{formatDate(reservation.endTime)}</p>
             </div>
           </div>
         </div>
