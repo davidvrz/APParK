@@ -11,7 +11,7 @@ import { CalendarIcon, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '@/config'
 import { formatTimeForInput } from "@/lib/utils"
 
-const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId }) => {
+const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, preselectedPlazaId }) => {
   const [form, setForm] = useState({
     vehicleId: '',
     plazaId: preselectedPlazaId ? String(preselectedPlazaId) : '',
@@ -121,8 +121,12 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
         startTime: new Date(form.startTime).toISOString(),
         endTime: new Date(form.endTime).toISOString()
       })
-
       setSuccess(true)
+
+      if (onReservaSuccess) {
+        onReservaSuccess()
+      }
+
       setTimeout(() => {
         onCancel()
       }, 2000)
@@ -134,7 +138,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, preselectedPlazaId
     }
   }
 
-  // Establecer fecha actual + 30 min como valor predeterminado para inicio
   useEffect(() => {
     const now = new Date()
     const startDefault = new Date(now.getTime() + RESERVA_ANTICIPACION_MIN * 60000)

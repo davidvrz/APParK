@@ -2,121 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useSocketParking } from '@/hooks/useSocketParking'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Wifi, WifiOff, Car, Bike } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-
-const TipoPlazaIcon = ({ tipo }) => {
-  switch (tipo) {
-  case 'Coche':
-    return <Car className="h-4 w-4" />
-  case 'Moto':
-    return <Bike className="h-4 w-4" />
-  case 'Especial':
-  case 'VIP':
-    return <span className="text-xs font-bold">VIP</span>
-  case 'Eléctrico':
-    return <span className="text-xs font-bold">⚡</span>
-  case 'Discapacitados':
-    return <span className="text-xs font-bold">♿</span>
-  default:
-    return <Car className="h-4 w-4" />
-  }
-}
-
-const Plaza = ({ plaza, onSelect }) => {
-  const getEstadoClasses = () => {
-    if (!plaza.reservable) {
-      return 'bg-gray-200 border-gray-300 text-gray-600 cursor-not-allowed'
-    }
-
-    switch (plaza.estado) {
-    case 'Libre':
-      return 'bg-green-100 border-green-400 text-green-800 hover:bg-green-200 cursor-pointer'
-    case 'Ocupado':
-      return 'bg-red-100 border-red-400 text-red-800 cursor-not-allowed'
-    case 'Reservado':
-      return 'bg-amber-100 border-amber-400 text-amber-800 cursor-not-allowed'
-    default:
-      return 'bg-gray-100 border-gray-300 text-gray-800'
-    }
-  }
-
-  const [isRecent, setIsRecent] = useState(false)
-
-  useEffect(() => {
-    setIsRecent(true)
-    const timeout = setTimeout(() => {
-      setIsRecent(false)
-    }, 2000)
-    return () => clearTimeout(timeout)
-  }, [plaza.estado])
-
-  const handleClick = () => {
-    if (plaza.reservable && plaza.estado === 'Libre') {
-      onSelect(plaza)
-    }
-  }
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        className={`relative rounded-md border p-2 flex flex-col items-center justify-center h-24 shadow-sm ${getEstadoClasses()}`}
-        onClick={handleClick}
-        initial={{ scale: isRecent ? 0.9 : 1 }}
-        animate={{
-          scale: 1,
-          boxShadow: isRecent ? '0 0 0 3px rgba(59, 130, 246, 0.5)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-        }}
-        transition={{ duration: 0.3 }}
-        whileHover={plaza.reservable && plaza.estado === 'Libre' ? { scale: 1.05 } : {}}
-      >
-        <div className="font-medium text-center">{plaza.numero}</div>
-        <div className="flex items-center space-x-1 text-xs mt-1">
-          <TipoPlazaIcon tipo={plaza.tipo} />
-          <span>{plaza.tipo}</span>
-        </div>
-        {plaza.precioHora && (
-          <div className="text-xs mt-1 font-medium">{plaza.precioHora}€/h</div>
-        )}
-
-        {/* Indicador de estado */}
-        <Badge
-          variant="outline"
-          className={`absolute -top-2 -right-2 px-1.5 py-0.5 text-[10px] ${
-            plaza.estado === 'Libre' ? 'bg-green-500 text-white' :
-              plaza.estado === 'Ocupado' ? 'bg-red-500 text-white' :
-                plaza.estado === 'Reservado' ? 'bg-amber-500 text-white' : 'bg-gray-500 text-white'
-          }`}
-        >
-          {plaza.estado}
-        </Badge>
-      </motion.div>
-    </AnimatePresence>
-  )
-}
-
-const Planta = ({ planta, onSelectPlaza }) => {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h3 className="font-medium">Planta {planta.numero}</h3>
-        <Badge variant="outline" className="px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
-          {planta.plazas.length} plazas
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {planta.plazas.map(plaza => (
-          <Plaza
-            key={plaza.id}
-            plaza={plaza}
-            onSelect={() => onSelectPlaza(plaza)}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
+import { Loader2, Wifi, WifiOff } from 'lucide-react'
+import Planta from './Planta'
 
 const ParkingPlan = ({ parking, onSelectPlaza }) => {
   const [activePlanta, setActivePlanta] = useState(null)
@@ -126,11 +13,18 @@ const ParkingPlan = ({ parking, onSelectPlaza }) => {
 
   useEffect(() => {
     if (parking && parking.plantas && parking.plantas.length > 0) {
+      console.log('🔄 ParkingPlan: Cargando datos del parking')
       setPlantas(parking.plantas)
-      setActivePlanta(String(parking.plantas[0].id))
     }
   }, [parking])
 
+  useEffect(() => {
+    if (plantas.length > 0 && !activePlanta) {
+      setActivePlanta(String(plantas[0].id))
+    }
+  }, [plantas, activePlanta])
+
+  // Actualizaciones en tiempo real
   useEffect(() => {
     if (plazasActualizadas.length > 0) {
       plazasActualizadas.forEach(update => {

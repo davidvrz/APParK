@@ -5,7 +5,7 @@ import ParkingPlan from './ParkingPlan'
 import ReservationForm from './ReservationForm'
 import { ArrowLeft, Map, ClipboardCheck } from 'lucide-react'
 
-const ParkingReservationFlow = ({ parking, onCancel, skipPlano = false }) => {
+const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano = false }) => {
   const [selectedPlaza, setSelectedPlaza] = useState(null)
   const [showPlano, setShowPlano] = useState(!skipPlano)
 
@@ -22,6 +22,21 @@ const ParkingReservationFlow = ({ parking, onCancel, skipPlano = false }) => {
 
   const handleBackToPlano = () => {
     setShowPlano(true)
+  }
+
+  const handleReservaSuccess = () => {
+    console.log('🎉 Reserva exitosa, notificando al componente padre...')
+
+    // Notificar al componente padre que necesita refrescar datos
+    if (onReservaSuccess) {
+      onReservaSuccess()
+    }
+
+    // Resetear estado local y volver al plano después de un breve delay
+    setTimeout(() => {
+      setSelectedPlaza(null)
+      setShowPlano(true)
+    }, 2000)
   }
 
   const getPlantasWithSelectedPlaza = () => {
@@ -80,6 +95,7 @@ const ParkingReservationFlow = ({ parking, onCancel, skipPlano = false }) => {
             parkingId={parking.id}
             plantas={getPlantasWithSelectedPlaza()}
             onCancel={skipPlano ? onCancel : handleBackToPlano}
+            onReservaSuccess={handleReservaSuccess}
             preselectedPlazaId={selectedPlaza?.id}
           />
         )}
@@ -96,7 +112,6 @@ const ParkingReservationFlow = ({ parking, onCancel, skipPlano = false }) => {
               Volver
             </Button>
 
-            {/* Mensaje de ayuda */}
             <div className="text-sm text-muted-foreground flex items-center">
               <ClipboardCheck className="h-4 w-4 mr-1" />
               Selecciona una plaza libre para hacer una reserva

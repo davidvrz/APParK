@@ -1,23 +1,38 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion } from "framer-motion"
-import { Activity, Search, RefreshCw, AlertCircle, Info, CheckCircle, Calendar, Loader2 } from "lucide-react"
+import { Activity, Search, AlertCircle, Info, CheckCircle, Calendar, Loader2, Wifi, WifiOff } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { useParking } from "@/hooks/useParking"
 import { useEventos } from "@/hooks/useEventos"
+import { useSocketEventos } from "@/hooks/useSocketEventos"
 import { formatDateTime } from "@/lib/utils"
-import { toast } from "sonner"
 
 function EventosPage() {
   const { parkings, loading: parkingsLoading } = useParking()
   const { eventos, loading: eventosLoading, fetchAllEventos } = useEventos()
-  const [refreshing, setRefreshing] = useState(false)
+
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedParking, setSelectedParking] = useState("all")
   const [tipoFilter, setTipoFilter] = useState("all")
+  const parkingIds = useMemo(() => parkings.map(p => p.id), [parkings])
+
+  const { connected, eventosEnTiempoReal, clearEventosEnTiempoReal, updateEventoEnTiempoReal } = useSocketEventos(parkingIds)
+
+  const allEvents = useMemo(() => {
+    const eventosRT = eventosEnTiempoReal.filter(eventoRT =>
+      !eventos.some(eventoBD =>
+        eventoBD.plazaId === eventoRT.plazaId &&
+        Math.abs(new Date(eventoBD.fecha) - new Date(eventoRT.fecha)) < 5000
+      )
+    )
+
+    // Combinar y ordenar por fecha
+    const combined = [...eventosRT, ...eventos]
+    return combined.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+  }, [eventos, eventosEnTiempoReal])
 
   useEffect(() => {
     if (parkings.length > 0) {
@@ -26,21 +41,21 @@ function EventosPage() {
     }
   }, [parkings, fetchAllEventos])
 
-  const handleRefresh = async () => {
-    if (parkings.length === 0) return
-
-    setRefreshing(true)
-    try {
-      const parkingIds = parkings.map(p => p.id)
-      await fetchAllEventos(parkingIds)
-      toast.success('Eventos actualizados')
-    } catch (error) {
-      console.error('Error refreshing eventos:', error)
-      toast.error('Error al actualizar eventos')
-    } finally {
-      setRefreshing(false)
+  useEffect(() => {
+    if (eventosEnTiempoReal.length > 0) {
+      const ultimoEvento = eventosEnTiempoReal[0]
+      if (ultimoEvento.isNew) {
+        setTimeout(() => {
+          updateEventoEnTiempoReal(prev =>
+            prev.map(evento =>
+              evento.id === ultimoEvento.id ? { ...evento, isNew: false } : evento
+            )
+          )
+        }, 1000)
+      }
     }
-  }
+  }, [eventosEnTiempoReal, updateEventoEnTiempoReal])
+
   const getEventoIcon = (tipo) => {
     switch (tipo?.toLowerCase()) {
     case 'entrada':
@@ -67,7 +82,7 @@ function EventosPage() {
     }
   }
 
-  const filteredEventos = eventos.filter(evento => {
+  const filteredEventos = allEvents.filter(evento => {
     const matchesSearch = !searchTerm ||
       evento.mensaje?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       evento.parking?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,13 +94,12 @@ function EventosPage() {
     const matchesTipo = tipoFilter === "all" || evento.tipoEvento === tipoFilter
 
     return matchesSearch && matchesParking && matchesTipo
-  })
-
+  }).slice(0, 25) // Limitar a los últimos 25 eventos
   const eventosStats = {
-    total: eventos.length,
-    entradas: eventos.filter(e => e.tipoEvento === 'entrada').length,
-    salidas: eventos.filter(e => e.tipoEvento === 'salida').length,
-    errores: eventos.filter(e => e.tipoEvento === 'anomalia').length
+    total: allEvents.length,
+    entradas: allEvents.filter(e => e.tipoEvento === 'entrada').length,
+    salidas: allEvents.filter(e => e.tipoEvento === 'salida').length,
+    anomalías: allEvents.filter(e => e.tipoEvento === 'anomalia').length
   }
 
   return (
@@ -104,15 +118,20 @@ function EventosPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Monitorea la actividad del sistema en tiempo real
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            {connected ? (
+              <>
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span className="text-sm text-green-600">Tiempo real activo</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-600">Tiempo real desconectado</span>
+              </>
+            )}
+          </div>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Actualizar
-        </Button>
       </motion.div>
 
       {/* Stats Cards */}
@@ -171,8 +190,8 @@ function EventosPage() {
                 <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Errores</p>
-                <p className="text-2xl font-bold">{eventosStats.errores}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Anomalías</p>
+                <p className="text-2xl font-bold">{eventosStats.anomalías}</p>
               </div>
             </div>
           </CardContent>
@@ -254,57 +273,59 @@ function EventosPage() {
         ) : (
           <div className="space-y-3">
             {filteredEventos.map((evento) => (
-              <Card key={evento.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1">
-                      {getEventoIcon(evento.tipoEvento)}
-                    </div>
+              <motion.div
+                key={evento.id}
+                initial={evento.isNew ? { opacity: 0, scale: 0.95, y: -20 } : false}
+                animate={evento.isNew ? { opacity: 1, scale: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                <Card className={`hover:shadow-md transition-shadow ${
+                  evento.isNew ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50' : ''
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1">
+                        {getEventoIcon(evento.tipoEvento)}
+                      </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={`text-xs ${getEventoBadgeColor(evento.tipoEvento)}`}>
-                          {evento.tipoEvento || 'Unknown'}
-                        </Badge>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {evento.parking?.nombre}
-                        </span>
-                        {evento.matricula && (
-                          <span className="text-sm text-gray-500">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className={`text-xs ${getEventoBadgeColor(evento.tipoEvento)}`}>
+                            {evento.tipoEvento || 'Unknown'}
+                          </Badge>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {evento.parking?.nombre}
+                          </span>
+                          {evento.matricula && (
+                            <span className="text-sm text-gray-500">
                             Matrícula: {evento.matricula}
-                          </span>
-                        )}
-                        {evento.plaza && (
-                          <span className="text-sm text-gray-500">
-                            Plaza {evento.plaza.numero} - {evento.planta?.nombre}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-gray-700 dark:text-gray-300 mb-2">
-                        {evento.mensaje || 'Sin descripción'}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatDateTime(evento.fecha)}</span>
+                            </span>
+                          )}
+                          {evento.plaza && (
+                            <span className="text-sm text-gray-500">
+                            Plaza {evento.plaza.numero} - Planta {evento.planta?.numero}
+                            </span>
+                          )}
                         </div>
-                        {evento.usuario && (
+                        <p className="text-gray-700 dark:text-gray-300 mb-2">
+                          {evento.mensaje || 'Sin descripción'}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
                           <div className="flex items-center gap-1">
-                            <span>👤 {evento.usuario.nombre} {evento.usuario.apellidos}</span>
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDateTime(evento.fecha)}</span>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
             {filteredEventos.length > 0 && (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500">
-                  Mostrando {filteredEventos.length} de {eventos.length} eventos
+                  Mostrando {filteredEventos.length} de {allEvents.length} eventos
                 </p>
               </div>
             )}

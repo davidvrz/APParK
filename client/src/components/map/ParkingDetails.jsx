@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParking } from '@/hooks/useParking'
 import ParkingReservationFlow from './ParkingReservationFlow'
 import { Button } from '@/components/ui/button'
@@ -18,30 +18,49 @@ import {
 const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'plan' }) => {
   const [activeTab, setActiveTab] = useState(initialSection)
   const [loadingAnuncios, setLoadingAnuncios] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const anunciosLoadedRef = useRef(false)
+  const lastParkingIdRef = useRef(null) // Referencia para evitar fetches duplicados
+
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
 
+  const handleReservaSuccess = useCallback(() => {
+    console.log('🔄 Reserva exitosa, refrescando datos del parking...')
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
   useEffect(() => {
-    if (parkingPreview?.id) {
-      fetchParkingById(parkingPreview.id)
-      // Resetear el estado de carga de anuncios cuando cambia el parking
+    const currentParkingId = parkingPreview?.id
+
+    if (currentParkingId &&
+        (lastParkingIdRef.current !== currentParkingId || refreshKey > 0)) {
+
+      console.log('🔄 Fetching parking data...', {
+        id: currentParkingId,
+        refreshKey,
+        lastId: lastParkingIdRef.current
+      })
+
+      fetchParkingById(currentParkingId)
+      lastParkingIdRef.current = currentParkingId
       anunciosLoadedRef.current = false
     }
-  }, [parkingPreview?.id, fetchParkingById])
+  }, [parkingPreview?.id, refreshKey, fetchParkingById])
 
-  // Cargar anuncios solo cuando se selecciona la pestaña de anuncios y no se han cargado ya
   useEffect(() => {
-    if (activeTab === 'anuncios' && parking?.id && !loadingAnuncios && !anunciosLoadedRef.current) {
+    if (activeTab === 'anuncios' &&
+        parking?.id &&
+        !anunciosLoadedRef.current &&
+        !loadingAnuncios) {
+
       setLoadingAnuncios(true)
       fetchAnuncios(parking.id)
-        .then(() => {
-          anunciosLoadedRef.current = true
-        })
         .finally(() => {
           setLoadingAnuncios(false)
+          anunciosLoadedRef.current = true
         })
     }
-  }, [activeTab, parking?.id, fetchAnuncios])
+  }, [activeTab, parking?.id, fetchAnuncios, loadingAnuncios])
 
   if (loading) {
     return (
@@ -126,7 +145,8 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
             {parking.estado}
           </Badge>
         </div>
-      </div>      {/* Contenido principal con tabs */}
+      </div>
+      {/* Contenido principal con tabs */}
       <div className="flex-grow">
         <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
           <div className="flex justify-center border-b">
@@ -151,15 +171,16 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
           </div>
 
           <div className="p-4">
-            {/* SECCIÓN DEL PLANO Y RESERVAS */}
+            {/* Sección del plano y reservas */}
             <TabsContent value="plan" className="m-0">
               <ParkingReservationFlow
                 parking={parking}
                 onCancel={onClose}
+                onReservaSuccess={handleReservaSuccess}
               />
             </TabsContent>
 
-            {/* SECCIÓN DE FORMULARIO DE RESERVA */}
+            {/* Sección de formulario de reserva */}
             <TabsContent value="reservation" className="m-0">
               <div className="bg-blue-50 p-4 rounded-lg mb-4">
                 <h3 className="font-medium text-blue-800 mb-1">Reserva una plaza en {parking.nombre}</h3>
@@ -171,11 +192,12 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
               <ParkingReservationFlow
                 parking={parking}
                 onCancel={() => setActiveTab('plan')}
+                onReservaSuccess={handleReservaSuccess}
                 skipPlano={true}
               />
             </TabsContent>
 
-            {/* SECCIÓN DE ANUNCIOS */}
+            {/* Sección de anuncios */}
             <TabsContent value="anuncios" className="m-0">
               <div className="space-y-4">
                 <h3 className="font-medium text-lg flex items-center gap-2">
