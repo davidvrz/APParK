@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import ParkingPlan from './ParkingPlan'
 import ReservationForm from './ReservationForm'
-import { ArrowLeft, Map, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Map, ClipboardCheck, Wifi, WifiOff } from 'lucide-react'
+import { useSocketParking } from '@/hooks/useSocketParking'
 
 const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano = false }) => {
   const [selectedPlaza, setSelectedPlaza] = useState(null)
   const [showPlano, setShowPlano] = useState(!skipPlano)
+
+  const { connected } = useSocketParking(parking?.id)
 
   useEffect(() => {
     if (skipPlano) {
@@ -25,14 +28,10 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
   }
 
   const handleReservaSuccess = () => {
-    console.log('🎉 Reserva exitosa, notificando al componente padre...')
-
-    // Notificar al componente padre que necesita refrescar datos
     if (onReservaSuccess) {
       onReservaSuccess()
     }
 
-    // Resetear estado local y volver al plano después de un breve delay
     setTimeout(() => {
       setSelectedPlaza(null)
       setShowPlano(true)
@@ -70,21 +69,38 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
             )}
           </div>
 
-          {!showPlano && !skipPlano && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToPlano}
-              className="gap-1"
-            >
-              <Map className="h-4 w-4" />
-              <span>Ver plano</span>
-            </Button>
+          {showPlano ? (
+            /* Indicador de tiempo real cuando se muestra el plano */
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {connected ? (
+                <>
+                  <Wifi className="h-4 w-4 text-green-500" />
+                  <span>Tiempo real activo</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-4 w-4 text-red-500" />
+                  <span>Tiempo real desconectado</span>
+                </>
+              )}
+            </div>
+          ) : (
+            !skipPlano && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToPlano}
+                className="gap-1"
+              >
+                <Map className="h-4 w-4" />
+                <span>Ver plano</span>
+              </Button>
+            )
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="p-4">
+      <CardContent className="p-8">
         {showPlano ? (
           <ParkingPlan
             parking={parking}
@@ -104,14 +120,6 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
       {showPlano && (
         <CardFooter className="border-t p-4">
           <div className="flex justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-
             <div className="text-sm text-muted-foreground flex items-center">
               <ClipboardCheck className="h-4 w-4 mr-1" />
               Selecciona una plaza libre para hacer una reserva

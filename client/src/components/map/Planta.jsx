@@ -1,25 +1,25 @@
 import React from 'react'
-import { Badge } from '@/components/ui/badge'
 import Plaza from './Plaza'
 
-const Planta = ({ planta, onSelectPlaza }) => {
+const Planta = ({ planta, onSelectPlaza, plazasActualizadas = [] }) => {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h3 className="font-medium">Planta {planta.numero}</h3>
-        <Badge variant="outline" className="px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
-          {planta.plazas.length} plazas
-        </Badge>
-      </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {planta.plazas.map(plaza => {
+          // Verificar si esta plaza fue actualizada recientemente por socket
+          const plazaActualizada = plazasActualizadas.find(p => p.id === plaza.id)
+          const isUpdatedBySocket = plazaActualizada &&
+            (Date.now() - new Date(plazaActualizada.timestamp).getTime()) < 3000 // Últimos 3 segundos
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {planta.plazas.map(plaza => (
-          <Plaza
-            key={plaza.id}
-            plaza={plaza}
-            onSelect={() => onSelectPlaza(plaza)}
-          />
-        ))}
+          return (
+            <Plaza
+              key={plaza.id}
+              plaza={plaza}
+              onSelect={() => onSelectPlaza(plaza)}
+              isUpdatedBySocket={isUpdatedBySocket}
+            />
+          )
+        })}
       </div>
     </div>
   )

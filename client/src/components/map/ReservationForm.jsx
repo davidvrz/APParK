@@ -350,8 +350,7 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, 
             </div>
           </div>
         </div>
-
-        <div className="flex justify-end space-x-2 border-t mt-6 pt-4">
+        <div className="flex justify-end space-x-2 mt-6">
           <Button
             type="button"
             variant="outline"

@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParking } from '@/hooks/useParking'
 import ParkingReservationFlow from './ParkingReservationFlow'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { formatDateTime } from '@/lib/utils'
 import {
   ChevronLeftIcon,
   MapPinIcon,
@@ -25,22 +26,13 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
 
   const handleReservaSuccess = useCallback(() => {
-    console.log('🔄 Reserva exitosa, refrescando datos del parking...')
     setRefreshKey(prev => prev + 1)
   }, [])
 
   useEffect(() => {
     const currentParkingId = parkingPreview?.id
 
-    if (currentParkingId &&
-        (lastParkingIdRef.current !== currentParkingId || refreshKey > 0)) {
-
-      console.log('🔄 Fetching parking data...', {
-        id: currentParkingId,
-        refreshKey,
-        lastId: lastParkingIdRef.current
-      })
-
+    if (currentParkingId && (lastParkingIdRef.current !== currentParkingId || refreshKey > 0)) {
       fetchParkingById(currentParkingId)
       lastParkingIdRef.current = currentParkingId
       anunciosLoadedRef.current = false
@@ -98,80 +90,106 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
       </Card>
     )
   }
-  return (
-    <div className="h-full w-full overflow-auto flex flex-col">
-      {/* Cabecera fija */}
-      <div className="sticky top-0 z-10 bg-white shadow-sm p-3 border-b">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-2 -ml-2 h-8 w-8 flex-shrink-0"
-              onClick={onClose}
-              title="Volver al mapa"
-            >
-              <ChevronLeftIcon className="h-5 w-5" />
-            </Button>
 
-            <div>
-              <h1 className="text-xl font-semibold">{parking.nombre}</h1>
-              <div className="flex items-center mt-1 text-sm text-slate-500">
-                <MapPinIcon className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
-                <span className="line-clamp-1">{parking.ubicacion}</span>
-              </div>
-              <div className="flex flex-wrap items-center mt-2 text-xs text-slate-600 gap-x-3 gap-y-1">
-                <div>
-                  <span className="font-semibold">{parking.capacidad}</span> plazas
+  return (
+    <div className="h-full w-full flex flex-col bg-background">
+      {/* Header con información del parking */}
+      <div className="bg-card border-b">
+        <div className="p-6">
+          <div className="flex items-center justify-between gap-4">
+            {/* Botón volver y título */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-lg hover:bg-muted shrink-0"
+                onClick={onClose}
+                title="Volver al mapa"
+              >
+                <ChevronLeftIcon className="h-5 w-5" />
+              </Button>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl font-display font-bold text-foreground truncate">{parking.nombre}</h1>
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 px-2 py-1 ${
+                      parking.estado === 'Operativo'
+                        ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' :
+                        parking.estado === 'Cerrado'
+                          ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800' :
+                          'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800'
+                    }`}
+                  >
+                    {parking.estado}
+                  </Badge>
                 </div>
-                <div className="hidden sm:block w-0.5 h-3 bg-slate-200"></div>
-                <div className="text-green-600">
-                  <span className="font-semibold">{parking.plazasLibres}</span> libres
-                </div>
-                <div className="hidden sm:block w-0.5 h-3 bg-slate-200"></div>
-                <div className="text-red-600">
-                  <span className="font-semibold">{parking.plazasOcupadas}</span> ocupadas
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <MapPinIcon className="h-4 w-4 mr-1.5 shrink-0" />
+                  <span className="truncate">{parking.ubicacion}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <Badge
-            variant="outline"
-            className={`flex-shrink-0 ${parking.estado === 'Operativo' ? 'text-green-600 border-green-200' :
-              parking.estado === 'Cerrado' ? 'text-red-600 border-red-200' :
-                'text-amber-600 border-amber-200'}`}
-          >
-            {parking.estado}
-          </Badge>
+            {/* Estadísticas del parking */}
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-foreground">{parking.capacidad}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Total</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{parking.plazasLibres}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Libres</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{parking.plazasOcupadas}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Ocupadas</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{parking.plazasReservadas || 0}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Reservadas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navegación con tabs */}
+        <div className="border-t border-border/50">
+          <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full h-12 p-0 bg-transparent rounded-none">
+              <TabsTrigger
+                value="plan"
+                className="flex-1 h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none text-sm"
+              >
+                <Layout className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Plano y Reservas</span>
+                <span className="sm:hidden">Plano</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="reservation"
+                className="flex-1 h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none text-sm"
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Crear Reserva</span>
+                <span className="sm:hidden">Reservar</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="anuncios"
+                className="flex-1 h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none text-sm"
+              >
+                <BellIcon className="h-4 w-4 mr-2" />
+                Anuncios
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
-      {/* Contenido principal con tabs */}
-      <div className="flex-grow">
-        <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-          <div className="flex justify-center border-b">
-            <div className="bg-slate-50 px-2 rounded-t-lg">
-              <TabsList className="bg-transparent">
-                <TabsTrigger value="plan" className="flex items-center gap-1.5 data-[state=active]:bg-white">
-                  <Layout className="h-4 w-4" />
-                  <span className="hidden sm:inline">Plano y Reservas</span>
-                  <span className="sm:hidden">Plano</span>
-                </TabsTrigger>
-                <TabsTrigger value="reservation" className="flex items-center gap-1.5 data-[state=active]:bg-white">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Crear Reserva</span>
-                  <span className="sm:hidden">Reservar</span>
-                </TabsTrigger>
-                <TabsTrigger value="anuncios" className="flex items-center gap-1.5 data-[state=active]:bg-white">
-                  <BellIcon className="h-4 w-4" />
-                  <span>Anuncios</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
 
-          <div className="p-4">
-            {/* Sección del plano y reservas */}
+      {/* Contenido principal */}
+      <div className="flex-1 overflow-auto">
+        <Tabs defaultValue={initialSection} value={activeTab} onValueChange={setActiveTab}>
+          <div className="p-6">
             <TabsContent value="plan" className="m-0">
               <ParkingReservationFlow
                 parking={parking}
@@ -180,11 +198,12 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
               />
             </TabsContent>
 
-            {/* Sección de formulario de reserva */}
             <TabsContent value="reservation" className="m-0">
-              <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                <h3 className="font-medium text-blue-800 mb-1">Reserva una plaza en {parking.nombre}</h3>
-                <p className="text-sm text-blue-700">
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4 mb-6">
+                <h3 className="font-display font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  Reserva una plaza en {parking.nombre}
+                </h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
                   Completa el formulario para reservar una plaza en este parking.
                 </p>
               </div>
@@ -196,52 +215,47 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
                 skipPlano={true}
               />
             </TabsContent>
-
-            {/* Sección de anuncios */}
             <TabsContent value="anuncios" className="m-0">
-              <div className="space-y-4">
-                <h3 className="font-medium text-lg flex items-center gap-2">
-                  <CircleDashed className="h-5 w-5 text-blue-500" />
+              <div className="space-y-6">
+                <div className="text-2xl font-semibold leading-none tracking-tight">
                   Anuncios y Notificaciones
-                </h3>
+                </div>
 
                 {loadingAnuncios ? (
-                  <div className="flex items-center justify-center p-8">
-                    <Loader2 className="h-6 w-6 animate-spin mr-2 text-blue-500" />
-                    <span>Cargando anuncios...</span>
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin mr-3 text-primary" />
+                    <span className="text-sm text-muted-foreground">Cargando anuncios...</span>
                   </div>
                 ) : anuncios.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {anuncios.map(anuncio => (
-                      <Card key={anuncio.id} className="overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-2.5">
-                            <div className="mt-0.5">
-                              <BellIcon className="h-5 w-5 text-blue-500" />
-                            </div>
-                            <div>
-                              <p className="text-sm">{anuncio.contenido}</p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {new Date(anuncio.created_at).toLocaleDateString('es-ES', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                            </div>
+                      <div
+                        key={anuncio.id}
+                        className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1">
+                            <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div className="flex-1">
+                            <p className="text-sm text-foreground leading-relaxed">{anuncio.contenido}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {formatDateTime(anuncio.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
-                  <Card>
-                    <CardContent className="p-6 text-center">
-                      <p className="italic text-slate-500">
-                        No hay anuncios o notificaciones en este momento.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-12">
+                    <div className="p-3 bg-muted/50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <CircleDashed className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      No hay anuncios disponibles en este momento.
+                    </p>
+                  </div>
                 )}
               </div>
             </TabsContent>
