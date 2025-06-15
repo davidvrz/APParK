@@ -15,7 +15,7 @@ const Plaza = ({ plaza, onSelect, isUpdatedBySocket = false }) => {
     case 'Especial':
     case 'VIP':
       return <span className="text-[10px] font-bold">VIP</span>
-    case 'Eléctrico':
+    case 'Electrico':
       return <span className="text-xs">⚡</span>
     case 'Discapacitados':
       return <span className="text-xs">♿</span>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useSocketParking } from '@/hooks/useSocketParking'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader } from 'lucide-react'
 import Planta from './Planta'
 
 const ParkingPlan = ({ parking, onSelectPlaza }) => {
@@ -13,7 +12,6 @@ const ParkingPlan = ({ parking, onSelectPlaza }) => {
 
   useEffect(() => {
     if (parking && parking.plantas && parking.plantas.length > 0) {
-      console.log('🔄 ParkingPlan: Cargando datos del parking')
       setPlantas(parking.plantas)
     }
   }, [parking])

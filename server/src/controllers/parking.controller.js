@@ -10,13 +10,45 @@ import { generateParkingToken } from '../libs/jwt.js'
 export const getAllParkings = async (req, res) => {
   try {
     const parkings = await Parking.findAll({
-      attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado']
+      attributes: ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'],
+      include: {
+        model: Planta,
+        as: 'plantas',
+        include: {
+          model: Plaza,
+          as: 'plazas',
+          attributes: ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora']
+        }
+      }
     })
 
-    // Incluir todos los atributos necesarios, incluyendo capacidad y estado
-    const formattedParkings = parkings.map(parking =>
-      pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
-    )
+    const formattedParkings = parkings.map(parking => {
+      let plazasLibres = 0
+      let plazasOcupadas = 0
+      let plazasReservadas = 0
+
+      parking.plantas.forEach(planta => {
+        planta.plazas.forEach(plaza => {
+          if (plaza.estado === 'Libre') plazasLibres++
+          if (plaza.estado === 'Ocupado') plazasOcupadas++
+          if (plaza.estado === 'Reservado') plazasReservadas++
+        })
+      })
+
+      return {
+        ...pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado']),
+        plantas: parking.plantas.map(planta => ({
+          id: planta.id,
+          numero: planta.numero,
+          plazas: planta.plazas.map(plaza =>
+            pick(plaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
+          )
+        })),
+        plazasLibres,
+        plazasOcupadas,
+        plazasReservadas
+      }
+    })
 
     res.status(200).json({ parkings: formattedParkings })
   } catch (error) {
@@ -138,6 +170,11 @@ export const createParking = async (req, res) => {
   try {
     const { nombre, ubicacion, latitud, longitud, capacidad, estado, plantas } = req.body
 
+    if (!nombre || !ubicacion || !latitud || !longitud || !capacidad) {
+      await transaction.rollback()
+      return res.status(400).json({ error: 'Faltan campos requeridos' })
+    }
+
     const parking = await Parking.create(
       { nombre, ubicacion, latitud, longitud, capacidad, estado },
       { transaction }
@@ -160,13 +197,16 @@ export const createParking = async (req, res) => {
           if (planta.plazas && planta.plazas.length > 0) {
             plazasCreadas = await Promise.all(
               planta.plazas.map(async (plaza) => {
+                if (!plaza.numero || !plaza.tipo || plaza.precioHora === undefined) {
+                  throw new Error(`Datos incompletos en plaza: ${JSON.stringify(plaza)}`)
+                }
                 const nuevaPlaza = await Plaza.create(
                   {
                     planta_id: nuevaPlanta.id,
                     numero: plaza.numero,
                     tipo: plaza.tipo,
                     estado: plaza.estado ?? 'Libre',
-                    precioHora: plaza.precioHora,
+                    precioHora: parseFloat(plaza.precioHora),
                     reservable: plaza.reservable ?? true
                   },
                   { transaction }

@@ -18,7 +18,8 @@ import {
   deleteAnuncio,
   getReservasParking,
   getReservasRapidasParking,
-  completeReservaRapida,  crearReservaRapida
+  completeReservaRapida,
+  crearReservaRapida
 } from '@/api/parking'
 
 export const useParking = (parkingId = null) => {
@@ -86,6 +87,7 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }
+
   const fetchPlazaById = async (parkingId, plantaId, plazaId) => {
     clearError()
     try {
@@ -104,7 +106,7 @@ export const useParking = (parkingId = null) => {
     clearError()
     try {
       const { parking } = await createParking(data)
-      await fetchParkings() // Refresh list
+      await fetchParkings()
       return parking
     } catch (err) {
       console.error('Error al crear parking:', err)
@@ -117,9 +119,9 @@ export const useParking = (parkingId = null) => {
     clearError()
     try {
       const { parking } = await updateParking(id, data)
-      await fetchParkings() // Refresh list
+      await fetchParkings()
       if (parking && parking.id === id) {
-        await fetchParkingById(id) // Refresh current parking
+        await fetchParkingById(id)
       }
       return parking
     } catch (err) {
@@ -128,13 +130,14 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchParkings, fetchParkingById])
+
   const handleDeleteParking = useCallback(async (id) => {
     clearError()
     try {
       const { message } = await deleteParking(id)
-      await fetchParkings() // Refresh list
+      await fetchParkings()
       if (parking && parking.id === id) {
-        setParking(null) // Clear current parking if deleted
+        setParking(null)
       }
       return message
     } catch (err) {
@@ -143,12 +146,13 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchParkings, parking])
+
   const handleCreatePlanta = useCallback(async (parkingId, data) => {
     clearError()
     try {
       const { planta } = await createPlanta(parkingId, data)
       if (parking && parking.id === parkingId) {
-        await fetchParkingById(parkingId) // Refresh current parking
+        await fetchParkingById(parkingId)
       }
       return planta
     } catch (err) {
@@ -157,12 +161,13 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [parking, fetchParkingById])
+
   const handleDeletePlanta = useCallback(async (parkingId, plantaId) => {
     clearError()
     try {
       const { message } = await deletePlanta(parkingId, plantaId)
       if (parking && parking.id === parkingId) {
-        await fetchParkingById(parkingId) // Refresh current parking
+        await fetchParkingById(parkingId)
       }
       return message
     } catch (err) {
@@ -171,12 +176,13 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [parking, fetchParkingById])
+
   const handleCreatePlaza = useCallback(async (parkingId, plantaId, data) => {
     clearError()
     try {
       const { plaza } = await createPlaza(parkingId, plantaId, data)
       if (parking && parking.id === parkingId) {
-        await fetchParkingById(parkingId) // Refresh current parking
+        await fetchParkingById(parkingId)
       }
       return plaza
     } catch (err) {
@@ -185,6 +191,7 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [parking, fetchParkingById])
+
   const handleUpdatePlaza = useCallback(async (parkingId, plantaId, plazaId, data) => {
     clearError()
     try {
@@ -199,12 +206,13 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [parking, fetchParkingById])
+
   const handleDeletePlaza = useCallback(async (parkingId, plantaId, plazaId) => {
     clearError()
     try {
       const { message } = await deletePlaza(parkingId, plantaId, plazaId)
       if (parking && parking.id === parkingId) {
-        await fetchParkingById(parkingId) // Refresh current parking
+        await fetchParkingById(parkingId)
       }
       return message
     } catch (err) {
@@ -213,11 +221,12 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [parking, fetchParkingById])
+
   const handleCreateAnuncio = useCallback(async (parkingId, data) => {
     clearError()
     try {
       const { anuncio } = await createAnuncio(parkingId, data)
-      await fetchAnuncios(parkingId) // Refresh anuncios
+      await fetchAnuncios(parkingId)
       return anuncio
     } catch (err) {
       console.error('Error al crear anuncio:', err)
@@ -225,11 +234,12 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchAnuncios])
+
   const handleUpdateAnuncio = useCallback(async (parkingId, anuncioId, data) => {
     clearError()
     try {
       const { anuncio } = await updateAnuncio(parkingId, anuncioId, data)
-      await fetchAnuncios(parkingId) // Refresh anuncios
+      await fetchAnuncios(parkingId)
       return anuncio
     } catch (err) {
       console.error('Error al actualizar anuncio:', err)
@@ -237,11 +247,12 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchAnuncios])
+
   const handleDeleteAnuncio = useCallback(async (parkingId, anuncioId) => {
     clearError()
     try {
       const { message } = await deleteAnuncio(parkingId, anuncioId)
-      await fetchAnuncios(parkingId) // Refresh anuncios
+      await fetchAnuncios(parkingId)
       return message
     } catch (err) {
       console.error('Error al eliminar anuncio:', err)
@@ -258,7 +269,8 @@ export const useParking = (parkingId = null) => {
     try {
       const { reservas } = await getReservasParking(parkingId)
       setReservas(reservas || [])
-      return reservas    } catch (err) {
+      return reservas
+    } catch (err) {
       console.error('Error al obtener reservas del parking:', err)
       setError(err.message)
       return []
@@ -276,13 +288,14 @@ export const useParking = (parkingId = null) => {
       console.error('Error al obtener reservas rápidas del parking:', err)
       setError(err.message)
       return []
-    }  }, [])
+    }
+  }, [])
 
   const handleCompleteReservaRapida = useCallback(async (parkingId) => {
     clearError()
     try {
       const { reserva } = await completeReservaRapida(parkingId)
-      await fetchReservasRapidasParking(parkingId) // Refresh reservas rápidas
+      await fetchReservasRapidasParking(parkingId)
       return reserva
     } catch (err) {
       console.error('Error al completar reserva rápida:', err)
@@ -290,17 +303,19 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchReservasRapidasParking])
+
   const handleCrearReservaRapida = useCallback(async (parkingId, data) => {
     clearError()
     try {
       const { reserva } = await crearReservaRapida(parkingId, data)
-      await fetchReservasRapidasParking(parkingId) // Refresh reservas rápidas
+      await fetchReservasRapidasParking(parkingId)
       return reserva
     } catch (err) {
       console.error('Error al crear reserva rápida:', err)
       setError(err.message)
       throw err
-    }  }, [fetchReservasRapidasParking])
+    }
+  }, [fetchReservasRapidasParking])
 
   useEffect(() => {
     fetchParkings()
@@ -311,6 +326,7 @@ export const useParking = (parkingId = null) => {
       fetchParkingById(parkingId)
     }
   }, [parkingId, fetchParkingById])
+
   return {
     // State
     parkings,
@@ -348,7 +364,9 @@ export const useParking = (parkingId = null) => {
     // Admin anuncio operations
     createAnuncio: handleCreateAnuncio,
     updateAnuncio: handleUpdateAnuncio,
-    deleteAnuncio: handleDeleteAnuncio,    // Reservation management
+    deleteAnuncio: handleDeleteAnuncio,
+
+    // Reservation management
     fetchReservasParking,
     fetchReservasRapidasParking,
     completeReservaRapida: handleCompleteReservaRapida,

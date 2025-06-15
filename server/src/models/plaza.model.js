@@ -12,7 +12,7 @@ const Plaza = sequelize.define('Plaza', {
     defaultValue: true
   },
   tipo: {
-    type: DataTypes.ENUM('Coche', 'Moto', 'Especial', 'Eléctrico', 'Discapacitados', 'VIP'),
+    type: DataTypes.ENUM('Coche', 'Moto', 'Especial', 'Electrico', 'Discapacitados', 'VIP'),
     allowNull: false
   },
   estado: {

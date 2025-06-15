@@ -28,17 +28,16 @@ export const useSocketEventos = (parkingIds = []) => {
     }
 
     const onEventoRegistrado = (data) => {
-      console.log('📡 Nuevo evento recibido:', data)
 
       if (data && data.plazaId) {
         const nuevoEvento = {
-          id: `temp-${Date.now()}`, // ID temporal hasta que se refresque desde BD
+          id: `temp-${Date.now()}`,
           plazaId: data.plazaId,
           matricula: data.matricula,
           tipoEvento: data.tipoEvento,
           mensaje: data.mensaje,
           fecha: data.fecha || new Date().toISOString(),
-          isNew: true, // Marcar como nuevo para animaciones
+          isNew: true,
           timestamp: new Date()
         }
 

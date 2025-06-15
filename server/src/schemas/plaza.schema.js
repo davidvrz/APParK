@@ -9,7 +9,7 @@ export const plazaSchema = z.object({
     .int('El número de plaza debe ser un entero positivo')
     .positive('El número de plaza debe ser mayor que 0'),
 
-  tipo: z.enum(['Coche', 'Moto', 'Especial', 'Eléctrico', 'Discapacitados', 'VIP']),
+  tipo: z.enum(['Coche', 'Moto', 'Especial', 'Electrico', 'Discapacitados', 'VIP']),
 
   estado: z.enum(['Libre', 'Ocupado', 'Reservado']).optional(),
 

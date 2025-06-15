@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { Loader2 } from 'lucide-react'
 
 function AdminRoute({ children }) {
   const { user, isAuthenticated, isAuthChecked } = useAuth()
@@ -7,11 +8,8 @@ function AdminRoute({ children }) {
   // Si aún no se ha verificado la autenticación, mostramos un loading
   if (!isAuthChecked) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando permisos...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
       </div>
     )
   }

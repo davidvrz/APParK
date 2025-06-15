@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS Plaza (
     planta_id INT,
     numero INT NOT NULL,
     reservable BOOLEAN NOT NULL DEFAULT TRUE,
-    tipo ENUM('Coche', 'Moto', 'Especial', 'Eléctrico', 'Discapacitados', 'VIP') NOT NULL,
+    tipo ENUM('Coche', 'Moto', 'Especial', 'Electrico', 'Discapacitados', 'VIP') NOT NULL,
     estado ENUM('Libre', 'Ocupado', 'Reservado') DEFAULT 'Libre',
     precio_por_hora DECIMAL(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

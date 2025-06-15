@@ -8,13 +8,14 @@ import { useParking } from "@/hooks/useParking"
 import ParkingCard from "@/components/admin/ParkingCard"
 import ParkingFormModal from "@/components/admin/ParkingFormModal"
 import ParkingDetailsModal from "@/components/admin/ParkingDetailsModal"
+import AnunciosListModal from "@/components/admin/AnunciosListModal"
 
 function ParkingsPage() {
-  const { parkings, loading, error } = useParking()
-
+  const { parkings, loading, error, createParking, updateParking, deleteParking } = useParking()
   const [searchTerm, setSearchTerm] = useState("")
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [isAnunciosModalOpen, setIsAnunciosModalOpen] = useState(false)
   const [selectedParking, setSelectedParking] = useState(null)
   const [editingParking, setEditingParking] = useState(null)
 
@@ -28,15 +29,17 @@ function ParkingsPage() {
     setIsFormModalOpen(true)
   }
 
+  const handleManageAnuncios = (parking) => {
+    setSelectedParking(parking)
+    setIsAnunciosModalOpen(true)
+  }
+
   const handleModalClose = () => {
     setIsFormModalOpen(false)
     setIsDetailsModalOpen(false)
+    setIsAnunciosModalOpen(false)
     setSelectedParking(null)
     setEditingParking(null)
-  }
-
-  const handleSuccess = () => {
-    handleModalClose()
   }
 
   const filteredParkings = parkings.filter(parking =>
@@ -118,14 +121,17 @@ function ParkingsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">            {filteredParkings.map((parking) => (
-            <ParkingCard
-              key={parking.id}
-              parking={parking}
-              onView={() => handleViewParking(parking)}
-              onEdit={() => handleEditParking(parking)}
-            />
-          ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredParkings.map((parking) => (
+              <ParkingCard
+                key={parking.id}
+                parking={parking}
+                onView={() => handleViewParking(parking)}
+                onEdit={() => handleEditParking(parking)}
+                onDelete={deleteParking}
+                onManageAnuncios={() => handleManageAnuncios(parking)}
+              />
+            ))}
           </div>
         )}
       </motion.div>
@@ -135,7 +141,8 @@ function ParkingsPage() {
         isOpen={isFormModalOpen}
         onClose={handleModalClose}
         parking={editingParking}
-        onSuccess={handleSuccess}
+        createParking={createParking}
+        updateParking={updateParking}
       />
 
       <ParkingDetailsModal
@@ -147,6 +154,13 @@ function ParkingsPage() {
           setIsDetailsModalOpen(false)
           setIsFormModalOpen(true)
         }}
+      />
+
+      {/* Anuncios Modal */}
+      <AnunciosListModal
+        isOpen={isAnunciosModalOpen}
+        onClose={() => setIsAnunciosModalOpen(false)}
+        parking={selectedParking}
       />
     </div>
   )
