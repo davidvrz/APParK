@@ -4,8 +4,6 @@ import {
   updateProfile,
   deleteAccount,
   getAllUsers,
-  updateUserRole,
-  toggleUserStatus,
   deleteUser
 } from '@/api/profile'
 
@@ -55,64 +53,38 @@ export const useProfile = () => {
     }
   }
 
-  // ============= ADMIN USER MANAGEMENT =============
+  // Admin
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
-      const data = await getAllUsers()
-      setUsers(data.users || [])
+      const { users } = await getAllUsers()
+      setUsers(users || [])
     } catch (err) {
       console.error('Error al obtener usuarios:', err)
-      setError(err.message)
+      setError(err.response?.data?.error || 'Error desconocido')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const handleUpdateUserRole = useCallback(async (userId, newRole) => {
-    clearError()
-    try {
-      const res = await updateUserRole(userId, newRole)
-      await fetchUsers() // Refresh users list
-      return res
-    } catch (err) {
-      console.error('Error al actualizar rol:', err)
-      setError(err.message)
-      throw err
-    }
-  }, [fetchUsers])
-
-  const handleToggleUserStatus = useCallback(async (userId) => {
-    clearError()
-    try {
-      const res = await toggleUserStatus(userId)
-      await fetchUsers() // Refresh users list
-      return res
-    } catch (err) {
-      console.error('Error al cambiar estado:', err)
-      setError(err.message)
-      throw err
-    }
-  }, [fetchUsers])
-
   const handleDeleteUser = useCallback(async (userId) => {
     clearError()
     try {
       const res = await deleteUser(userId)
-      await fetchUsers() // Refresh users list
+      await fetchUsers()
       return res
     } catch (err) {
       console.error('Error al eliminar usuario:', err)
-      setError(err.message)
+      setError(err.response?.data?.error || 'Error desconocido')
       throw err
     }
   }, [fetchUsers])
 
   useEffect(() => {
     fetchPerfil()
-    fetchUsers()  // Auto-fetch users for admin components
+    fetchUsers()
   }, [fetchPerfil, fetchUsers])
 
   return {
@@ -134,8 +106,6 @@ export const useProfile = () => {
 
     // Admin user operations
     fetchUsers,
-    updateUserRole: handleUpdateUserRole,
-    toggleUserStatus: handleToggleUserStatus,
     deleteUser: handleDeleteUser,
   }
 }

@@ -32,12 +32,21 @@ export default function ReservasActivas({ searchTerm = "", isEmbedded = false, }
     if (!searchTerm) return reservas
 
     const searchLower = searchTerm.toLowerCase()
+
+    // Helper function for safe searching
+    const safeTextIncludes = (text, term) => {
+      if (text === null || typeof text === 'undefined') {
+        return false
+      }
+      return text.toString().toLowerCase().includes(term)
+    }
+
     return reservas.filter(reserva => (
-      reserva.parking?.nombre?.toLowerCase().includes(searchLower) ||
-      reserva.parking?.ubicacion?.toLowerCase().includes(searchLower) ||
-      reserva.plaza?.numero?.toString().toLowerCase().includes(searchLower) ||
-      reserva.vehiculo?.matricula?.toLowerCase().includes(searchLower) ||
-      reserva.vehiculo?.modelo?.toLowerCase().includes(searchLower)
+      safeTextIncludes(reserva.parking?.nombre, searchLower) ||
+      safeTextIncludes(reserva.parking?.ubicacion, searchLower) ||
+      safeTextIncludes(reserva.plaza?.numero, searchLower) ||
+      safeTextIncludes(reserva.vehicle?.matricula, searchLower) ||
+      safeTextIncludes(reserva.vehicle?.modelo, searchLower)
     ))
   }, [reservas, searchTerm])
 
@@ -118,7 +127,7 @@ export default function ReservasActivas({ searchTerm = "", isEmbedded = false, }
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error al Cargar Reservas</AlertTitle>
           <AlertDescription>
-            {typeof error === 'string' ? error : JSON.stringify(error)}
+            {error}
             <Button variant="link" onClick={() => clearError && clearError()} className="p-0 h-auto ml-2">Reintentar</Button>
           </AlertDescription>
         </Alert>

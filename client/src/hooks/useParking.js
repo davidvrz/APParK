@@ -51,7 +51,7 @@ export const useParking = (parkingId = null) => {  const [parkings, setParkings]
     } catch (err) {
       console.error('Error al obtener parking por ID:', err)
       setError(err.message)
-      throw err
+      return null
     } finally {
       setLoading(false)
     }
@@ -93,7 +93,7 @@ export const useParking = (parkingId = null) => {  const [parkings, setParkings]
     }
   }
 
-  // ============= ADMIN CRUD OPERATIONS =============
+  // Admin
 
   const handleCreateParking = useCallback(async (data) => {
     clearError()
@@ -190,7 +190,7 @@ export const useParking = (parkingId = null) => {  const [parkings, setParkings]
     try {
       const { plaza } = await updatePlaza(parkingId, plantaId, plazaId, data)
       if (parking && parking.id === parkingId) {
-        await fetchParkingById(parkingId) // Refresh current parking
+        await fetchParkingById(parkingId)
       }
       return plaza
     } catch (err) {
@@ -253,8 +253,6 @@ export const useParking = (parkingId = null) => {  const [parkings, setParkings]
       throw err
     }
   }, [fetchAnuncios])
-  // ============= RESERVATION MANAGEMENT =============
-  // Nota: Las operaciones de reservas se manejan en useReserva hook
 
   useEffect(() => {
     fetchParkings()

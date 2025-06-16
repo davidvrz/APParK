@@ -86,23 +86,6 @@ export const useSocketParking = (parkingId) => {
     return () => clearTimeout(timeout)
   }, [plazasActualizadas.length])
 
-  // Función para actualizar estados localmente en una plaza
-  const actualizarEstadoPlaza = useCallback((plazaId, nuevoEstado, plantas) => {
-    if (!plantas) {
-      return plantas
-    }
-
-    return plantas.map(planta => ({
-      ...planta,
-      plazas: planta.plazas.map(plaza => {
-        if (plaza.id === plazaId) {
-          return { ...plaza, estado: nuevoEstado }
-        }
-        return plaza
-      })
-    }))
-  }, [])
-
   // Función para emitir un evento personalizado
   const emitEvent = useCallback((event, data) => {
     return emitSocketEvent(event, data)
@@ -118,7 +101,6 @@ export const useSocketParking = (parkingId) => {
   return {
     connected,
     plazasActualizadas,
-    actualizarEstadoPlaza,
     emitEvent,
     requestRefresh,
     clearUpdates: () => setPlazasActualizadas([])

@@ -116,8 +116,7 @@ export const addVehicle = async (req, res) => {
 
     res.status(201).json({ vehicle: createdVehicle })
   } catch (error) {
-    console.error('Error creating vehicle:', error)
-    res.status(500).json({ error: 'Error interno del servidor al añadir el vehículo' })
+    res.status(500).json({ error: error.message })
   }
 }
 
@@ -183,8 +182,7 @@ export const updateVehicle = async (req, res) => {
 
     res.status(200).json({ message: 'Vehículo actualizado correctamente', vehicle: updatedVehicle })
   } catch (error) {
-    console.error('Error updating vehicle:', error)
-    res.status(500).json({ error: 'Error interno del servidor al actualizar el vehículo' })
+    res.status(500).json({ error: error.message })
   }
 }
 
@@ -229,6 +227,69 @@ export const deleteAccount = async (req, res) => {
     })
 
     res.status(200).json({ message: 'Cuenta eliminada correctamente' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const adminGetAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'email', 'nombreCompleto', 'telefono', 'rol', 'created_at', 'updated_at']
+    })
+    res.status(200).json({ users })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const adminGetUserById = async (req, res) => {
+  try {
+    const { id } = req.params
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'email', 'nombreCompleto', 'telefono', 'rol', 'created_at', 'updated_at'],
+      include: [{
+        model: Vehicle,
+        as: 'vehicles',
+        attributes: ['id', 'matricula', 'modelo', 'tipo']
+      }]
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' })
+    }
+
+    res.status(200).json({ user })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const adminDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params
+    const user = await User.findByPk(id)
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' })
+    }
+
+    if (user.id === req.user.id) {
+      return res.status(403).json({ error: 'No puedes eliminar tu propia cuenta de administrador' })
+    }
+
+    await Vehicle.destroy({ where: { usuario_id: id } })
+
+    await user.destroy()
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      sameSite: 'Strict',
+      path: '/api/auth/refresh'
+    })
+
+    res.status(200).json({ message: 'Usuario eliminado correctamente por el administrador' })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

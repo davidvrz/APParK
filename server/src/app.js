@@ -10,6 +10,9 @@ import parkingRoutes from './routes/parking.routes.js'
 import reservaRoutes from './routes/reserva.routes.js'
 import bullBoardRouter from './jobs/monitor.js'
 
+import { authenticate } from './middlewares/auth.middleware.js'
+import { requireAdmin } from './middlewares/admin.middleware.js'
+
 import { FRONTEND_URL } from './config.js'
 
 const app = express()
@@ -38,7 +41,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/parking', parkingRoutes)
 app.use('/api/reserva', reservaRoutes)
-app.use('/admin/queues', bullBoardRouter)
+app.use('/admin/queues', authenticate, requireAdmin, bullBoardRouter)
 
 // Middleware para rutas no encontradas (404)
 app.use((req, res, next) => {

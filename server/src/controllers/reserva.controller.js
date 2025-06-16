@@ -438,13 +438,6 @@ export const updateReserva = async (req, res) => {
 
         const estadoPlazaAnterior = reservasRestantesPlazaAnterior === 0 ? 'Libre' : 'Reservado'
 
-        console.log('🔄 [SERVER] Enviando evento de plaza anterior:', {
-          parkingId: parkingIdAnterior,
-          plazaId: plazaAnteriorId,
-          nuevoEstado: estadoPlazaAnterior,
-          reservasRestantes: reservasRestantesPlazaAnterior
-        })
-
         getIO().to(`parking:${parkingIdAnterior}`).emit('parking:update', {
           plazaId: plazaAnteriorId,
           nuevoEstado: estadoPlazaAnterior,
@@ -452,11 +445,6 @@ export const updateReserva = async (req, res) => {
         })
       }
 
-      console.log('🔄 [SERVER] Enviando evento de plaza reservada:', {
-        parkingId: parkingIdNuevo,
-        plazaId,
-        nuevoEstado: 'Reservado'
-      })
       getIO().to(`parking:${parkingIdNuevo}`).emit('parking:update', {
         plazaId,
         nuevoEstado: 'Reservado',

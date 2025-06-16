@@ -11,7 +11,6 @@ reservaQueue.process('completar-reserva', async job => {
   try {
     const reserva = await Reserva.findByPk(reservaId)
     if (!reserva || reserva.estado !== 'activa') {
-      console.log(`⚠️ Job completado pero la reserva ${reservaId} no existe o ya está finalizada`)
       return
     }
 
@@ -50,8 +49,6 @@ reservaQueue.process('completar-reserva', async job => {
         nuevoEstado: 'Libre',
         tipo: 'reserva_completada'
       })
-
-    console.log(`✅ Reserva completada automáticamente: Reserva #${reserva.id}`)
   } catch (err) {
     console.error(`❌ [Bull] Error al completar la reserva ${reservaId}:`, err.message)
   }

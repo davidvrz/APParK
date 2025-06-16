@@ -87,6 +87,7 @@ export default function Vehiculos() {
     try {
       await eliminarVehiculo(selectedVehicle.id)
       setIsDeleteDialogOpen(false)
+      setSelectedVehicle(null)
     } catch (err) {
       setFormError(err.message || "Error al eliminar el vehículo")
     } finally {
@@ -110,14 +111,6 @@ export default function Vehiculos() {
             Añadir Vehículo
           </Button>
         </div>
-
-        {/* Mostrar error si existe */}
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
         {/* Lista de vehículos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -196,7 +189,10 @@ export default function Vehiculos() {
           open={isDeleteDialogOpen}
           onOpenChange={(open) => {
             setIsDeleteDialogOpen(open)
-            if (!open) setFormError(null)
+            if (!open) {
+              setFormError(null)
+              setSelectedVehicle(null)
+            }
           }}
         >
           <DialogContent>

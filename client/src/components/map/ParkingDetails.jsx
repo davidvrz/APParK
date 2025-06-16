@@ -29,7 +29,6 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
   const {
     connected,
     plazasActualizadas,
-    actualizarEstadoPlaza,
     clearUpdates,
     requestRefresh  } = useSocketParking(parkingPreview?.id)
 

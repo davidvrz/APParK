@@ -19,22 +19,3 @@ export const authenticate = (req, res, next) => {
     return res.status(403).json({ error: 'Token inválido' })
   }
 }
-
-export const refreshToken = (req, res, next) => {
-  const refreshToken = req.cookies?.refreshToken
-
-  if (!refreshToken) {
-    return res.status(401).json({ error: 'No autorizado' })
-  }
-
-  try {
-    const decoded = verifyUserToken(refreshToken)
-    req.user = decoded
-    next()
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Refresh token expirado' })
-    }
-    return res.status(403).json({ error: 'Refresh token inválido' })
-  }
-}

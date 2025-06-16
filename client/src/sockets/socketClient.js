@@ -14,11 +14,9 @@ export const initSocket = () => {
 
     // Configurar handlers básicos
     socket.on('connect', () => {
-      console.log('🔌 Socket conectado:', socket.id)
     })
 
     socket.on('disconnect', () => {
-      console.log('🔌 Socket desconectado')
     })
 
     socket.on('error', (error) => {

@@ -5,7 +5,7 @@ import pick from 'lodash/pick.js'
 
 export const register = async (req, res) => {
   try {
-    const { email, password, nombreCompleto, telefono, rol } = req.body
+    const { email, password, nombreCompleto, telefono } = req.body
 
     const existingUser = await User.findOne({ where: { email } })
     if (existingUser) {
@@ -19,7 +19,7 @@ export const register = async (req, res) => {
       hashedPassword,
       nombreCompleto,
       telefono,
-      rol
+      rol: 'conductor'
     })
 
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({
@@ -62,12 +62,12 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ where: { email } })
     if (!user) {
-      return res.status(401).json({ error: 'Credenciales incorrectas' })
+      return res.status(401).json({ error: 'El correo electrónico no está registrado' })
     }
 
     const isMatch = await bcrypt.compare(password, user.hashedPassword)
     if (!isMatch) {
-      return res.status(401).json({ error: 'Credenciales incorrectas' })
+      return res.status(401).json({ error: 'La contraseña es incorrecta' })
     }
 
     const { token: accessToken, expiresIn: accessTokenExpiresIn } = generateAccessToken({

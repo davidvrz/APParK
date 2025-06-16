@@ -12,7 +12,7 @@ function Login() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -25,26 +25,43 @@ function Login() {
     }
   }, [isAuthChecked, isAuthenticated, user, navigate])
 
+  const validateFields = () => {
+    const newErrors = {}
+    if (!email) newErrors.email = "El correo electrónico es obligatorio"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "El correo electrónico no es válido"
+    if (!password) newErrors.password = "La contraseña es obligatoria"
+    return newErrors
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email || !password) {
-      setError("Por favor, completa todos los campos")
+    const fieldErrors = validateFields()
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors)
       return
     }
 
     setLoading(true)
-    setError("")
+    setErrors({})
 
     const result = await login(email, password)
     if (result.ok) {
-      // Redirección automática basada en el rol
       if (result.rol === 'admin') {
         navigate("/admin/dashboard", { replace: true })
       } else {
         navigate("/dashboard", { replace: true })
       }
     } else {
-      setError(result.error)
+      // Manejar errores del backend
+      if (result.fieldErrors) {
+        // Errores de validación específicos por campo
+        setErrors(result.fieldErrors)
+      } else if (typeof result.error === 'string') {
+        // Error general
+        setErrors({ general: result.error })
+      } else {
+        setErrors({ general: "Error desconocido al iniciar sesión." })
+      }
     }
 
     setLoading(false)
@@ -69,15 +86,15 @@ function Login() {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <FormError message={error} />
-
-            <div className="space-y-1">
+            {errors.general && <FormError message={errors.general} />}            <div className="space-y-1">
               <label className="text-sm font-medium">Correo electrónico</label>
               <Input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@correo.com"
               />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
 
             <div className="space-y-1">
@@ -88,6 +105,7 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">

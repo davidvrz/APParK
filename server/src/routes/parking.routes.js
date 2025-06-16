@@ -45,7 +45,6 @@ router.get('/:parkingId', parkingAccess, getParkingById)
 router.get('/:parkingId/plantas/:plantaId', parkingAccess, getPlantaById)
 router.get('/:parkingId/plantas/:plantaId/plazas/:plazaId', parkingAccess, getPlazaById)
 
-// admin123
 router.post('/', authenticate, requireAdmin, validateSchema(parkingSchema), createParking)
 router.put('/:parkingId', authenticate, requireAdmin, validateSchema(parkingSchema), updateParking)
 router.delete('/:parkingId', authenticate, requireAdmin, deleteParking)

@@ -172,64 +172,83 @@ export const createParking = async (req, res) => {
 
     if (!nombre || !ubicacion || !latitud || !longitud || !capacidad) {
       await transaction.rollback()
-      return res.status(400).json({ error: 'Faltan campos requeridos' })
+      return res.status(400).json({ error: 'Faltan campos requeridos para el parking (nombre, ubicación, latitud, longitud, capacidad)' })
     }
 
     const parking = await Parking.create(
-      { nombre, ubicacion, latitud, longitud, capacidad, estado },
+      {
+        nombre,
+        ubicacion,
+        latitud: parseFloat(latitud),
+        longitud: parseFloat(longitud),
+        capacidad: parseInt(capacidad),
+        estado: estado ?? 'Operativo' // Default si no se provee
+      },
       { transaction }
     )
 
-    let createdParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
+    const createdParkingData = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
+    const createdPlantasArray = []
 
-    if (plantas && plantas.length > 0) {
-      const createdPlantas = await Promise.all(
-        plantas.map(async (planta) => {
-          const nuevaPlanta = await Planta.create(
-            {
-              parking_id: parking.id,
-              numero: planta.numero
-            },
-            { transaction }
-          )
+    if (plantas && Array.isArray(plantas) && plantas.length > 0) {
+      for (const plantaData of plantas) {
+        if (plantaData.numero === undefined || plantaData.numero === null) {
+          // Opcional: registrar advertencia o lanzar error. Por ahora, omitimos la planta.
+          console.warn(`Número de planta no proporcionado para parking ${parking.id}. Omitiendo esta planta.`)
+          continue
+        }
+        const nuevaPlanta = await Planta.create(
+          {
+            parking_id: parking.id,
+            numero: plantaData.numero
+          },
+          { transaction }
+        )
 
-          let plazasCreadas = []
-          if (planta.plazas && planta.plazas.length > 0) {
-            plazasCreadas = await Promise.all(
-              planta.plazas.map(async (plaza) => {
-                if (!plaza.numero || !plaza.tipo || plaza.precioHora === undefined) {
-                  throw new Error(`Datos incompletos en plaza: ${JSON.stringify(plaza)}`)
-                }
-                const nuevaPlaza = await Plaza.create(
-                  {
-                    planta_id: nuevaPlanta.id,
-                    numero: plaza.numero,
-                    tipo: plaza.tipo,
-                    estado: plaza.estado ?? 'Libre',
-                    precioHora: parseFloat(plaza.precioHora),
-                    reservable: plaza.reservable ?? true
-                  },
-                  { transaction }
-                )
-
-                return pick(nuevaPlaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
-              })
+        const plazasCreadasArray = []
+        if (plantaData.plazas && Array.isArray(plantaData.plazas) && plantaData.plazas.length > 0) {
+          for (const plazaData of plantaData.plazas) {
+            if (plazaData.numero === undefined || plazaData.numero === null || !plazaData.tipo || plazaData.precioHora === undefined || plazaData.precioHora === null) {
+              await transaction.rollback()
+              return res.status(400).json({ error: `Datos incompletos para la plaza número ${plazaData.numero || '(desconocido)'} en planta ${plantaData.numero}. Se requieren: numero, tipo, precioHora.` })
+            }
+            const nuevaPlaza = await Plaza.create(
+              {
+                planta_id: nuevaPlanta.id,
+                numero: plazaData.numero,
+                tipo: plazaData.tipo,
+                estado: plazaData.estado ?? 'Libre',
+                precioHora: parseFloat(plazaData.precioHora),
+                reservable: plazaData.reservable ?? true
+              },
+              { transaction }
             )
+            plazasCreadasArray.push(pick(nuevaPlaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora']))
           }
-
-          return {
-            id: nuevaPlanta.id,
-            numero: nuevaPlanta.numero,
-            plazas: plazasCreadas
-          }
+        }
+        createdPlantasArray.push({
+          ...pick(nuevaPlanta.get(), ['id', 'numero']),
+          plazas: plazasCreadasArray
         })
-      )
-
-      createdParking = {
-        ...createdParking,
-        plantas: createdPlantas
       }
     }
+    createdParkingData.plantas = createdPlantasArray
+
+    let plazasLibres = 0
+    let plazasOcupadas = 0
+    let plazasReservadas = 0
+
+    createdParkingData.plantas.forEach(planta => {
+      planta.plazas.forEach(plaza => {
+        if (plaza.estado === 'Libre' && plaza.reservable) plazasLibres++
+        else if (plaza.estado === 'Ocupada') plazasOcupadas++
+        else if (plaza.estado === 'Reservada') plazasReservadas++
+      })
+    })
+
+    createdParkingData.plazasLibres = plazasLibres
+    createdParkingData.plazasOcupadas = plazasOcupadas
+    createdParkingData.plazasReservadas = plazasReservadas
 
     const parkingToken = generateParkingToken({
       parkingId: parking.id,
@@ -239,7 +258,8 @@ export const createParking = async (req, res) => {
     await transaction.commit()
 
     res.status(201).json({
-      parking: createdParking,
+      message: 'Parking creado correctamente',
+      parking: createdParkingData,
       parkingToken
     })
   } catch (error) {
@@ -249,30 +269,161 @@ export const createParking = async (req, res) => {
 }
 
 export const updateParking = async (req, res) => {
+  const transaction = await sequelize.transaction()
   try {
     const { parkingId } = req.params
-    const { nombre, ubicacion, latitud, longitud, capacidad, estado } = req.body
+    const { nombre, ubicacion, latitud, longitud, capacidad, estado, plantas: incomingPlantas } = req.body
 
-    const parking = await Parking.findByPk(parkingId)
+    const parking = await Parking.findByPk(parkingId, { transaction })
 
     if (!parking) {
+      await transaction.rollback()
       return res.status(404).json({ error: 'Parking no encontrado' })
     }
 
+    // Actualizar propiedades directas del Parking
     parking.nombre = nombre ?? parking.nombre
     parking.ubicacion = ubicacion ?? parking.ubicacion
     parking.latitud = latitud ?? parking.latitud
     parking.longitud = longitud ?? parking.longitud
     parking.capacidad = capacidad ?? parking.capacidad
     parking.estado = estado ?? parking.estado
+    await parking.save({ transaction })
 
-    await parking.save()
+    // Manejar Plantas y Plazas
+    if (incomingPlantas && Array.isArray(incomingPlantas)) {
+      const existingPlantas = await Planta.findAll({
+        where: { parking_id: parkingId },
+        transaction
+      })
+      const incomingPlantaIds = incomingPlantas.map(p => p.id).filter(id => id)
 
-    const updatedParking = pick(parking.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado'])
+      // Eliminar plantas (y sus plazas) que no están en la solicitud
+      for (const existingPlanta of existingPlantas) {
+        if (!incomingPlantaIds.includes(existingPlanta.id)) {
+          await Plaza.destroy({ where: { planta_id: existingPlanta.id }, transaction })
+          await existingPlanta.destroy({ transaction })
+        }
+      }
 
-    res.status(200).json({ message: 'Parking actualizado correctamente', parking: updatedParking })
+      // Actualizar plantas existentes o crear nuevas
+      for (const incomingPlanta of incomingPlantas) {
+        let plantaInstance
+        if (incomingPlanta.id) {
+          plantaInstance = await Planta.findOne({ where: { id: incomingPlanta.id, parking_id: parkingId }, transaction })
+          if (plantaInstance) {
+            plantaInstance.numero = incomingPlanta.numero ?? plantaInstance.numero
+            await plantaInstance.save({ transaction })
+          } else {
+            console.warn(`Planta con ID ${incomingPlanta.id} no encontrada para parking ${parkingId}. Omitiendo.`)
+            continue
+          }
+        } else {
+          plantaInstance = await Planta.create({
+            parking_id: parkingId,
+            numero: incomingPlanta.numero
+          }, { transaction })
+        }
+
+        // Manejar Plazas para la plantaInstance actual
+        if (plantaInstance && incomingPlanta.plazas && Array.isArray(incomingPlanta.plazas)) {
+          const existingPlazasForPlanta = await Plaza.findAll({ where: { planta_id: plantaInstance.id }, transaction })
+          const incomingPlazaIdsForPlanta = incomingPlanta.plazas.map(p => p.id).filter(id => id)
+
+          for (const existingPlaza of existingPlazasForPlanta) {
+            if (!incomingPlazaIdsForPlanta.includes(existingPlaza.id)) {
+              await existingPlaza.destroy({ transaction })
+            }
+          }
+
+          for (const incomingPlaza of incomingPlanta.plazas) {
+            if (incomingPlaza.id) {
+              const plazaToUpdate = await Plaza.findOne({ where: { id: incomingPlaza.id, planta_id: plantaInstance.id }, transaction })
+              if (plazaToUpdate) {
+                plazaToUpdate.numero = incomingPlaza.numero ?? plazaToUpdate.numero
+                plazaToUpdate.tipo = incomingPlaza.tipo ?? plazaToUpdate.tipo
+                plazaToUpdate.estado = incomingPlaza.estado ?? plazaToUpdate.estado
+                plazaToUpdate.reservable = typeof incomingPlaza.reservable === 'boolean' ? incomingPlaza.reservable : plazaToUpdate.reservable
+                if (incomingPlaza.precioHora !== undefined) {
+                  plazaToUpdate.precioHora = incomingPlaza.precioHora === null ? null : parseFloat(incomingPlaza.precioHora)
+                }
+                await plazaToUpdate.save({ transaction })
+              } else {
+                console.warn(`Plaza con ID ${incomingPlaza.id} no encontrada para planta ${plantaInstance.id}. Omitiendo.`)
+              }
+            } else {
+              if (incomingPlaza.numero === undefined || incomingPlaza.numero === null || !incomingPlaza.tipo || incomingPlaza.precioHora === undefined || incomingPlaza.precioHora === null) {
+                throw new Error(`Datos incompletos para la nueva plaza número ${incomingPlaza.numero || '(desconocido)'} en planta ${plantaInstance.numero}. Se requieren: numero, tipo, precioHora.`)
+              }
+              await Plaza.create({
+                planta_id: plantaInstance.id,
+                numero: incomingPlaza.numero,
+                tipo: incomingPlaza.tipo,
+                estado: incomingPlaza.estado ?? 'Libre',
+                reservable: incomingPlaza.reservable ?? true,
+                precioHora: parseFloat(incomingPlaza.precioHora)
+              }, { transaction })
+            }
+          }
+        }
+      }
+    }
+
+    await transaction.commit()
+
+    const updatedParkingWithDetails = await Parking.findByPk(parkingId, {
+      include: {
+        model: Planta,
+        as: 'plantas',
+        order: [['numero', 'ASC']],
+        include: {
+          model: Plaza,
+          as: 'plazas',
+          order: [['numero', 'ASC']]
+        }
+      }
+    })
+
+    let plazasLibres = 0
+    let plazasOcupadas = 0
+    let plazasReservadas = 0
+
+    if (updatedParkingWithDetails && updatedParkingWithDetails.plantas) {
+      updatedParkingWithDetails.plantas.forEach(planta => {
+        if (planta.plazas) {
+          planta.plazas.forEach(plaza => {
+            if (plaza.estado === 'Libre' && plaza.reservable) plazasLibres++
+            else if (plaza.estado === 'Ocupada') plazasOcupadas++
+            else if (plaza.estado === 'Reservada') plazasReservadas++
+          })
+        }
+      })
+    }
+
+    const formattedParking = {
+      ...(updatedParkingWithDetails ? pick(updatedParkingWithDetails.get(), ['id', 'nombre', 'ubicacion', 'latitud', 'longitud', 'capacidad', 'estado']) : {}),
+      plantas: updatedParkingWithDetails && updatedParkingWithDetails.plantas
+        ? updatedParkingWithDetails.plantas.map(planta => ({
+          ...pick(planta.get(), ['id', 'numero']),
+          plazas: planta.plazas
+            ? planta.plazas.map(plaza =>
+              pick(plaza.get(), ['id', 'numero', 'reservable', 'tipo', 'estado', 'precioHora'])
+            )
+            : []
+        }))
+        : [],
+      plazasLibres,
+      plazasOcupadas,
+      plazasReservadas
+    }
+
+    res.status(200).json({ message: 'Parking actualizado correctamente', parking: formattedParking })
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    if (transaction && transaction.sequelize && transaction.finished !== 'commit' && transaction.finished !== 'rollback') {
+      await transaction.rollback()
+    }
+    console.error('Error al actualizar parking:', error)
+    res.status(500).json({ error: 'Error interno al actualizar el parking: ' + error.message })
   }
 }
 

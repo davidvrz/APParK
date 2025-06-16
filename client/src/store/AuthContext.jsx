@@ -36,12 +36,11 @@ export const AuthProvider = ({ children }) => {
           setIsAuthChecked(true)
         } else {
         // Token expirado
-          console.log('Token expirado, eliminando...')
           localStorage.removeItem('accessToken')
           attemptTokenRefresh()
         }
-      } catch (_err) {
-        console.error('Token inválido, eliminando...', _err)
+      } catch (err) {
+        console.error('Token inválido, eliminando...', err)
         localStorage.removeItem('accessToken')
         attemptTokenRefresh()
       }
@@ -67,7 +66,6 @@ export const AuthProvider = ({ children }) => {
         nombreCompleto: decoded.nombreCompleto
       })
 
-      console.log('Token renovado exitosamente')
     } catch (err) {
       console.warn('No se pudo renovar el token:', err.message)
     } finally {
@@ -75,15 +73,14 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Usamos useCallback para evitar dependencias circulares en useEffect
   const logout = useCallback(async () => {
     setLoading(true)
     clearError()
     try {
       await logoutUser()
-    } catch (_err) {
-      console.error("Error al cerrar sesión:", _err)
-      setError(_err.message)
+    } catch (err) {
+      console.error("Error al cerrar sesión:", err)
+      setError(err.message)
     } finally {
       localStorage.removeItem('accessToken')
       setAccessTokenState(null)
@@ -112,30 +109,64 @@ export const AuthProvider = ({ children }) => {
       })
 
       return { ok: true, rol: decoded.rol }
-    } catch (_err) {
-      console.error("Error al iniciar sesión:", _err)
-      setError(_err.message)
-      return {
-        ok: false,
-        error: _err.message
+    } catch (err) {
+      console.error("Error al iniciar sesión:", err)
+      const errorData = err.response?.data || { error: err.message }
+
+      // Manejar errores de validación de Zod (del middleware)
+      if (errorData.details && Array.isArray(errorData.details)) {
+        const fieldErrors = {}
+        errorData.details.forEach((detail) => {
+          const fieldName = detail.path?.[0] || "general"
+          fieldErrors[fieldName] = detail.message
+        })
+        return {
+          ok: false,
+          fieldErrors
+        }
+      } else {
+        // Errores directos del controlador
+        const errorMessage = errorData.error || 'Error desconocido durante el inicio de sesión'
+        return {
+          ok: false,
+          error: errorMessage
+        }
       }
     } finally {
       setLoading(false)
     }
   }
 
-  const register = async (nombre, email, password) => {
+  const register = async (nombre, email, password, telefono) => {
     setLoading(true)
     clearError()
     try {
-      await registerUser(nombre, email, password)
+      await registerUser(nombre, email, password, telefono)
       return await login(email, password)
-    } catch (_err) {
-      console.error("Error al registrarse:", _err)
-      setError(_err.message)
-      return {
-        ok: false,
-        error: _err.message
+    } catch (err) {
+      console.error("Error al registrarse:", err)
+      const errorData = err.response?.data || { error: err.message }
+
+      // Manejar errores de validación de Zod (del middleware)
+      if (errorData.details && Array.isArray(errorData.details)) {
+        const fieldErrors = {}
+        errorData.details.forEach((detail) => {
+          const fieldName = detail.path?.[0] || "general"
+          // Mapear nombreCompleto a nombre para el frontend
+          const mappedFieldName = fieldName === 'nombreCompleto' ? 'nombre' : fieldName
+          fieldErrors[mappedFieldName] = detail.message
+        })
+        return {
+          ok: false,
+          fieldErrors
+        }
+      } else {
+        // Errores directos del controlador
+        const errorMessage = errorData.error || 'Error desconocido durante el registro'
+        return {
+          ok: false,
+          error: errorMessage
+        }
       }
     } finally {
       setLoading(false)
@@ -154,7 +185,7 @@ export const AuthProvider = ({ children }) => {
           nombreCompleto: decoded.nombreCompleto
         })
         clearError()
-      } catch (_err) {
+      } catch (err) {
         setError('Error al decodificar token')
         logout()
       }

@@ -12,8 +12,7 @@ export const useEventos = () => {
     if (!parkingId) return []
     clearError()
     try {
-      const response = await getEventosByParkingId(parkingId)
-      const { eventos } = response.data
+      const { eventos } = await getEventosByParkingId(parkingId)
       return eventos || []
     } catch (err) {
       console.error('Error al obtener eventos del parking:', err)

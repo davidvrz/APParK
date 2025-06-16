@@ -27,25 +27,65 @@ export const getAnunciosByParkingId = async (parkingId) => {
 }
 
 // Admin
-export const createParking = (data) => axios.post('/parking', data)
-export const updateParking = (id, data) => axios.put(`/parking/${id}`, data)
-export const deleteParking = (id) => axios.delete(`/parking/${id}`)
+export const createParking = async (data) => {
+  const response = await axios.post('/parking', data)
+  return response.data
+}
 
-export const createPlanta = (parkingId, data) => axios.post(`/parking/${parkingId}/plantas`, data)
-export const deletePlanta = (parkingId, plantaId) => axios.delete(`/parking/${parkingId}/plantas/${plantaId}`)
+export const updateParking = async (id, data) => {
+  const response = await axios.put(`/parking/${id}`, data)
+  return response.data
+}
 
-export const createPlaza = (parkingId, plantaId, data) =>
-  axios.post(`/parking/${parkingId}/plantas/${plantaId}/plazas`, data)
-export const updatePlaza = (parkingId, plantaId, plazaId, data) =>
-  axios.put(`/parking/${parkingId}/plantas/${plantaId}/plazas/${plazaId}`, data)
-export const deletePlaza = (parkingId, plantaId, plazaId) =>
-  axios.delete(`/parking/${parkingId}/plantas/${plantaId}/plazas/${plazaId}`)
+export const deleteParking = async (id) => {
+  const response = await axios.delete(`/parking/${id}`)
+  return response.data
+}
 
-export const createAnuncio = (parkingId, data) => axios.post(`/parking/${parkingId}/anuncios`, data)
-export const updateAnuncio = (parkingId, anuncioId, data) => axios.put(`/parking/${parkingId}/anuncios/${anuncioId}`, data)
-export const deleteAnuncio = (parkingId, anuncioId) => axios.delete(`/parking/${parkingId}/anuncios/${anuncioId}`)
+export const createPlanta = async (parkingId, data) => {
+  const response = await axios.post(`/parking/${parkingId}/plantas`, data)
+  return response.data
+}
 
-export const getEventosByParkingId = (parkingId) => axios.get(`/parking/${parkingId}/eventos`)
+export const deletePlanta = async (parkingId, plantaId) => {
+  const response = await axios.delete(`/parking/${parkingId}/plantas/${plantaId}`)
+  return response.data
+}
+
+export const createPlaza = async (parkingId, plantaId, data) => {
+  const response = await axios.post(`/parking/${parkingId}/plantas/${plantaId}/plazas`, data)
+  return response.data
+}
+
+export const updatePlaza = async (parkingId, plantaId, plazaId, data) => {
+  const response = await axios.put(`/parking/${parkingId}/plantas/${plantaId}/plazas/${plazaId}`, data)
+  return response.data
+}
+
+export const deletePlaza = async (parkingId, plantaId, plazaId) => {
+  const response = await axios.delete(`/parking/${parkingId}/plantas/${plantaId}/plazas/${plazaId}`)
+  return response.data
+}
+
+export const createAnuncio = async (parkingId, data) => {
+  const response = await axios.post(`/parking/${parkingId}/anuncios`, data)
+  return response.data
+}
+
+export const updateAnuncio = async (parkingId, anuncioId, data) => {
+  const response = await axios.put(`/parking/${parkingId}/anuncios/${anuncioId}`, data)
+  return response.data
+}
+
+export const deleteAnuncio = async (parkingId, anuncioId) => {
+  const response = await axios.delete(`/parking/${parkingId}/anuncios/${anuncioId}`)
+  return response.data
+}
+
+export const getEventosByParkingId = async (parkingId) => {
+  const response = await axios.get(`/parking/${parkingId}/eventos`)
+  return response.data
+}
 
 // Sistema interno (token de parking)
 export const enviarEventoSensor = (parkingId, evento) =>

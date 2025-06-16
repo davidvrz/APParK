@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Users, UserPlus, Shield, Search, MoreVertical, Edit2, Trash2, UserCheck, UserX, Loader2, AlertCircle, Crown } from "lucide-react"
+import { Users, Search, MoreVertical, Trash2, UserCheck, Loader2, AlertCircle, Crown, Shield } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/input"
@@ -12,30 +12,9 @@ import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
 
 function UsuariosPage() {
-  const { users, loading, error, updateUserRole, toggleUserStatus, deleteUser } = useProfile()
+  const { users, loading, error, deleteUser } = useProfile()
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await updateUserRole(userId, newRole)
-      toast.success('Rol actualizado correctamente')
-    } catch (error) {
-      console.error('Error updating role:', error)
-      toast.error('Error al actualizar el rol')
-    }
-  }
-
-  const handleToggleStatus = async (userId) => {
-    try {
-      await toggleUserStatus(userId)
-      toast.success('Estado del usuario actualizado')
-    } catch (error) {
-      console.error('Error toggling status:', error)
-      toast.error('Error al cambiar el estado')
-    }
-  }
 
   const handleDeleteUser = async (userId) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return
@@ -58,40 +37,27 @@ function UsuariosPage() {
         </Badge>
       )
     }
+    if (rol === 'conductor') {
+      return <Badge variant="secondary">Conductor</Badge>
+    }
     return <Badge variant="outline">Usuario</Badge>
-  }
-
-  const getStatusBadge = (activo) => {
-    return activo ? (
-      <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-        Activo
-      </Badge>
-    ) : (
-      <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-        Inactivo
-      </Badge>
-    )
   }
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchTerm ||
-      user.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.nombreCompleto && user.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase())) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.telefono.includes(searchTerm)
+      (user.telefono && user.telefono.includes(searchTerm))
 
     const matchesRole = roleFilter === "all" || user.rol === roleFilter
-    const matchesStatus = statusFilter === "all" ||
-      (statusFilter === "active" && user.activo) ||
-      (statusFilter === "inactive" && !user.activo)
 
-    return matchesSearch && matchesRole && matchesStatus
+    return matchesSearch && matchesRole
   })
 
   const userStats = {
     total: users.length,
-    active: users.filter(u => u.activo).length,
-    inactive: users.filter(u => !u.activo).length,
-    admins: users.filter(u => u.rol === 'admin').length
+    admins: users.filter(u => u.rol === 'admin').length,
+    conductores: users.filter(u => u.rol === 'conductor').length
   }
 
   return (
@@ -111,10 +77,6 @@ function UsuariosPage() {
             Administra los usuarios del sistema
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          Nuevo Usuario
-        </Button>
       </motion.div>
 
       {/* Stats Cards */}
@@ -122,7 +84,7 @@ function UsuariosPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <Card>
           <CardContent className="p-4">
@@ -145,22 +107,8 @@ function UsuariosPage() {
                 <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Activos</p>
-                <p className="text-2xl font-bold">{userStats.active}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                <UserX className="h-5 w-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Inactivos</p>
-                <p className="text-2xl font-bold">{userStats.inactive}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Conductores</p>
+                <p className="text-2xl font-bold">{userStats.conductores}</p>
               </div>
             </div>
           </CardContent>
@@ -205,18 +153,7 @@ function UsuariosPage() {
           <SelectContent>
             <SelectItem value="all">Todos los roles</SelectItem>
             <SelectItem value="admin">Administradores</SelectItem>
-            <SelectItem value="user">Usuarios</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="active">Activos</SelectItem>
-            <SelectItem value="inactive">Inactivos</SelectItem>
+            <SelectItem value="conductor">Conductores</SelectItem>
           </SelectContent>
         </Select>
       </motion.div>
@@ -236,13 +173,13 @@ function UsuariosPage() {
             <CardContent>
               <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-6" />
               <h2 className="text-xl font-semibold mb-2">
-                {searchTerm || roleFilter !== "all" || statusFilter !== "all"
+                {searchTerm || roleFilter !== "all"
                   ? 'No se encontraron usuarios'
                   : 'No hay usuarios registrados'
                 }
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {searchTerm || roleFilter !== "all" || statusFilter !== "all"
+                {searchTerm || roleFilter !== "all"
                   ? 'Intenta ajustar los filtros de búsqueda'
                   : 'Los usuarios aparecerán aquí cuando se registren en el sistema'
                 }
@@ -263,20 +200,19 @@ function UsuariosPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-gray-900 dark:text-white">
-                            {user.nombreCompleto}
+                            {user.nombreCompleto || 'Nombre no disponible'}
                           </h3>
                           {getRoleBadge(user.rol)}
-                          {getStatusBadge(user.activo)}
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <span>{user.email}</span>
                           <span className="hidden sm:block">•</span>
-                          <span>{user.telefono}</span>
-                          {user.fechaRegistro && (
+                          <span>{user.telefono || 'Teléfono no disponible'}</span>
+                          {user.created_at && (
                             <>
                               <span className="hidden sm:block">•</span>
-                              <span>Registrado: {formatDate(user.fechaRegistro)}</span>
+                              <span>Registrado: {formatDate(user.created_at)}</span>
                             </>
                           )}
                         </div>
@@ -290,27 +226,6 @@ function UsuariosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleRoleChange(user.id, user.rol === 'admin' ? 'user' : 'admin')}
-                        >
-                          <Shield className="h-4 w-4 mr-2" />
-                          {user.rol === 'admin' ? 'Quitar Admin' : 'Hacer Admin'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleToggleStatus(user.id)}
-                        >
-                          {user.activo ? (
-                            <>
-                              <UserX className="h-4 w-4 mr-2" />
-                              Desactivar
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Activar
-                            </>
-                          )}
-                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteUser(user.id)}
                           className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"

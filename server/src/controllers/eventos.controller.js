@@ -43,8 +43,6 @@ export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, 
           fecha: evento.fecha
         })
     }
-
-    console.log(`✅ Evento registrado: [${tipoEvento}] Plaza ${plazaId} - ${mensaje}`)
   } catch (error) {
     console.error('❌ Error al registrar evento del sistema:', error.message)
   }

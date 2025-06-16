@@ -16,3 +16,19 @@ docker-compose.override.yml
 
 # OS files
 Thumbs.db
+
+# Client-specific
+logs
+*.local
+dist
+dist-ssr
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

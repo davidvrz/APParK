@@ -9,7 +9,10 @@ import {
   updateVehicle,
   deleteVehicle,
   deleteAccount,
-  getUserVehicles
+  getUserVehicles,
+  adminGetAllUsers,
+  adminGetUserById,
+  adminDeleteUser
 } from '../controllers/profile.controller.js'
 
 const router = Router()
@@ -27,5 +30,12 @@ router.put('/vehicle/:id', authenticate, validateSchema(vehicleSchema), updateVe
 router.delete('/vehicle/:id', authenticate, deleteVehicle)
 
 router.delete('/', authenticate, deleteAccount)
+
+// Admin routes
+router.get('/admin/users', authenticate, adminGetAllUsers)
+
+router.get('/admin/users/:id', authenticate, adminGetUserById)
+
+router.delete('/admin/users/:id', authenticate, adminDeleteUser)
 
 export default router
