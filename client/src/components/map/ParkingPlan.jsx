@@ -1,38 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useSocketParking } from '@/hooks/useSocketParking'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import Planta from './Planta'
 
-const ParkingPlan = ({ parking, onSelectPlaza }) => {
+const ParkingPlan = ({ parking, onSelectPlaza, reservaData = {} }) => {
   const [activePlanta, setActivePlanta] = useState(null)
-  const [plantas, setPlantas] = useState([])
 
-  const { plazasActualizadas, actualizarEstadoPlaza, clearUpdates } = useSocketParking(parking?.id)
-
-  useEffect(() => {
-    if (parking && parking.plantas && parking.plantas.length > 0) {
-      setPlantas(parking.plantas)
-    }
-  }, [parking])
+  const plantas = useMemo(() => parking?.plantas || [], [parking?.plantas])
 
   useEffect(() => {
     if (plantas.length > 0 && !activePlanta) {
       setActivePlanta(String(plantas[0].id))
     }
   }, [plantas, activePlanta])
-
-  // Actualizaciones en tiempo real
-  useEffect(() => {
-    if (plazasActualizadas.length > 0) {
-      plazasActualizadas.forEach(update => {
-        setPlantas(prevPlantas =>
-          actualizarEstadoPlaza(update.id, update.estado, prevPlantas)
-        )
-      })
-      clearUpdates()
-    }
-  }, [plazasActualizadas, actualizarEstadoPlaza, clearUpdates])
 
   // Memorizar la planta activa
   const activePlantaData = useMemo(() => {
@@ -77,34 +58,36 @@ const ParkingPlan = ({ parking, onSelectPlaza }) => {
           <div className="w-4 h-4 rounded-full bg-gray-400"></div>
           <span>No reservable</span>
         </div>
-      </div>      {plantas.length > 1 ? (
+      </div>
+
+      {plantas.length > 1 ? (
         <div className="space-y-4">
           {/* Botones para seleccionar planta */}
-          <div className="flex gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center items-center">
             {plantas.map(planta => (
               <Button
                 key={planta.id}
                 variant={String(planta.id) === activePlanta ? "default" : "outline"}
                 onClick={() => setActivePlanta(String(planta.id))}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 min-w-0 flex-shrink-0 max-w-[140px] sm:max-w-none"
+                size="sm"
               >
-                <span>Planta {planta.numero}</span>
+                <span className="truncate">Planta {planta.numero}</span>
                 <Badge
                   variant="secondary"
-                  className="h-5 px-2 text-xs"
+                  className="h-4 sm:h-5 px-1.5 sm:px-2 text-xs flex-shrink-0"
                 >
                   {planta.plazas.filter(p => p.estado === 'Libre' && p.reservable).length}/{planta.plazas.length}
                 </Badge>
               </Button>
             ))}
           </div>
-
           {/* Mostrar planta activa */}
           {activePlantaData && (
             <Planta
               planta={activePlantaData}
               onSelectPlaza={onSelectPlaza}
-              plazasActualizadas={plazasActualizadas}
+              reservaData={reservaData}
             />
           )}
         </div>
@@ -114,7 +97,7 @@ const ParkingPlan = ({ parking, onSelectPlaza }) => {
           <Planta
             planta={activePlantaData}
             onSelectPlaza={onSelectPlaza}
-            plazasActualizadas={plazasActualizadas}
+            reservaData={reservaData}
           />
         )
       )}

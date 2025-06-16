@@ -22,16 +22,12 @@ function EventosPage() {
   const { connected, eventosEnTiempoReal, clearEventosEnTiempoReal, updateEventoEnTiempoReal } = useSocketEventos(parkingIds)
 
   const allEvents = useMemo(() => {
-    const eventosRT = eventosEnTiempoReal.filter(eventoRT =>
-      !eventos.some(eventoBD =>
-        eventoBD.plazaId === eventoRT.plazaId &&
-        Math.abs(new Date(eventoBD.fecha) - new Date(eventoRT.fecha)) < 5000
-      )
-    )
-
-    // Combinar y ordenar por fecha
-    const combined = [...eventosRT, ...eventos]
-    return combined.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+    const combined = [...eventos, ...eventosEnTiempoReal]
+    const uniqueEventsMap = new Map()
+    combined.forEach(evento => {
+      uniqueEventsMap.set(evento.id, evento)
+    })
+    return Array.from(uniqueEventsMap.values()).sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
   }, [eventos, eventosEnTiempoReal])
 
   useEffect(() => {

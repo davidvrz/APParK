@@ -24,6 +24,7 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
       tipo: vehicle.tipo || ""
     })
 
+    setValidationErrors({})
   }, [vehicle])
 
   const handleInputChange = (e) => {
@@ -46,7 +47,7 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
   const validateForm = () => {
     const errors = {}
 
-    if (!formData.matricula) {
+    if (!formData.matricula || formData.matricula.trim() === '') {
       errors.matricula = "La matrícula es obligatoria"
     } else {
       const normalizedMatricula = formData.matricula.trim().toUpperCase()
@@ -56,6 +57,12 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
       else if (!normalizedMatricula.match(/^[A-Z0-9]+$/)) {
         errors.matricula = "La matrícula solo puede contener letras y números"
       }
+    }
+
+    if (!formData.modelo || formData.modelo.trim() === '') {
+      errors.modelo = "El modelo es obligatorio"
+    } else if (formData.modelo.trim().length < 2) {
+      errors.modelo = "El modelo debe tener al menos 2 caracteres"
     }
 
     if (!formData.tipo) {
@@ -81,8 +88,8 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="matricula" className={validationErrors.matricula ? "text-red-500 font-medium" : "font-medium"}>
-          Matrícula {validationErrors.matricula && `(${validationErrors.matricula})`}
+        <Label htmlFor="matricula" className="font-medium">
+          Matrícula
         </Label>
         <Input
           id="matricula"
@@ -90,14 +97,15 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
           placeholder="Ejemplo: 1234ABC"
           value={formData.matricula}
           onChange={handleInputChange}
-          className={validationErrors.matricula ? "border-red-500 mt-1" : "mt-1"}
           disabled={isSubmitting}
         />
+        {validationErrors.matricula && (
+          <p className="text-sm text-red-500 mt-1">{validationErrors.matricula}</p>
+        )}
       </div>
-
       <div className="space-y-2 pt-2">
         <Label htmlFor="modelo" className="font-medium">
-          Modelo (opcional)
+          Modelo
         </Label>
         <Input
           id="modelo"
@@ -105,14 +113,16 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
           placeholder="Ejemplo: Seat Ibiza, Honda CBR..."
           value={formData.modelo}
           onChange={handleInputChange}
-          className="mt-1"
           disabled={isSubmitting}
         />
+        {validationErrors.modelo && (
+          <p className="text-sm text-red-500 mt-1">{validationErrors.modelo}</p>
+        )}
       </div>
 
       <div className="space-y-2 pt-2">
-        <Label htmlFor="tipo" className={validationErrors.tipo ? "text-red-500 font-medium" : "font-medium"}>
-          Tipo de vehículo {validationErrors.tipo && `(${validationErrors.tipo})`}
+        <Label htmlFor="tipo" className="font-medium">
+          Tipo de vehículo
         </Label>
         {(vehicle === null || formData.tipo) && (
           <Select
@@ -120,15 +130,20 @@ export default function VehicleForm({ vehicle = null, onSubmit, isSubmitting = f
             onValueChange={handleSelectChange}
             disabled={isSubmitting}
           >
-            <SelectTrigger className={validationErrors.tipo ? "border-red-500 mt-1" : "mt-1"}>
+            <SelectTrigger>
               <SelectValue placeholder="Selecciona un tipo" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Coche">Coche</SelectItem>
               <SelectItem value="Moto">Moto</SelectItem>
               <SelectItem value="Especial">Especial</SelectItem>
+              <SelectItem value="Electrico">Eléctrico</SelectItem>
+              <SelectItem value="Discapacitados">Discapacitados</SelectItem>
             </SelectContent>
           </Select>
+        )}
+        {validationErrors.tipo && (
+          <p className="text-sm text-red-500 mt-1">{validationErrors.tipo}</p>
         )}
       </div>
 

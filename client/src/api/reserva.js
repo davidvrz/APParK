@@ -29,3 +29,24 @@ export const getHistorialReservas = async () => {
   const response = await axios.get('/reserva/historial')
   return response.data
 }
+
+export const getReservasParking = async (parkingId) => {
+  const response = await axios.get(`/parking/${parkingId}/reservas`)
+  return response.data
+}
+
+// Funciones para reservas rápidas
+export const getReservasRapidasParking = async (parkingId) => {
+  const response = await axios.get(`/parking/${parkingId}/rapidas`)
+  return response.data
+}
+
+export const crearReservaRapida = async (parkingId, datos) => {
+  const response = await axios.post(`/parking/${parkingId}/quick`, datos)
+  return response.data
+}
+
+export const completeReservaRapida = async (parkingId) => {
+  const response = await axios.patch(`/parking/${parkingId}/complete`)
+  return response.data
+}

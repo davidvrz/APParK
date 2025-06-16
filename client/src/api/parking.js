@@ -45,15 +45,8 @@ export const createAnuncio = (parkingId, data) => axios.post(`/parking/${parking
 export const updateAnuncio = (parkingId, anuncioId, data) => axios.put(`/parking/${parkingId}/anuncios/${anuncioId}`, data)
 export const deleteAnuncio = (parkingId, anuncioId) => axios.delete(`/parking/${parkingId}/anuncios/${anuncioId}`)
 
-export const getReservasParking = (parkingId) => axios.get(`/parking/${parkingId}/reservas`)
-export const getReservasRapidasParking = (parkingId) => axios.get(`/parking/${parkingId}/rapidas`)
-export const completeReservaRapida = (parkingId) => axios.patch(`/parking/${parkingId}/complete`)
-
 export const getEventosByParkingId = (parkingId) => axios.get(`/parking/${parkingId}/eventos`)
 
 // Sistema interno (token de parking)
 export const enviarEventoSensor = (parkingId, evento) =>
   axios.post(`/parking/${parkingId}/sensor`, evento)
-
-export const crearReservaRapida = (parkingId, data) =>
-  axios.post(`/parking/${parkingId}/quick`, data)

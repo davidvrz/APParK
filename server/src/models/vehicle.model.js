@@ -15,7 +15,7 @@ const Vehicle = sequelize.define('Vehicle', {
     allowNull: true
   },
   tipo: {
-    type: DataTypes.ENUM('Coche', 'Moto', 'Especial'),
+    type: DataTypes.ENUM('Coche', 'Moto', 'Especial', 'Electrico', 'Discapacitados'),
     allowNull: false
   }
 }, {

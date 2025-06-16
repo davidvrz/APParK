@@ -28,10 +28,9 @@ export const useSocketEventos = (parkingIds = []) => {
     }
 
     const onEventoRegistrado = (data) => {
-
       if (data && data.plazaId) {
         const nuevoEvento = {
-          id: `temp-${Date.now()}`,
+          id: data.id,
           plazaId: data.plazaId,
           matricula: data.matricula,
           tipoEvento: data.tipoEvento,
@@ -41,7 +40,12 @@ export const useSocketEventos = (parkingIds = []) => {
           timestamp: new Date()
         }
 
-        setEventosEnTiempoReal(prev => [nuevoEvento, ...prev])
+        setEventosEnTiempoReal(prev => {
+          if (prev.find(e => e.id === nuevoEvento.id)) {
+            return prev
+          }
+          return [nuevoEvento, ...prev]
+        })
       }
     }
 
@@ -49,7 +53,6 @@ export const useSocketEventos = (parkingIds = []) => {
     onSocketEvent('disconnect', onDisconnect)
     onSocketEvent('evento:registrado', onEventoRegistrado)
 
-    // Verificar si ya está conectado inicialmente
     if (socket && socket.connected) {
       onConnect()
     }

@@ -316,26 +316,77 @@
 
 /* Estilos personalizados para los tooltips de los marcadores del mapa */
 .leaflet-tooltip.custom-tooltip {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 0;
-    font-family: var(--font-sans);
-    overflow: hidden;
+    background-color: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    padding: 0 !important;
+    font-family: var(--font-sans) !important;
+    overflow: hidden !important;
+    color: #1e293b !important;
 }
 
 /* Tooltips en modo oscuro */
 .dark .leaflet-tooltip.custom-tooltip {
-    background-color: hsl(var(--card));
-    border-color: hsl(var(--border));
-    color: hsl(var(--card-foreground));
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    background-color: hsl(218, 13%, 23%) !important;
+    border: 1px solid hsl(218, 13%, 30%) !important;
+    color: hsl(220, 14%, 98%) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Ocultar la flecha del tooltip */
 .leaflet-tooltip.custom-tooltip:before {
-    display: none;
+    display: none !important;
+}
+
+/* Estilos específicos para el contenido del tooltip */
+.leaflet-tooltip.custom-tooltip .text-primary {
+    color: #3b82f6 !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-primary {
+    color: hsl(218, 100%, 65%) !important;
+}
+
+.leaflet-tooltip.custom-tooltip .text-slate-600 {
+    color: #64748b !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-slate-600 {
+    color: hsl(220, 14%, 70%) !important;
+}
+
+.leaflet-tooltip.custom-tooltip .text-slate-700 {
+    color: #334155 !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-slate-700 {
+    color: hsl(220, 14%, 85%) !important;
+}
+
+/* Estilos para los estados en tooltips */
+.leaflet-tooltip.custom-tooltip .text-green-600 {
+    color: #16a34a !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-green-600 {
+    color: #4ade80 !important;
+}
+
+.leaflet-tooltip.custom-tooltip .text-red-600 {
+    color: #dc2626 !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-red-600 {
+    color: #f87171 !important;
+}
+
+.leaflet-tooltip.custom-tooltip .text-amber-600 {
+    color: #d97706 !important;
+}
+
+.dark .leaflet-tooltip.custom-tooltip .text-amber-600 {
+    color: #fbbf24 !important;
 }
 
 /* Estilos para componentes específicos en modo oscuro */
@@ -359,13 +410,6 @@
 
 .dark .leaflet-control-zoom a:hover {
     background-color: hsl(var(--secondary));
-}
-
-.dark .custom-tooltip {
-    background-color: hsl(var(--card));
-    border-color: hsl(var(--border));
-    color: hsl(var(--card-foreground));
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 /* Estilos específicos para el componente ParkingPlan en modo oscuro */

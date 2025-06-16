@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParking } from '@/hooks/useParking'
+import { useSocketParking } from '@/hooks/useSocketParking'
+import { useReserva } from '@/hooks/useReserva'
 import ParkingReservationFlow from './ParkingReservationFlow'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -19,25 +21,80 @@ import {
 const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'plan' }) => {
   const [activeTab, setActiveTab] = useState(initialSection)
   const [loadingAnuncios, setLoadingAnuncios] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [plantas, setPlantas] = useState([])
   const anunciosLoadedRef = useRef(false)
-  const lastParkingIdRef = useRef(null) // Referencia para evitar fetches duplicados
+  const lastParkingIdRef = useRef(null)
 
   const { parking, anuncios, loading, error, fetchParkingById, fetchAnuncios } = useParking()
+  const {
+    connected,
+    plazasActualizadas,
+    actualizarEstadoPlaza,
+    clearUpdates,
+    requestRefresh  } = useSocketParking(parkingPreview?.id)
 
-  const handleReservaSuccess = useCallback(() => {
-    setRefreshKey(prev => prev + 1)
-  }, [])
+  const {
+    fetchReservasParking,
+    getReservasEstaSemana,
+    getReservasPorPlaza,
+    getProximasReservas
+  } = useReserva()
+
+  useEffect(() => {
+    if (parking?.plantas) {
+      setPlantas(parking.plantas)
+    }
+  }, [parking?.plantas])
+
+  // Cargar reservas del parking cuando cambie el parking
+  useEffect(() => {
+    if (parking?.id) {
+      fetchReservasParking(parking.id)
+    }
+  }, [parking?.id, fetchReservasParking])
+
+  // Socket: procesar actualizaciones de plazas con debounce
+  useEffect(() => {
+    if (plazasActualizadas.length === 0) return
+
+    // Debounce para agrupar eventos simultáneos
+    const timeoutId = setTimeout(() => {
+      // Procesar todas las actualizaciones en batch
+      setPlantas(prevPlantas => {
+        return prevPlantas.map(planta => ({
+          ...planta,
+          plazas: planta.plazas.map(plaza => {
+            // Buscar si esta plaza tiene alguna actualización pendiente
+            const updateForThisPlaza = plazasActualizadas.find(update => update.id === plaza.id)
+            if (updateForThisPlaza) {
+              return { ...plaza, estado: updateForThisPlaza.estado }
+            }
+            return plaza
+          })
+        }))
+      })
+
+      // Recargar reservas del parking cuando haya cambios de socket
+      if (parking?.id) {
+        fetchReservasParking(parking.id)
+      }
+
+      // Limpiar actualizaciones procesadas
+      clearUpdates()
+    }, 50) // 50ms de debounce para agrupar eventos simultáneos
+
+    return () => clearTimeout(timeoutId)
+  }, [plazasActualizadas, clearUpdates, parking, fetchReservasParking])
 
   useEffect(() => {
     const currentParkingId = parkingPreview?.id
 
-    if (currentParkingId && (lastParkingIdRef.current !== currentParkingId || refreshKey > 0)) {
+    if (currentParkingId && lastParkingIdRef.current !== currentParkingId) {
       fetchParkingById(currentParkingId)
       lastParkingIdRef.current = currentParkingId
       anunciosLoadedRef.current = false
     }
-  }, [parkingPreview?.id, refreshKey, fetchParkingById])
+  }, [parkingPreview?.id, fetchParkingById])
 
   useEffect(() => {
     if (activeTab === 'anuncios' &&
@@ -94,7 +151,7 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
   return (
     <div className="h-full w-full flex flex-col bg-background">
       {/* Header con información del parking */}
-      <div className="bg-card border-b">
+      <div className="bg-background border-b">
         <div className="p-6">
           <div className="flex items-center justify-between gap-4">
             {/* Botón volver y título */}
@@ -192,9 +249,14 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
           <div className="p-6">
             <TabsContent value="plan" className="m-0">
               <ParkingReservationFlow
-                parking={parking}
+                parking={{ ...parking, plantas }}
+                socketData={{ connected, requestRefresh }}
+                reservaData={{
+                  getReservasEstaSemana,
+                  getReservasPorPlaza,
+                  getProximasReservas
+                }}
                 onCancel={onClose}
-                onReservaSuccess={handleReservaSuccess}
               />
             </TabsContent>
 
@@ -207,11 +269,15 @@ const ParkingDetails = ({ parking: parkingPreview, onClose, initialSection = 'pl
                   Completa el formulario para reservar una plaza en este parking.
                 </p>
               </div>
-
               <ParkingReservationFlow
-                parking={parking}
+                parking={{ ...parking, plantas }}
+                socketData={{ connected, requestRefresh }}
+                reservaData={{
+                  getReservasEstaSemana,
+                  getReservasPorPlaza,
+                  getProximasReservas
+                }}
                 onCancel={() => setActiveTab('plan')}
-                onReservaSuccess={handleReservaSuccess}
                 skipPlano={true}
               />
             </TabsContent>

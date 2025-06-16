@@ -21,7 +21,7 @@ export default function VehicleCard({ vehicle, onEdit, onDelete, index = 0 }) {
       <div className="px-7 py-6 flex-grow">
         {/* Título del modelo centrado */}
         <h2 className="text-center font-display text-2xl font-semibold tracking-tight mb-5">
-          {vehicle.modelo || getDefaultModelName(vehicle.tipo)}
+          {vehicle.modelo}
         </h2>
 
         {/* Detalles del vehículo */}

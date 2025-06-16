@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS Vehiculo (
     usuario_id INT,
     matricula VARCHAR(20) NOT NULL UNIQUE,
     modelo VARCHAR(255),
-    tipo ENUM('Coche', 'Moto', 'Especial') NOT NULL,
+    tipo ENUM('Coche', 'Moto', 'Especial', 'Electrico', 'Discapacitados') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id) ON DELETE CASCADE

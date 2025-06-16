@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/Dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Search } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import ReservaCard from "./ReservaCard"
@@ -17,22 +17,29 @@ import { useReserva } from "@/hooks/useReserva"
 import { useVehiculos } from "@/hooks/useVehiculos"
 import { useParking } from "@/hooks/useParking"
 
-export default function ReservasActivas({
-  reservas: propReservas,
-  isLoading: propIsLoading,
-  isEmbedded = false,
-}) {
+export default function ReservasActivas({ searchTerm = "", isEmbedded = false, }) {
   const {
-    reservas: hookReservas,
-    loading: hookLoading,
-    error: actionError,
+    reservas,
+    loading,
+    error,
     cancelarReserva,
     modificarReserva,
     clearError
   } = useReserva()
 
-  const currentReservas = isEmbedded ? propReservas : hookReservas
-  const currentLoading = isEmbedded ? propIsLoading : hookLoading
+  // Filtrar reservas según el término de búsqueda
+  const filteredReservas = useMemo(() => {
+    if (!searchTerm) return reservas
+
+    const searchLower = searchTerm.toLowerCase()
+    return reservas.filter(reserva => (
+      reserva.parking?.nombre?.toLowerCase().includes(searchLower) ||
+      reserva.parking?.ubicacion?.toLowerCase().includes(searchLower) ||
+      reserva.plaza?.numero?.toString().toLowerCase().includes(searchLower) ||
+      reserva.vehiculo?.matricula?.toLowerCase().includes(searchLower) ||
+      reserva.vehiculo?.modelo?.toLowerCase().includes(searchLower)
+    ))
+  }, [reservas, searchTerm])
 
   const [expandedId, setExpandedId] = useState(null)
   const [selectedReservation, setSelectedReservation] = useState(null)
@@ -43,14 +50,17 @@ export default function ReservasActivas({
   const { vehiculos } = useVehiculos()
   const { parking } = useParking(selectedReservation?.parking?.id)
 
-  const expandedReservation = (currentReservas || []).find((r) => r.id === expandedId)
+  // Usar la lista correcta según el contexto
+  const displayReservas = isEmbedded ? filteredReservas : reservas
+  const expandedReservation = (displayReservas || []).find((r) => r.id === expandedId)
   const isExpanded = !!expandedId
 
   let itemsToRender
   if (isEmbedded) {
-    itemsToRender = currentReservas || []
+    itemsToRender = filteredReservas || []
   } else {
-    const dashboardReservas = currentReservas || []
+    // En el dashboard, usar reservas originales
+    const dashboardReservas = reservas || []
     itemsToRender = [...dashboardReservas.slice(0, 3)]
     if (dashboardReservas.length < 3) {
       while (itemsToRender.length < 3) {
@@ -103,11 +113,43 @@ export default function ReservasActivas({
 
   const reservationsContent = (
     <>
-      {currentLoading ? (
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error al Cargar Reservas</AlertTitle>
+          <AlertDescription>
+            {typeof error === 'string' ? error : JSON.stringify(error)}
+            <Button variant="link" onClick={() => clearError && clearError()} className="p-0 h-auto ml-2">Reintentar</Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!error && loading ? (
         <div className="h-56 flex items-center justify-center">
           <div className="rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-100 animate-spin"></div>
         </div>
-      ) : (
+      ) : !error && !loading && isEmbedded && filteredReservas.length === 0 ? (
+        <div className="h-56 flex flex-col items-center justify-center text-center px-8">
+          <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
+            <Search className="h-6 w-6 text-blue-500" />
+          </div>
+          <h3 className="text-lg font-display font-medium tracking-tight mb-2">
+            {searchTerm ? 'No hay resultados para tu búsqueda' : 'No tienes reservas activas'}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 font-normal">
+            {searchTerm
+              ? 'Prueba con otros términos de búsqueda.'
+              : 'Cuando realices una reserva, aparecerá aquí.'}
+          </p>
+          {!searchTerm && (
+            <Link to="/map">
+              <Button className="mt-4">
+                Crear Reserva
+              </Button>
+            </Link>
+          )}
+        </div>
+      ) : !error && (
         <AnimatePresence mode="wait" initial={false}>
           {isExpanded && expandedReservation ? (
             <motion.div
@@ -181,11 +223,11 @@ export default function ReservasActivas({
               ¿Estás seguro de que deseas cancelar esta reserva?
             </DialogDescription>
           </DialogHeader>
-          {actionError && (
+          {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle className="font-display font-medium">Error</AlertTitle>
-              <AlertDescription className="font-normal">{actionError}</AlertDescription>
+              <AlertDescription className="font-normal">{error}</AlertDescription>
             </Alert>
           )}
           {selectedReservation && (
@@ -225,17 +267,38 @@ export default function ReservasActivas({
               parking={parking}
               onCancel={() => setEditOpen(false)}
               onSave={handleSave}
-              apiError={actionError}
-              isLoading={hookLoading || editLoading}
+              apiError={error}
+              isLoading={loading || editLoading}
             />
           )}
         </DialogContent>
       </Dialog>
     </>
   )
-
   if (isEmbedded) {
-    return reservationsContent
+    return (
+      <Card className="bg-gray-100 dark:bg-gray-800/90 border-none shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="border-b border-gray-100 dark:border-gray-700 pb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="font-display text-xl font-semibold tracking-tight text-gray-800 dark:text-gray-100">
+                Reservas Activas
+              </CardTitle>
+              <CardDescription className="font-normal text-gray-500 dark:text-gray-400 mt-1">
+                {searchTerm ? 'Resultados de la búsqueda' : 'Todas tus reservas activas'}
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
+              <span className="sm:hidden">{filteredReservas.length}</span>
+              <span className="hidden sm:inline">{filteredReservas.length} Reservas</span>
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          {reservationsContent}
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -249,7 +312,7 @@ export default function ReservasActivas({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {(currentReservas || []).length > 3 && !isExpanded && (
+            {(reservas || []).length > 3 && !isExpanded && (
               <Link to="/reservas/activas">
                 <Button
                   variant="link"
@@ -261,8 +324,8 @@ export default function ReservasActivas({
               </Link>
             )}
             <Badge variant="outline" className="text-blue-500 border-blue-200 dark:border-blue-800 font-medium">
-              <span className="sm:hidden">{(currentReservas || []).length}</span>
-              <span className="hidden sm:inline">{(currentReservas || []).length} Reservas</span>
+              <span className="sm:hidden">{(reservas || []).length}</span>
+              <span className="hidden sm:inline">{(reservas || []).length} Reservas</span>
             </Badge>
           </div>
         </div>

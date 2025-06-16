@@ -35,6 +35,7 @@ export const registrarEventos = async ({ plazaId, matricula = null, tipoEvento, 
       getIO()
         .to(`parking:${parkingId}`)
         .emit('evento:registrado', {
+          id: evento.id,
           plazaId,
           matricula,
           tipoEvento,
@@ -191,7 +192,7 @@ export const procesarEventoSensor = async (req, res) => {
       }
 
       if (reserva) {
-        await registrarEventos({ plazaId, matricula, tipoEvento: 'salida', mensaje: 'Salida registrada para reserva normal (pendiente de completar automáticamente)' })
+        await registrarEventos({ plazaId, matricula, tipoEvento: 'salida', mensaje: 'Salida registrada para reserva normal' })
         return res.status(200).json({ message: 'Salida registrada (reserva normal)' })
       }
 

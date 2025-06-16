@@ -9,29 +9,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarIcon, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { RESERVA_TIEMPO_MIN, RESERVA_TIEMPO_MAX, RESERVA_ANTICIPACION_MIN } from '@/config'
-import { formatTimeForInput } from "@/lib/utils"
+import { formatTimeForInput, formatDateTime } from "@/lib/utils"
 
-const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, preselectedPlazaId }) => {
+const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, preselectedPlazaId, reservaData = {} }) => {
+
   const [form, setForm] = useState({
     vehicleId: '',
     plazaId: preselectedPlazaId ? String(preselectedPlazaId) : '',
     startTime: '',
     endTime: ''
   })
+
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [selectedTipoVehiculo, setSelectedTipoVehiculo] = useState(null)
+  const [reservasExistentes, setReservasExistentes] = useState([])
 
   const { vehiculos, loading: loadingVehiculos } = useVehiculos()
   const { crearReserva, error: reservaError, clearError } = useReserva()
+
+  // Extraer funciones de reserva del prop
+  const { getReservasPorPlaza = () => [] } = reservaData
+
+  // Cargar reservas existentes cuando cambie la plaza seleccionada
+  useEffect(() => {
+    if (form.plazaId && getReservasPorPlaza) {
+      const reservas = getReservasPorPlaza(parseInt(form.plazaId))
+      setReservasExistentes(reservas)
+    } else {
+      setReservasExistentes([])
+    }  }, [form.plazaId, getReservasPorPlaza])
 
   const plazasDisponibles = plantas.flatMap(planta =>
     planta.plazas
       .filter(plaza =>
         preselectedPlazaId ?
           String(plaza.id) === String(preselectedPlazaId) :
-          plaza.estado === 'Libre' &&
+          (plaza.estado === 'Libre' || plaza.estado === 'Reservado') &&
         plaza.reservable &&
         (!selectedTipoVehiculo || plaza.tipo === selectedTipoVehiculo)
       )
@@ -41,7 +56,6 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, 
         plantaNumero: planta.numero
       }))
   )
-
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
@@ -301,6 +315,33 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, 
             {errors.plazaId && <p className="text-red-500 text-xs font-normal mt-1">{errors.plazaId}</p>}
           </div>
 
+          {/* Reservas existentes en la plaza seleccionada */}
+          {form.plazaId && reservasExistentes.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h4 className="font-medium text-amber-800 mb-2 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Reservas existentes en esta plaza
+              </h4>
+              <p className="text-sm text-amber-700 mb-3">
+                Ten en cuenta estos horarios ocupados para elegir tu reserva:
+              </p>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {reservasExistentes.map((reserva, index) => (
+                  <div key={index} className="text-xs bg-white p-2 rounded border border-amber-300">
+                    <div className="font-medium text-amber-800">
+                      {formatDateTime(reserva.startTime)} - {formatDateTime(reserva.endTime)}
+                    </div>
+                    {reserva.vehicle && (
+                      <div className="text-amber-600 mt-1">
+                        Vehículo: {reserva.vehicle.matricula} ({reserva.vehicle.tipo})
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Fechas y horas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -314,8 +355,8 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, 
                 onChange={handleChange}
                 disabled={submitting}
                 className={`w-full ${errors.startTime || errors.ahead ? "border-red-500" : ""}`}
-                min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60000)
-                  .toISOString().slice(0,16)}
+                min={new Date().toISOString().slice(0, 16)}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().slice(0, 16)}
               />
               {errors.startTime && <p className="text-red-500 text-xs mt-1">{errors.startTime}</p>}
               {errors.ahead && <p className="text-red-500 text-xs mt-1">{errors.ahead}</p>}
@@ -332,18 +373,8 @@ const ReservationForm = ({ parkingId, plantas = [], onCancel, onReservaSuccess, 
                 onChange={handleChange}
                 disabled={submitting}
                 className={`w-full ${errors.endTime || errors.duration ? "border-red-500" : ""}`}
-                min={
-                  form.startTime
-                    ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60000)
-                      .toISOString().slice(0,16)
-                    : undefined
-                }
-                max={
-                  form.startTime
-                    ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60000)
-                      .toISOString().slice(0,16)
-                    : undefined
-                }
+                min={new Date().toISOString().slice(0, 16)}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().slice(0, 16)}
               />
               {errors.endTime && <p className="text-red-500 text-xs mt-1">{errors.endTime}</p>}
               {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}

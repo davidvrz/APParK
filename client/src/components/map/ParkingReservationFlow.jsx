@@ -4,13 +4,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import ParkingPlan from './ParkingPlan'
 import ReservationForm from './ReservationForm'
 import { ArrowLeft, Map, ClipboardCheck, Wifi, WifiOff } from 'lucide-react'
-import { useSocketParking } from '@/hooks/useSocketParking'
 
-const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano = false }) => {
+const ParkingReservationFlow = ({ parking, socketData = {}, reservaData = {}, onCancel, onReservaSuccess, skipPlano = false }) => {
   const [selectedPlaza, setSelectedPlaza] = useState(null)
   const [showPlano, setShowPlano] = useState(!skipPlano)
-
-  const { connected } = useSocketParking(parking?.id)
+  const { connected = false, requestRefresh } = socketData
+  const { getReservasEstaSemana, getReservasPorPlaza, getProximasReservas } = reservaData
 
   useEffect(() => {
     if (skipPlano) {
@@ -80,7 +79,15 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
               ) : (
                 <>
                   <WifiOff className="h-4 w-4 text-red-500" />
-                  <span>Tiempo real desconectado</span>
+                  <span>Desconectado</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={requestRefresh}
+                    className="text-xs h-6 px-2 ml-2"
+                  >
+                    Reconectar
+                  </Button>
                 </>
               )}
             </div>
@@ -105,14 +112,15 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
           <ParkingPlan
             parking={parking}
             onSelectPlaza={handlePlazaSelect}
-          />
-        ) : (
+            reservaData={{ getReservasEstaSemana }}
+          />        ) : (
           <ReservationForm
             parkingId={parking.id}
             plantas={getPlantasWithSelectedPlaza()}
             onCancel={skipPlano ? onCancel : handleBackToPlano}
             onReservaSuccess={handleReservaSuccess}
             preselectedPlazaId={selectedPlaza?.id}
+            reservaData={{ getReservasEstaSemana, getReservasPorPlaza, getProximasReservas }}
           />
         )}
       </CardContent>
@@ -122,7 +130,7 @@ const ParkingReservationFlow = ({ parking, onCancel, onReservaSuccess, skipPlano
           <div className="flex justify-between w-full">
             <div className="text-sm text-muted-foreground flex items-center">
               <ClipboardCheck className="h-4 w-4 mr-1" />
-              Selecciona una plaza libre para hacer una reserva
+              Selecciona una plaza libre o reservada para hacer una reserva
             </div>
           </div>
         </CardFooter>

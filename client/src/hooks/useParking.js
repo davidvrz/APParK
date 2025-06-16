@@ -15,19 +15,12 @@ import {
   deletePlaza,
   createAnuncio,
   updateAnuncio,
-  deleteAnuncio,
-  getReservasParking,
-  getReservasRapidasParking,
-  completeReservaRapida,
-  crearReservaRapida
+  deleteAnuncio
 } from '@/api/parking'
 
-export const useParking = (parkingId = null) => {
-  const [parkings, setParkings] = useState([])
+export const useParking = (parkingId = null) => {  const [parkings, setParkings] = useState([])
   const [parking, setParking] = useState(null)
   const [anuncios, setAnuncios] = useState([])
-  const [reservas, setReservas] = useState([])
-  const [reservasRapidas, setReservasRapidas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -260,62 +253,8 @@ export const useParking = (parkingId = null) => {
       throw err
     }
   }, [fetchAnuncios])
-
   // ============= RESERVATION MANAGEMENT =============
-
-  const fetchReservasParking = useCallback(async (parkingId) => {
-    if (!parkingId) return []
-    clearError()
-    try {
-      const { reservas } = await getReservasParking(parkingId)
-      setReservas(reservas || [])
-      return reservas
-    } catch (err) {
-      console.error('Error al obtener reservas del parking:', err)
-      setError(err.message)
-      return []
-    }
-  }, [])
-
-  const fetchReservasRapidasParking = useCallback(async (parkingId) => {
-    if (!parkingId) return []
-    clearError()
-    try {
-      const { reservasRapidas } = await getReservasRapidasParking(parkingId)
-      setReservasRapidas(reservasRapidas || [])
-      return reservasRapidas
-    } catch (err) {
-      console.error('Error al obtener reservas rápidas del parking:', err)
-      setError(err.message)
-      return []
-    }
-  }, [])
-
-  const handleCompleteReservaRapida = useCallback(async (parkingId) => {
-    clearError()
-    try {
-      const { reserva } = await completeReservaRapida(parkingId)
-      await fetchReservasRapidasParking(parkingId)
-      return reserva
-    } catch (err) {
-      console.error('Error al completar reserva rápida:', err)
-      setError(err.message)
-      throw err
-    }
-  }, [fetchReservasRapidasParking])
-
-  const handleCrearReservaRapida = useCallback(async (parkingId, data) => {
-    clearError()
-    try {
-      const { reserva } = await crearReservaRapida(parkingId, data)
-      await fetchReservasRapidasParking(parkingId)
-      return reserva
-    } catch (err) {
-      console.error('Error al crear reserva rápida:', err)
-      setError(err.message)
-      throw err
-    }
-  }, [fetchReservasRapidasParking])
+  // Nota: Las operaciones de reservas se manejan en useReserva hook
 
   useEffect(() => {
     fetchParkings()
@@ -326,14 +265,11 @@ export const useParking = (parkingId = null) => {
       fetchParkingById(parkingId)
     }
   }, [parkingId, fetchParkingById])
-
   return {
     // State
     parkings,
     parking,
     anuncios,
-    reservas,
-    reservasRapidas,
     loading,
     error,
 
@@ -364,12 +300,6 @@ export const useParking = (parkingId = null) => {
     // Admin anuncio operations
     createAnuncio: handleCreateAnuncio,
     updateAnuncio: handleUpdateAnuncio,
-    deleteAnuncio: handleDeleteAnuncio,
-
-    // Reservation management
-    fetchReservasParking,
-    fetchReservasRapidasParking,
-    completeReservaRapida: handleCompleteReservaRapida,
-    crearReservaRapida: handleCrearReservaRapida
+    deleteAnuncio: handleDeleteAnuncio
   }
 }

@@ -30,17 +30,16 @@ export const useSocketParking = (parkingId) => {
 
     // Actualización del parking cuando cambia una plaza
     const onParkingUpdate = (data) => {
-      console.log('📡 Actualización recibida:', data)
       if (data && data.plazaId) {
-        setPlazasActualizadas(prev => [
-          ...prev,
-          {
+        setPlazasActualizadas(prev => {
+          const newUpdate = {
             id: data.plazaId,
             estado: data.nuevoEstado,
             timestamp: new Date(),
             tipo: data.tipo
           }
-        ])
+          return [...prev, newUpdate]
+        })
       }
     }
 
@@ -71,15 +70,36 @@ export const useSocketParking = (parkingId) => {
     return cleanup
   }, [connectToSocket])
 
+  // Auto-limpiar actualizaciones después de 3 segundos
+  useEffect(() => {
+    if (plazasActualizadas.length === 0) return
+
+    const timeout = setTimeout(() => {
+      setPlazasActualizadas(prev =>
+        prev.filter(plaza => {
+          const timeElapsed = Date.now() - new Date(plaza.timestamp).getTime()
+          return timeElapsed < 3000
+        })
+      )
+    }, 3000)
+
+    return () => clearTimeout(timeout)
+  }, [plazasActualizadas.length])
+
   // Función para actualizar estados localmente en una plaza
   const actualizarEstadoPlaza = useCallback((plazaId, nuevoEstado, plantas) => {
-    if (!plantas) return plantas
+    if (!plantas) {
+      return plantas
+    }
 
     return plantas.map(planta => ({
       ...planta,
-      plazas: planta.plazas.map(plaza =>
-        plaza.id === plazaId ? { ...plaza, estado: nuevoEstado } : plaza
-      )
+      plazas: planta.plazas.map(plaza => {
+        if (plaza.id === plazaId) {
+          return { ...plaza, estado: nuevoEstado }
+        }
+        return plaza
+      })
     }))
   }, [])
 
@@ -88,11 +108,19 @@ export const useSocketParking = (parkingId) => {
     return emitSocketEvent(event, data)
   }, [])
 
+  const requestRefresh = useCallback(() => {
+    // Limpiar actualizaciones pendientes
+    setPlazasActualizadas([])
+    // Emitir evento para solicitar estado actual
+    emitEvent('parking:request-state', { parkingId })
+  }, [emitEvent, parkingId])
+
   return {
     connected,
     plazasActualizadas,
     actualizarEstadoPlaza,
     emitEvent,
+    requestRefresh,
     clearUpdates: () => setPlazasActualizadas([])
   }
 }

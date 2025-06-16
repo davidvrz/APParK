@@ -119,7 +119,6 @@ export default function ReservaEditForm({
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
-
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm(f => ({ ...f, [name]: value }))
@@ -236,6 +235,7 @@ export default function ReservaEditForm({
             disabled={isLoading || submitting}
             className={`w-full ${errors.startTime || errors.ahead ? "border-red-500" : ""}`}
             min={new Date(Date.now() + RESERVA_ANTICIPACION_MIN * 60 * 1000).toISOString().slice(0,16)}
+            max={new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().slice(0, 16)}
           />
           {errors.startTime && <p className="text-red-500 text-xs font-normal mt-1">{errors.startTime}</p>}
           {errors.ahead && <p className="text-red-500 text-xs font-normal mt-1">{errors.ahead}</p>}
@@ -256,11 +256,7 @@ export default function ReservaEditForm({
                 ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MIN * 60 * 1000).toISOString().slice(0,16)
                 : undefined
             }
-            max={
-              form.startTime
-                ? new Date(new Date(form.startTime).getTime() + RESERVA_TIEMPO_MAX * 60 * 1000).toISOString().slice(0,16)
-                : undefined
-            }
+            max={new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().slice(0, 16)}
           />
           {errors.endTime && <p className="text-red-500 text-xs font-normal mt-1">{errors.endTime}</p>}
           {errors.duration && <p className="text-red-500 text-xs font-normal mt-1">{errors.duration}</p>}

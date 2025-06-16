@@ -79,7 +79,8 @@ const ParkingMap = ({ parkings = [], onSelectParking }) => {
         zoom={6}
         style={{ height: '100%', width: '100%', minHeight: '500px' }}
         whenReady={() => setMapReady(true)}
-      >        <TileLayer
+      >
+        <TileLayer
           attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
           url={isDarkMode
             ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"

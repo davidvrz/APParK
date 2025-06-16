@@ -62,7 +62,7 @@ router.post('/:parkingId/anuncios', authenticate, requireAdmin, validateSchema(a
 router.put('/:parkingId/anuncios/:id', authenticate, requireAdmin, validateSchema(anuncioSchema), updateAnuncio)
 router.delete('/:parkingId/anuncios/:id', authenticate, requireAdmin, deleteAnuncio)
 
-router.get('/:parkingId/reservas', authenticate, requireAdmin, getReservasParking)
+router.get('/:parkingId/reservas', authenticate, getReservasParking)
 router.get('/:parkingId/rapidas', authenticate, requireAdmin, getReservasRapidasParking)
 
 router.post('/:parkingId/quick', parkingAuth, validateSchema(reservaRapidaSchema), createReservaRapida)

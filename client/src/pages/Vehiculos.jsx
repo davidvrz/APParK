@@ -45,11 +45,16 @@ export default function Vehiculos() {
 
   const handleAddSubmit = async (formData) => {
     setSubmitting(true)
+    setFormError(null)
     try {
       await añadirVehiculo(formData)
       setIsAddDialogOpen(false)
     } catch (err) {
-      setFormError(err.message || "Error al añadir el vehículo")
+      if (err.status === 400 || err.response?.status === 400) {
+        setFormError(err.message)
+      } else {
+        setIsAddDialogOpen(false)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -59,11 +64,16 @@ export default function Vehiculos() {
     if (!selectedVehicle) return
 
     setSubmitting(true)
+    setFormError(null)
     try {
       await actualizarVehiculo(selectedVehicle.id, formData)
       setIsEditDialogOpen(false)
     } catch (err) {
-      setFormError(err.message || "Error al actualizar el vehículo")
+      if (err.status === 400 || err.response?.status === 400) {
+        setFormError(err.message)
+      } else {
+        setIsEditDialogOpen(false)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -73,6 +83,7 @@ export default function Vehiculos() {
     if (!selectedVehicle) return
 
     setSubmitting(true)
+    setFormError(null)
     try {
       await eliminarVehiculo(selectedVehicle.id)
       setIsDeleteDialogOpen(false)
@@ -132,7 +143,13 @@ export default function Vehiculos() {
         </div>
 
         {/* Dialog para añadir vehículo */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog
+          open={isAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open)
+            if (!open) setFormError(null)
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Añadir Vehículo</DialogTitle>
@@ -150,7 +167,13 @@ export default function Vehiculos() {
         </Dialog>
 
         {/* Dialog para editar vehículo */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open)
+            if (!open) setFormError(null)
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Editar Vehículo</DialogTitle>
@@ -169,7 +192,13 @@ export default function Vehiculos() {
         </Dialog>
 
         {/* Dialog para eliminar vehículo */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <Dialog
+          open={isDeleteDialogOpen}
+          onOpenChange={(open) => {
+            setIsDeleteDialogOpen(open)
+            if (!open) setFormError(null)
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Eliminar Vehículo</DialogTitle>

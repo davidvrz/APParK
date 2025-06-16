@@ -369,9 +369,7 @@ export const updateReserva = async (req, res) => {
     if (overlappingVehicle) {
       await transaction.rollback()
       return res.status(400).json({ error: 'Este vehículo ya tiene una reserva en ese horario' })
-    }
-
-    const durationHours = (end - start) / (1000 * 60 * 60)
+    } const durationHours = (end - start) / (1000 * 60 * 60)
     const precioTotal = durationHours * nuevaPlaza.precioHora
 
     const plazaAnteriorId = reserva.plaza_id
@@ -380,11 +378,25 @@ export const updateReserva = async (req, res) => {
     const seCambiaDePlaza = plazaAnteriorId !== plazaId
 
     if (seCambiaDePlaza) {
-      await Plaza.update({ estado: 'Libre' }, {
-        where: { id: plazaAnteriorId },
+      // Verificar si quedan otras reservas activas en la plaza anterior
+      const reservasRestantesPlazaAnterior = await Reserva.count({
+        where: {
+          id: { [Op.ne]: reservaId }, // Excluir la reserva actual
+          plaza_id: plazaAnteriorId,
+          estado: 'activa'
+        },
         transaction
       })
 
+      // Solo liberar la plaza anterior si no quedan más reservas
+      if (reservasRestantesPlazaAnterior === 0) {
+        await Plaza.update({ estado: 'Libre' }, {
+          where: { id: plazaAnteriorId },
+          transaction
+        })
+      }
+
+      // Siempre marcar la nueva plaza como reservada
       await Plaza.update({ estado: 'Reservado' }, {
         where: { id: plazaId },
         transaction
@@ -410,20 +422,41 @@ export const updateReserva = async (req, res) => {
 
     const updated = pick(reserva.get(), [
       'id', 'user_id', 'vehiculo_id', 'plaza_id', 'startTime', 'endTime', 'estado', 'precioTotal'
-    ])
-
-    // Emitimos al room del parking correspondiente
+    ]) // Emitimos al room del parking correspondiente
     if (seCambiaDePlaza) {
       const parkingIdNuevo = nuevaPlaza.planta.parking.id
 
       if (parkingIdAnterior) {
+        // Verificar nuevamente el estado de la plaza anterior para el evento
+        const reservasRestantesPlazaAnterior = await Reserva.count({
+          where: {
+            id: { [Op.ne]: reservaId },
+            plaza_id: plazaAnteriorId,
+            estado: 'activa'
+          }
+        })
+
+        const estadoPlazaAnterior = reservasRestantesPlazaAnterior === 0 ? 'Libre' : 'Reservado'
+
+        console.log('🔄 [SERVER] Enviando evento de plaza anterior:', {
+          parkingId: parkingIdAnterior,
+          plazaId: plazaAnteriorId,
+          nuevoEstado: estadoPlazaAnterior,
+          reservasRestantes: reservasRestantesPlazaAnterior
+        })
+
         getIO().to(`parking:${parkingIdAnterior}`).emit('parking:update', {
           plazaId: plazaAnteriorId,
-          nuevoEstado: 'Libre',
+          nuevoEstado: estadoPlazaAnterior,
           tipo: 'reserva_modificada'
         })
       }
 
+      console.log('🔄 [SERVER] Enviando evento de plaza reservada:', {
+        parkingId: parkingIdNuevo,
+        plazaId,
+        nuevoEstado: 'Reservado'
+      })
       getIO().to(`parking:${parkingIdNuevo}`).emit('parking:update', {
         plazaId,
         nuevoEstado: 'Reservado',
@@ -490,14 +523,25 @@ export const cancelReserva = async (req, res) => {
     if (!reserva.plaza || !reserva.plaza.planta || !reserva.plaza.planta.parking) {
       await transaction.rollback()
       return res.status(500).json({ error: 'No se pudo determinar el parking de la plaza asociada' })
-    }
+    } const parkingId = reserva.plaza.planta.parking.id
 
-    const parkingId = reserva.plaza.planta.parking.id
-
-    await Plaza.update({ estado: 'Libre' }, {
-      where: { id: reserva.plaza_id },
+    // Verificar si quedan otras reservas activas en esta plaza
+    const reservasRestantes = await Reserva.count({
+      where: {
+        id: { [Op.ne]: reservaId }, // Excluir la reserva actual
+        plaza_id: reserva.plaza_id,
+        estado: 'activa'
+      },
       transaction
     })
+
+    // Solo liberar la plaza si no quedan más reservas
+    if (reservasRestantes === 0) {
+      await Plaza.update({ estado: 'Libre' }, {
+        where: { id: reserva.plaza_id },
+        transaction
+      })
+    }
 
     reserva.estado = 'cancelada'
     await reserva.save({ transaction })
@@ -505,10 +549,12 @@ export const cancelReserva = async (req, res) => {
     await reservaQueue.removeJobs(`${reserva.id}`)
     await transaction.commit()
 
+    const estadoFinalPlaza = reservasRestantes === 0 ? 'Libre' : 'Reservado'
+
     // Emitimos al room del parking correspondiente
     getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId: reserva.plaza_id,
-      nuevoEstado: 'Libre',
+      nuevoEstado: estadoFinalPlaza,
       tipo: 'reserva_cancelada'
     })
 
@@ -550,13 +596,24 @@ export const deleteReserva = async (req, res) => {
     if (!reserva.plaza || !reserva.plaza.planta || !reserva.plaza.planta.parking) {
       await transaction.rollback()
       return res.status(500).json({ error: 'No se pudo determinar el parking de la plaza asociada' })
-    }
-
-    if (reserva.estado === 'activa') {
-      await Plaza.update({ estado: 'Libre' }, {
-        where: { id: reserva.plaza_id },
+    } if (reserva.estado === 'activa') {
+      // Verificar si quedan otras reservas activas en esta plaza
+      const reservasRestantes = await Reserva.count({
+        where: {
+          id: { [Op.ne]: reserva.id }, // Excluir la reserva actual
+          plaza_id: reserva.plaza_id,
+          estado: 'activa'
+        },
         transaction
       })
+
+      // Solo liberar la plaza si no quedan más reservas
+      if (reservasRestantes === 0) {
+        await Plaza.update({ estado: 'Libre' }, {
+          where: { id: reserva.plaza_id },
+          transaction
+        })
+      }
     }
 
     await reserva.destroy({ transaction })
@@ -564,9 +621,21 @@ export const deleteReserva = async (req, res) => {
 
     const parkingId = reserva.plaza.planta.parking.id
 
+    // Verificar el estado final de la plaza para el evento
+    let estadoFinalPlaza = 'Libre'
+    if (reserva.estado === 'activa') {
+      const reservasRestantes = await Reserva.count({
+        where: {
+          plaza_id: reserva.plaza_id,
+          estado: 'activa'
+        }
+      })
+      estadoFinalPlaza = reservasRestantes === 0 ? 'Libre' : 'Reservado'
+    }
+
     getIO().to(`parking:${parkingId}`).emit('parking:update', {
       plazaId: reserva.plaza_id,
-      nuevoEstado: 'Libre',
+      nuevoEstado: estadoFinalPlaza,
       tipo: 'reserva_eliminada'
     })
 
@@ -631,7 +700,7 @@ export const getReservasParking = async (req, res) => {
       include: {
         model: Plaza,
         as: 'plaza',
-        attributes: ['id', 'numero', 'tipo', 'estado'],
+        attributes: ['id', 'numero', 'tipo'],
         include: {
           model: Planta,
           as: 'planta',
@@ -648,10 +717,10 @@ export const getReservasParking = async (req, res) => {
     })
 
     const formatted = reservas.map(reserva => {
-      const base = pick(reserva.get(), ['id', 'startTime', 'precioTotal'])
+      const base = pick(reserva.get(), ['id', 'startTime', 'endTime'])
       return {
         ...base,
-        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo', 'estado']),
+        plaza: pick(reserva.plaza, ['id', 'numero', 'tipo']),
         planta: pick(reserva.plaza.planta, ['numero'])
       }
     })
