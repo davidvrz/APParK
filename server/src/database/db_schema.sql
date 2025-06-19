@@ -1,8 +1,6 @@
--- MySQL dump 10.13  Distrib 8.4.4, for Linux (x86_64)
 --
--- Host: localhost    Database: parksystem
--- ------------------------------------------------------
--- Server version	8.4.4
+-- Estructura de la base de datos para APParK
+--
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -31,7 +29,7 @@ CREATE TABLE `Anuncio` (
   PRIMARY KEY (`id`),
   KEY `parking_id` (`parking_id`),
   CONSTRAINT `Anuncio_ibfk_1` FOREIGN KEY (`parking_id`) REFERENCES `Parking` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -51,7 +49,7 @@ CREATE TABLE `Eventos` (
   PRIMARY KEY (`id`),
   KEY `plaza_id` (`plaza_id`),
   CONSTRAINT `Eventos_ibfk_1` FOREIGN KEY (`plaza_id`) REFERENCES `Plaza` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -72,7 +70,7 @@ CREATE TABLE `Parking` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,7 +89,7 @@ CREATE TABLE `Planta` (
   PRIMARY KEY (`id`),
   KEY `parking_id` (`parking_id`),
   CONSTRAINT `Planta_ibfk_1` FOREIGN KEY (`parking_id`) REFERENCES `Parking` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -114,7 +112,7 @@ CREATE TABLE `Plaza` (
   PRIMARY KEY (`id`),
   KEY `planta_id` (`planta_id`),
   CONSTRAINT `Plaza_ibfk_1` FOREIGN KEY (`planta_id`) REFERENCES `Planta` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +138,7 @@ CREATE TABLE `Reserva` (
   KEY `fk_reserva_vehiculo` (`vehiculo_id`),
   CONSTRAINT `fk_reserva_vehiculo` FOREIGN KEY (`vehiculo_id`) REFERENCES `Vehiculo` (`id`) ON DELETE CASCADE,
   CONSTRAINT `Reserva_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Usuario` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -163,7 +161,7 @@ CREATE TABLE `ReservaRapida` (
   PRIMARY KEY (`id`),
   KEY `plaza_id` (`plaza_id`),
   CONSTRAINT `ReservaRapida_ibfk_1` FOREIGN KEY (`plaza_id`) REFERENCES `Plaza` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -184,7 +182,7 @@ CREATE TABLE `Usuario` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -206,16 +204,9 @@ CREATE TABLE `Vehiculo` (
   UNIQUE KEY `matricula` (`matricula`),
   KEY `usuario_id` (`usuario_id`),
   CONSTRAINT `Vehiculo_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `Usuario` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping events for database 'parksystem'
---
-
---
--- Dumping routines for database 'parksystem'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -225,5 +216,3 @@ CREATE TABLE `Vehiculo` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-06-16  8:03:36

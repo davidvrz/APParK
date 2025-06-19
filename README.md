@@ -55,8 +55,8 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 
 **Backend:**
 -   **Node.js** con **Express.js**.
--   **Sequelize ORM** para la interacción con la base de datos MySQL.
--   **MySQL** como sistema de gestión de base de datos.
+-   **Sequelize ORM** para la interacción con la base de datos.
+-   **MariaDB (compatible con MySQL)** como sistema de gestión de base de datos.
 -   **Socket.IO** para comunicación bidireccional en tiempo real.
 -   **JSON Web Tokens (JWT)** para autenticación.
 -   **Zod** para validación de esquemas y datos de entrada.
@@ -65,7 +65,7 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 -   **Dotenv** para la carga de variables de entorno desde archivos `.env`.
 
 **Base de Datos:**
--   **MySQL**
+-   **MariaDB**
 
 **Herramientas de Desarrollo y Despliegue:**
 -   **Git y GitHub** para control de versiones.
@@ -148,7 +148,7 @@ APParK/
 │   │   ├── app.js            # Configuración principal de la aplicación Express (middlewares, rutas)
 │   │   ├── config.js         # Configuración del servidor (variables de entorno, etc.)
 │   │   ├── controllers/      # Lógica de manejo de peticiones para cada ruta
-│   │   ├── database/         # Configuración de la base de datos (Sequelize, esquema db_schema.sql)
+│   │   ├── database/         # Configuración de la base de datos (Sequelize, db_schema.sql, seeders (para crear el admin))
 │   │   ├── jobs/             # Lógica para tareas en segundo plano (BullMQ workers y queues)
 │   │   ├── libs/             # Librerías auxiliares (ej. manejo de JWT)
 │   │   ├── middlewares/      # Middlewares personalizados (autenticación, validación, admin)
@@ -166,127 +166,97 @@ APParK/
 ## ⚙️ Prerrequisitos
 -   **Node.js**: v18.x o superior.
 -   **npm**: v8.x o superior.
--   **Docker & Docker Compose**.
+-   **Docker & Docker Compose** (Para el método de despliegue recomendado).
 -   **Git**.
--   **MySQL Client** (Opcional, para acceso directo a DB si no se usa Docker).
 
-## 🚀 Getting Started
+## 🚀 Despliegue y Puesta en Marcha
 
-### 1. Clonar Repositorio
+Este proyecto está diseñado para ser desplegado fácilmente usando Docker, pero también puede ser ejecutado en un entorno de desarrollo local.
+
+### Requisitos Previos
+
+-   **Docker y Docker Compose**: Para el despliegue contenedorizado (método recomendado).
+-   **Node.js (v18+) y npm**: Para el desarrollo local.
+-   **Git**: Para clonar el repositorio.
+
+### 1. Despliegue con Docker (Recomendado)
+
+Este método levantará todos los servicios (backend, frontend, MariaDB y Redis) en contenedores Docker, creando un entorno aislado y consistente.
+
+**Paso 1: Clonar el Repositorio**
+
 ```bash
 git clone https://github.com/davidvrz/APParK.git
-cd APParK
+cd appark
 ```
 
-### 2. Configuración de Variables de Entorno
+**Paso 2: Configurar Variables de Entorno**
 
-**Importante sobre Roles de Usuario:**
-- Todos los usuarios registrados a través del formulario público de la aplicación tendrán automáticamente el rol de `conductor`.
-- Para crear un usuario con rol de `admin`, este debe ser creado o actualizado manualmente directamente en la base de datos. No existe una interfaz en la aplicación para asignar este rol durante el registro público.
+Crea un fichero `.env` en la raíz del proyecto, copiando el ejemplo `.env.example`:
 
-**Servidor (`server/.env`):**
-```env
-# Base de Datos (MySQL con Sequelize)
-DB_HOST="localhost" # o el nombre del servicio Docker, ej: "mysql_db"
-DB_USER="root"
-DB_PASSWORD="tu_password_mysql"
-DB_NAME="appark_db"
-DB_PORT=3306 # o el puerto expuesto por Docker
-
-# JWT
-JWT_SECRET="tu_secreto_jwt_muy_seguro"
-
-# Puerto del Servidor
-PORT=3001
-
-# Origen CORS permitido (URL del frontend)
-CORS_ORIGIN="http://localhost:5173"
-
-# Redis (para BullMQ y Sockets)
-REDIS_HOST="localhost" # o el nombre del servicio Docker, ej: "redis"
-REDIS_PORT=6379
-# REDIS_PASSWORD=""
-```
-*   **Nota con Docker**: Ajustar `DB_HOST` y `REDIS_HOST` a los nombres de servicio en `docker-compose.yml`.
-
-**Cliente (`client/.env`):**
-```env
-VITE_API_URL="http://localhost:3001/api"
-VITE_SOCKET_URL="http://localhost:3001"
-```
-
-### 3. Instalación de Dependencias
-**Terminal 1: Servidor**
 ```bash
-cd server
-npm install
+cp .env.example .env
 ```
-**Terminal 2: Cliente**
+
+Edita el fichero `.env` y ajusta los valores según sea necesario. Las credenciales de la base de datos (`DB_USER`, `DB_PASSWORD`, `DB_NAME`) serán usadas por Docker Compose para inicializar la base de datos MariaDB automáticamente.
+
+**Paso 3: Levantar los Contenedores**
+
+Desde la raíz del proyecto, ejecuta:
+
 ```bash
-cd client
-npm install
+docker-compose up --build
 ```
 
-### 4. Configuración de la Base de Datos (MySQL)
+Este comando hará lo siguiente:
+1.  Construirá las imágenes de Docker para el `server` y el `client`.
+2.  Descargará las imágenes de `mariadb` y `redis`.
+3.  Creará e iniciará los contenedores.
+4.  **Ejecutará el seeder**: El usuario administrador (`admin@appark.com` con contraseña `admin123`) se creará automáticamente en la base de datos.
 
-Para configurar la base de datos, utiliza el archivo `db_schema.sql` ubicado en `server/src/database/`. Este archivo contiene el esquema completo de la base de datos y las relaciones necesarias para que el sistema funcione correctamente.
+Una vez que todos los servicios estén en marcha:
+-   **Frontend**: Accede a `http://localhost:5173`
+-   **Backend API**: Disponible en `http://localhost:3000`
 
-#### Pasos para configurar la base de datos:
+**Paso 4: Acceder a la Base de Datos (Opcional)**
 
-1. **Crear la base de datos:**
-   Si estás utilizando Docker, asegúrate de que el contenedor de MySQL esté corriendo. Puedes iniciar los servicios con el siguiente comando desde la raíz del proyecto:
-   ```bash
-   docker-compose up -d
-   ```
-   Esto iniciará el contenedor de MySQL junto con los demás servicios definidos en `docker-compose.yml`.
+Si necesitas interactuar directamente con la base de datos MariaDB, puedes usar el siguiente comando:
 
-   Una vez que el contenedor esté corriendo, accede al contenedor de MySQL:
-   ```bash
-   docker exec -it [nombre_del_contenedor_mysql] mysql -u root -p
-   ```
-   Reemplaza `[nombre_del_contenedor_mysql]` por el nombre del servicio MySQL definido en `docker-compose.yml` (por ejemplo, `mysql_db`).
+```bash
+docker exec -it mariadb_app mariadb -u root -p
+```
 
-   Dentro del cliente MySQL, crea la base de datos:
-   ```sql
-   CREATE DATABASE appark_db;
-   ```
+Se te pedirá la `MYSQL_ROOT_PASSWORD` que definiste en tu fichero `.env`.
 
-2. **Importar el esquema:**
-   Para importar el archivo `db_schema.sql` directamente al contenedor de MySQL, utiliza el siguiente comando:
-   ```bash
-   docker cp server/src/database/db_schema.sql [nombre_del_contenedor_mysql]:/db_schema.sql
-   docker exec -it [nombre_del_contenedor_mysql] mysql -u root -p appark_db < /db_schema.sql
-   ```
+### 2. Ejecución en Local (Desarrollo)
 
-3. **Configurar las variables de entorno:**
-   Asegúrate de que las credenciales de conexión a la base de datos estén correctamente configuradas en `server/.env`.
+Si prefieres no usar Docker para la app, puedes ejecutar el frontend y el backend por separado en la terminal local.
 
-#### Nota:
-- El archivo `server/src/database/db_schema.sql` contiene todo el esquema necesario para iniciar la base de datos.
+**Requisitos Adicionales:**
+-   Tener una instancia de **MariaDB** y **Redis** corriendo en tu máquina local.
 
+**Backend (`/server`):**
 
+1.  Navega al directorio del servidor: `cd server`
+2.  Instala dependencias: `npm install`
+3.  Configura un fichero `.env` en este directorio con las credenciales de tu base de datos local y Redis.
+4.  Ejecuta las migraciones o importa el esquema desde `src/database/db_schema.sql`.
+5.  Ejecuta el seeder para crear el admin: `npm run seed`
+6.  Inicia el servidor: `npm start`
 
-## ▶️ Ejecución de la Aplicación
+**Frontend (`/client`):**
 
-### Opción 1: Usando Docker Compose (Recomendado)
-1.  Desde la raíz del proyecto (`APParK/`):
-    ```bash
-    docker-compose up --build
-    ```
-2.  **Acceso:**
-    -   Frontend: `http://localhost:5173`
-    -   Backend API: `http://localhost:3001`
-
-### Opción 2: Manualmente
-1.  **Iniciar MySQL y Redis**.
-2.  **Iniciar Servidor Backend** (`server/`): `npm run dev`
-3.  **Iniciar Cliente Frontend** (`client/`): `npm run dev`
+1.  Navega al directorio del cliente: `cd client`
+2.  Instala dependencias: `npm install`
+3.  Configura un fichero `.env` en este directorio, apuntando `VITE_API_URL` y `VITE_SOCKET_URL` a tu backend local (ej. `http://localhost:3000`).
+4.  Inicia la aplicación de desarrollo: `npm run dev`
 
 ## 📜 Scripts Disponibles
 
 **Servidor (`server/package.json`):**
 -   `npm run start`: Inicia el servidor en modo producción.
--   `npm run dev`: Inicia el servidor en modo desarrollo con reinicio automático usando `nodemon`.
+-   `npm run dev`: Inicia el servidor en modo desarrollo con `nodemon`.
+-   `npm run seed`: Ejecuta el script para crear el usuario administrador si no existe.
 
 **Cliente (`client/package.json`):**
 -   `npm run dev`: Inicia el servidor de desarrollo de Vite.

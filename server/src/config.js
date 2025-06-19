@@ -2,7 +2,7 @@ import 'dotenv/config'
 
 export const PORT = process.env.PORT || 3000
 
-// Configuración de la base de datos MySQL
+// Configuración de la base de datos MariaDB
 export const DB = {
   HOST: process.env.DB_HOST || 'localhost',
   USER: process.env.DB_USER || 'root',
@@ -17,8 +17,7 @@ export const redisConfig = {
 }
 
 // URL del frontend para permitir CORS
-// export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173' // En producción, esta URL debe ser la del frontend (3001 -> Docker)
-export const FRONTEND_URL = 'http://localhost:5173'
+export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 export const TOKEN_SECRET = process.env.TOKEN_SECRET || 'smart-park-system-secret-token'
 export const TOKEN_SECRET_PARKING = process.env.TOKEN_SECRET_PARKING || 'sistema-interno-provisional-token'

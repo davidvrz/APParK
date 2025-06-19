@@ -6,7 +6,8 @@
     "type": "module",
     "scripts": {
         "start": "node src/index.js",
-        "dev": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=../.env nodemon --legacy-watch src/index.js"
+        "dev": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=../.env nodemon --legacy-watch src/index.js",
+        "seed": "node src/database/seed.js"
     },
     "repository": {
         "type": "git",
@@ -44,7 +45,7 @@
         "nodemon": "3.1.9",
         "standard": "17.1.2"
     },
-     "eslintConfig": {
+    "eslintConfig": {
         "extends": "./node_modules/standard/eslintrc.json"
     }
 }

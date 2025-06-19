@@ -1,69 +1,66 @@
-version: '3.8'
+name: 'appark'
 
 services:
   server:
     build:
       context: ./server
     container_name: server_app
+    command: sh -c "npm run seed && npm start"
     env_file:
       - ./.env
     environment:
-      - MYSQL_HOST=${DB_HOST}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DB=${DB_NAME}
+      - DB_HOST=mariadb
+      - REDIS_HOST=redis
       - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
-      - NODE_ENV=development
-    depends_on:
-      mysql:
-        condition: service_healthy
     ports:
-      - "3000:3000"
-    networks:
-      - app-network
+      - "3001:3000"
     volumes:
       - ./server:/usr/src/app
       - /usr/src/app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   client:
     build:
       context: ./client
     container_name: client_app
     environment:
-      - name=value
       - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
-      - NODE_ENV=development
     ports:
-      - "3001:5173"
-    depends_on:
-      - server
-    networks:
-      - app-network
+      - "5173:5173"
     volumes:
       - ./client:/usr/src/app
       - /usr/src/app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - server
 
-  mysql:
-    image: mysql:8
-    container_name: mysql_app
-    env_file:
-      - ./.env
+  mariadb:
+    image: mariadb:10.11
+    container_name: mariadb_app
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./server/src/database/db_schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - mariadb_data:/var/lib/mysql
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 5s
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      timeout: 3s
 
   redis:
     image: redis:7
@@ -72,11 +69,16 @@ services:
       - "6379:6379"
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  mysql_data:
+  mariadb_data:
     driver: local
