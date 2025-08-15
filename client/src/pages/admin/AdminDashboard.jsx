@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Settings, Database, Activity, Users, TrendingUp, AlertCircle } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
 import { useParking } from "@/hooks/useParking"
 import { useProfile } from "@/hooks/useProfile"
 

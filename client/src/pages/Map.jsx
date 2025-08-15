@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParking } from '@/hooks/useParking'
 import ParkingMap from '@/components/map/ParkingMap'
 import ParkingDetails from '@/components/map/ParkingDetails'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/Card'
 
 const Map = () => {
   const { parkings, loading, error, fetchParkings } = useParking()
