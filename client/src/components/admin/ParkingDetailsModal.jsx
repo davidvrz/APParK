@@ -5,11 +5,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+} from "@/components/ui/Dialog"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/Badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
 import { useReserva } from "@/hooks/useReserva"
 import { toast } from "sonner"
 import { formatDate, formatTime } from "@/lib/utils"

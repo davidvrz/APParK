@@ -5,7 +5,7 @@ import { ArrowLeft, Search } from "lucide-react"
 import ReservasActivas from "@/components/dashboard/ReservasActivas"
 
 import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/Input"
 
 export default function ReservasActivasPage() {
   const [searchTerm, setSearchTerm] = useState("")

@@ -5,9 +5,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/Dialog"
 import { Button } from "@/components/ui/Button"
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/ui/Label"
 import { Textarea } from "@/components/ui/Textarea"
 import { useParking } from "@/hooks/useParking"
 import { toast } from "sonner"

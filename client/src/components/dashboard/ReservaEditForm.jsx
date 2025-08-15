@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
