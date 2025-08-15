@@ -35,7 +35,7 @@ export const register = async (req, res) => {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      secure: process.env.NODE_ENV === 'production', // true en producción, false en desarrollo
       sameSite: 'Strict',
       path: '/api/auth/refresh', // La cookie solo se enviará a esta ruta
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en millisegundos
@@ -83,7 +83,7 @@ export const login = async (req, res) => {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      secure: process.env.NODE_ENV === 'production', // true en producción, false en desarrollo
       sameSite: 'Strict',
       path: '/api/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en millisegundos
@@ -144,7 +144,7 @@ export const logout = (req, res) => {
   try {
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      secure: process.env.NODE_ENV === 'production', // true en producción, false en desarrollo
       sameSite: 'Strict',
       path: '/api/auth/refresh'
     })

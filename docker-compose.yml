@@ -4,11 +4,14 @@ services:
   server:
     build:
       context: ./server
+      args:
+        NODE_ENV: development
     container_name: server_app
     command: sh -c "npm run seed && npm start"
     env_file:
       - ./.env
     environment:
+      - NODE_ENV=development
       - DB_HOST=mariadb
       - REDIS_HOST=redis
       - CHOKIDAR_USEPOLLING=true
@@ -28,6 +31,8 @@ services:
   client:
     build:
       context: ./client
+      args:
+        NODE_ENV: development
     container_name: client_app
     environment:
       - CHOKIDAR_USEPOLLING=true
@@ -50,7 +55,7 @@ services:
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASSWORD}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./server/src/database/db_schema.sql:/docker-entrypoint-initdb.d/init.sql
       - mariadb_data:/var/lib/mysql

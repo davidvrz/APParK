@@ -221,7 +221,7 @@ export const deleteAccount = async (req, res) => {
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      secure: process.env.NODE_ENV === 'production', // true en producción, false en desarrollo
       sameSite: 'Strict',
       path: '/api/auth/refresh'
     })
@@ -284,7 +284,7 @@ export const adminDeleteUser = async (req, res) => {
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false, // CAMBIAR A true EN PRODUCCIÓN
+      secure: process.env.NODE_ENV === 'production', // true en producción, false en desarrollo
       sameSite: 'Strict',
       path: '/api/auth/refresh'
     })

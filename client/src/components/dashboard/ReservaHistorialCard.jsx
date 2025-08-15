@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/Card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Clock, MapPin, Car, Calendar, Layers, Square, CheckCircle } from "lucide-react"
 import { formatTime, formatDate } from "@/lib/utils"
 

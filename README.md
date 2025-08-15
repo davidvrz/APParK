@@ -1,6 +1,37 @@
+
+<div align="center">
+  <h1>🅿️ APParK</h1>
+  <p><strong>Sistema de Gestión de Parking Inteligente</strong></p>
+  <p><em>TFG - Grado en Ingeniería Informática</em></p>
+  
+  ![React](https://img.shields.io/badge/React-18-blue?logo=react)
+  ![Node.js](https://img.shields.io/badge/Node.js-18-green?logo=node.js)
+  ![MariaDB](https://img.shields.io/badge/MariaDB-10.6-orange?logo=mariadb)
+  ![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+  
+  <p>🌟 <strong>Demo en línea disponible</strong> 🌟</p>
+  
+  ---
+  
+  > ⚠️ **Proyecto académico y ficticio**: APParK es una demostración educativa desarrollada para un TFG. No es una aplicación comercial ni está conectada a sistemas reales de parking. Todos los datos son simulados.
+</div>
+
 # APParK - Sistema de Gestión de Parking Inteligente
 
 APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de Grado (TFG) del Grado en Ingeniería Informática. Su objetivo es ofrecer una solución moderna, eficiente y en tiempo real para la gestión de parkings y de reservas de plazas de aparcamiento, proporcionando interfaces dedicadas tanto para usuarios como para administradores.
+
+## 📑 Tabla de Contenidos
+
+- [🌟 Características Principales](#-características-principales)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [💾 Data Models](#-data-models-sequelize)
+- [📁 Estructura del Proyecto](#-estructura-del-proyecto)
+- [⚙️ Prerrequisitos](#️-prerrequisitos)
+- [🚀 Despliegue y Puesta en Marcha](#-despliegue-y-puesta-en-marcha)
+- [📜 Scripts Disponibles](#-scripts-disponibles)
+- [🌐 API Overview](#-api-overview-endpoints-principales)
+- [🛣️ Roadmap](#️-roadmap-y-futuras-mejoras)
+- [📄 Licencia](#-licencia-y-naturaleza-del-proyecto)
 
 ## 🌟 Características Principales
 
@@ -39,6 +70,9 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 -   **Finalización Automática por Sensores**: La `ReservaRapida` se completa y se calcula el coste cuando los sensores de la plaza detectan la salida del vehículo, registrando un evento de salida.
 -   **Actualización en Tiempo Real**: El estado de las plazas se refleja en el plano del parking en tiempo real en los dispositivos del parking y en la app principal.
 
+
+---
+
 ## 🛠️ Tech Stack
 
 **Frontend:**
@@ -74,6 +108,9 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 -   **Nodemon** para reinicio automático del servidor en desarrollo.
 -   **ESLint** para linting.
 
+
+---
+
 ## 💾 Data Models (Sequelize)
 
 El backend utiliza Sequelize ORM para mapear los siguientes modelos a tablas en la base de datos MySQL. Cada modelo representa una entidad clave en el sistema:
@@ -106,6 +143,9 @@ El backend utiliza Sequelize ORM para mapear los siguientes modelos a tablas en 
     -   Campos: `plaza_id` (plaza ocupada), `matricula` (del vehículo), `start_time` (inicio de ocupación), `end_time` (fin de ocupación, rellenado al salir), `estado` (ej. 'activa', 'completada'), `precio_total`.
 
 Estos modelos están interrelacionados para reflejar la lógica del negocio (ej. un `Usuario` puede tener varios `Vehiculo` y realizar múltiples `Reserva`; un `Parking` se compone de `Plantas`, y estas a su vez de `Plazas`).
+
+
+---
 
 ## 📁 Estructura del Proyecto
 El proyecto APParK se organiza en dos componentes principales: `client` (frontend React) y `server` (backend Node.js/Express), junto con archivos de configuración y Docker en la raíz. A continuación, se detalla la estructura de directorios y archivos más relevantes:
@@ -163,11 +203,17 @@ APParK/
 ├── docker-compose.yml        # Configuración de Docker Compose para orquestar los servicios
 ```
 
+
+---
+
 ## ⚙️ Prerrequisitos
 -   **Node.js**: v18.x o superior.
 -   **npm**: v8.x o superior.
 -   **Docker & Docker Compose** (Para el método de despliegue recomendado).
 -   **Git**.
+
+
+---
 
 ## 🚀 Despliegue y Puesta en Marcha
 
@@ -179,20 +225,25 @@ Este proyecto está diseñado para ser desplegado fácilmente usando Docker, per
 -   **Node.js (v18+) y npm**: Para el desarrollo local.
 -   **Git**: Para clonar el repositorio.
 
+
+---
+
 ### 1. Despliegue con Docker (Recomendado)
 
 Este método levantará todos los servicios (backend, frontend, MariaDB y Redis) en contenedores Docker, creando un entorno aislado y consistente.
+
 
 **Paso 1: Clonar el Repositorio**
 
 ```bash
 git clone https://github.com/davidvrz/APParK.git
-cd appark
+cd APParK
 ```
+
 
 **Paso 2: Configurar Variables de Entorno**
 
-Crea un fichero `.env` en la raíz del proyecto, copiando el ejemplo `.env.example`:
+Copia el ejemplo y edita tus variables:
 
 ```bash
 cp .env.example .env
@@ -200,33 +251,44 @@ cp .env.example .env
 
 Edita el fichero `.env` y ajusta los valores según sea necesario. Las credenciales de la base de datos (`DB_USER`, `DB_PASSWORD`, `DB_NAME`) serán usadas por Docker Compose para inicializar la base de datos MariaDB automáticamente.
 
-**Paso 3: Levantar los Contenedores**
 
-Desde la raíz del proyecto, ejecuta:
+**Paso 3: Levantar los Contenedores**
 
 ```bash
 docker-compose up --build
 ```
 
-Este comando hará lo siguiente:
-1.  Construirá las imágenes de Docker para el `server` y el `client`.
-2.  Descargará las imágenes de `mariadb` y `redis`.
-3.  Creará e iniciará los contenedores.
-4.  **Ejecutará el seeder**: El usuario administrador (`admin@appark.com` con contraseña `admin123`) se creará automáticamente en la base de datos.
+Esto construye e inicia todos los servicios:
+- 🐳 Backend (Node.js/Express)
+- ⚛️ Frontend (React + Vite)  
+- 🗄️ MariaDB (base de datos)
+- 🔄 Redis (cache y jobs)
+- 🌱 Seeder automático (crea usuario admin)
 
-Una vez que todos los servicios estén en marcha:
--   **Frontend**: Accede a `http://localhost:5173`
--   **Backend API**: Disponible en `http://localhost:3000`
+**URLs de acceso:**
+- **Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:3000](http://localhost:3000)
+
+**Credenciales de prueba (solo desarrollo local):**
+```
+👤 Usuario Administrador:
+   Email: admin@appark.com
+   Contraseña: admin123
+
+ℹ️ Estas credenciales solo funcionan en desarrollo local.
+  Para evaluar el proyecto, clona el repositorio y ejecútalo localmente.
+```
+
 
 **Paso 4: Acceder a la Base de Datos (Opcional)**
-
-Si necesitas interactuar directamente con la base de datos MariaDB, puedes usar el siguiente comando:
 
 ```bash
 docker exec -it mariadb_app mariadb -u root -p
 ```
+Se te pedirá la contraseña definida en `.env`.
 
-Se te pedirá la `MYSQL_ROOT_PASSWORD` que definiste en tu fichero `.env`.
+
+---
 
 ### 2. Ejecución en Local (Desarrollo)
 
@@ -251,6 +313,9 @@ Si prefieres no usar Docker para la app, puedes ejecutar el frontend y el backen
 3.  Configura un fichero `.env` en este directorio, apuntando `VITE_API_URL` y `VITE_SOCKET_URL` a tu backend local (ej. `http://localhost:3000`).
 4.  Inicia la aplicación de desarrollo: `npm run dev`
 
+
+---
+
 ## 📜 Scripts Disponibles
 
 **Servidor (`server/package.json`):**
@@ -263,6 +328,9 @@ Si prefieres no usar Docker para la app, puedes ejecutar el frontend y el backen
 -   `npm run build`: Compila la aplicación para producción.
 -   `npm run lint`: Ejecuta ESLint para corregir errores de estilo.
 -   `npm run preview`: Sirve la build de producción.
+
+
+---
 
 ## 🌐 API Overview (Endpoints Principales)
 
@@ -318,9 +386,15 @@ La API RESTful del backend está organizada por módulos y sigue los prefijos ba
     -   `PATCH /:reservaId`: Cancelar una reserva.
     -   `DELETE /:reservaId`: Eliminar una reserva (requiere rol admin).
 
+
+---
+
 ### 📡 Funcionalidades en Tiempo Real (Socket.IO)
 -   **Actualización del estado de las plazas**: Evento `parking:updatePlazaState` emitido por el servidor cuando una plaza cambia de estado (ej. finalización de una reserva en una plaza). Crucial para todos los clientes, incluidos los dispositivos del parking.
 -   **Notificaciones en tiempo real**: Logs de eventos para el admin procesados a partir de los eventos de los sensores del parking.
+
+
+---
 
 ### 🔄 Procesamiento de Tareas en Segundo Plano (Jobs)
 
@@ -328,6 +402,9 @@ El backend utiliza BullMQ con Redis para gestionar colas de tareas asíncronas, 
 
 -   **Monitorización de Reservas**: Tareas periódicas para verificar el estado de las reservas (`Reserva` y `ReservaRapida`) (ej. inicio, fin, expiración).
 -   **Finalización de Reservas Rápidas**: Tras un evento de salida detectado por un sensor, un job puede encargarse de procesar la finalización de la `ReservaRapida` correspondiente, calcular el costo y actualizar su estado.
+
+
+---
 
 ## 🛣️ Roadmap y Futuras Mejoras
 
@@ -340,16 +417,25 @@ Aunque APParK es un proyecto completo para los fines de un TFG, existen diversas
 -   **Soporte Multi-idioma**: Internacionalización de la interfaz para usuarios y administradores.
 -   **App Móvil Nativa o PWA**: Mejorar la experiencia en dispositivos móviles.
 
+
+---
+
 ## 📄 Licencia y Naturaleza del Proyecto
 
-**Importante: Proyecto Académico y Ficticio**
+> ⚠️ **Importante:** Proyecto académico y ficticio. No es una aplicación comercial ni conecta con sistemas reales. Todos los datos y funcionalidades son simulados para demostración y evaluación académica.
 
-APParK es un proyecto desarrollado exclusivamente con **fines académicos** como parte de un Trabajo de Fin de Grado (TFG) del Grado en Ingeniería Informática. 
+APParK es un Trabajo de Fin de Grado desarrollado con fines educativos. El código fuente se proporciona para evaluación académica y demostración de capacidades técnicas.
 
--   **No es una aplicación comercial ni está conectada a ningún sistema de parkings real.**
--   Cualquier dato sobre parkings, plazas, usuarios o reservas es **completamente ficticio** y generado para la demostración y evaluación del software.
--   Las funcionalidades de reserva, pago (si se simularan), o interacción con sensores **no tienen efecto en el mundo real**.
+---
 
-El código fuente se proporciona con el propósito de evaluación académica. Todos los derechos sobre el diseño y desarrollo original están reservados por el autor.
-
-Si deseas utilizar partes de este código para otros fines, por favor, contacta al autor.
+<div align="center">
+  <h2>📞 Contacto</h2>
+  
+  ¿Te interesa el proyecto o tienes dudas?
+  
+  **Autor**: David Álvarez Iglesias  
+  **Email**: alvareziglesiasdavid03@gmail.com  
+  **LinkedIn**: [linkedin.com/in/davidvrz](https://www.linkedin.com/in/davidvrz/)  
+  
+  <p><em>Grado en Ingeniería Informática - Universidad de Vigo</em></p>
+</div>
