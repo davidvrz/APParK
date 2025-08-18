@@ -25,6 +25,7 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
   const [reservasRapidas, setReservasRapidas] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, reservaId: null })
 
   const handleTabChange = useCallback((newTab) => {
     setActiveTab(newTab)
@@ -58,7 +59,11 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
   }, [isOpen, parking, loadParkingData])
 
   const handleDeleteReserva = async (reservaId) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta reserva?')) return
+    setDeleteConfirm({ isOpen: true, reservaId })
+  }
+
+  const confirmDeleteReserva = async () => {
+    const { reservaId } = deleteConfirm
 
     try {
       await eliminarReserva(reservaId)
@@ -67,6 +72,8 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
     } catch (error) {
       console.error('Error deleting reserva:', error)
       toast.error('Error al eliminar la reserva')
+    } finally {
+      setDeleteConfirm({ isOpen: false, reservaId: null })
     }
   }
   const totalPlazas = parking?.capacidad || 0
@@ -248,7 +255,8 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
                                 <div className="font-semibold">{plaza.numero}</div>
                                 <div className="text-xs opacity-75 truncate" title={plaza.tipo}>
                                   {plaza.tipo || 'Normal'}
-                                </div>                                <div className="text-xs opacity-75">€{plaza.precioHora}</div>
+                                </div>
+                                <div className="text-xs opacity-75">€{plaza.precioHora}</div>
                                 {plaza.reservable && (
                                   <div className="text-xs text-blue-600 dark:text-blue-400">
                                     <CalendarCheck className="h-3 w-3 mx-auto" />
@@ -269,7 +277,8 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
                             <span className="flex items-center gap-1">
                               <div className="w-3 h-3 bg-yellow-500 rounded"></div>
                               Reservado
-                            </span>                            <span className="flex items-center gap-1">
+                            </span>
+                            <span className="flex items-center gap-1">
                               <CalendarCheck className="h-3 w-3" />
                               Reservable
                             </span>
@@ -396,6 +405,37 @@ function ParkingDetailsModal({ isOpen, onClose, parking, onEdit }) {
                 )}
               </TabsContent>
             </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmación de eliminación */}
+      <Dialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm({ isOpen: false, reservaId: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Confirmar eliminación
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700 dark:text-gray-300">
+              ¿Estás seguro de que quieres eliminar esta reserva? Esta acción no se puede deshacer.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirm({ isOpen: false, reservaId: null })}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteReserva}
+            >
+              Eliminar reserva
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
