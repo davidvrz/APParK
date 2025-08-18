@@ -1,6 +1,7 @@
 
 <div align="center">
-  <h1>🅿️ APParK</h1>
+  <img src="client/public/android-chrome-192x192.png" alt="APParK Logo" width="64" height="64">
+  <h1>APParK</h1>
   <p><strong>Sistema de Gestión de Parking Inteligente</strong></p>
   <p><em>TFG - Grado en Ingeniería Informática</em></p>
   
@@ -8,8 +9,14 @@
   ![Node.js](https://img.shields.io/badge/Node.js-18-green?logo=node.js)
   ![MariaDB](https://img.shields.io/badge/MariaDB-10.6-orange?logo=mariadb)
   ![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
-  
-  <p>🌟 <strong>Demo en línea disponible</strong> 🌟</p>
+    
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0;">
+    <h3 style="color: white; margin: 0;">🚀 Acceso Directo</h3>
+    <p style="color: white; margin: 10px 0;">Prueba APParK directamente en línea:</p>
+    <a href="https://appark.vercel.app" target="_blank" style="display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 10px;">
+      🌐 Acceder a APParK
+    </a>
+  </div>
   
   ---
   
@@ -431,11 +438,30 @@ APParK es un Trabajo de Fin de Grado desarrollado con fines educativos. El códi
 <div align="center">
   <h2>📞 Contacto</h2>
   
-  ¿Te interesa el proyecto o tienes dudas?
+  <img src="client/public/android-chrome-192x192.png" alt="APParK Logo" width="48" height="48">
   
-  **Autor**: David Álvarez Iglesias  
-  **Email**: alvareziglesiasdavid03@gmail.com  
-  **LinkedIn**: [linkedin.com/in/davidvrz](https://www.linkedin.com/in/davidvrz/)  
+  **¿Te interesa el proyecto o tienes dudas?**
   
-  <p><em>Grado en Ingeniería Informática - Universidad de Vigo</em></p>
+  <br>
+  
+  [![Email](https://img.shields.io/badge/📧_Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:alvareziglesiasdavid03@gmail.com)
+  [![LinkedIn](https://img.shields.io/badge/💼_LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/davidvrz/)
+  [![GitHub](https://img.shields.io/badge/🐱_GitHub-333?style=for-the-badge&logo=github&logoColor=white)](https://github.com/davidvrz)
+  
+  <br><br>
+  
+  **👨‍💻 Autor**: David Álvarez Iglesias  
+  **🎓 Institución**: Universidad de Vigo - Escuela de Ingeniería Informática  
+  **📚 Grado**: Ingeniería Informática  
+  **🏆 Calificación TFG**: 9.6/10 
+  **📅 Año**: 2025
+  
+  <br>
+  
+  ---
+  
+  <sub>
+    ⭐ Si te gusta el proyecto, ¡dale una estrella en GitHub!<br>
+    💬 Cualquier feedback, sugerencia o colaboración es bienvenida
+  </sub>
 </div>
