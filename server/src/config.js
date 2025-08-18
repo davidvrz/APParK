@@ -13,7 +13,9 @@ export const DB = {
 
 export const redisConfig = {
   redisHost: process.env.REDIS_HOST || 'localhost',
-  redisPort: process.env.REDIS_PORT || 6379
+  redisPort: process.env.REDIS_PORT || 6379,
+  redisPassword: process.env.REDIS_PASSWORD || undefined,
+  redisUser: process.env.REDIS_USER || undefined
 }
 
 // URL del frontend para permitir CORS
