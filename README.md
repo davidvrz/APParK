@@ -13,9 +13,15 @@
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0;">
     <h3 style="color: white; margin: 0;">🚀 Acceso Directo</h3>
     <p style="color: white; margin: 10px 0;">Prueba APParK directamente en línea:</p>
-    <a href="https://appark.vercel.app" target="_blank" style="display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 10px;">
-      🌐 Acceder a APParK
+    <a href="https://appark.vercel.app" target="_blank">
+        <img src="https://img.shields.io/badge/Abrir%20Demo-APParK-2ea44f?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Abrir demo APParK"/>
     </a>
+    <br><br>
+    <p>
+        <strong>Credenciales de la cuenta de demo</strong><br><br>
+        <strong>Email:</strong> <code>demo@appark.com</code><br>
+        <strong>Contraseña:</strong> <code>demoappark</code>
+    </p>
   </div>
   
   ---
@@ -23,23 +29,24 @@
   > ⚠️ **Proyecto académico y ficticio**: APParK es una demostración educativa desarrollada para un TFG. No es una aplicación comercial ni está conectada a sistemas reales de parking. Todos los datos son simulados.
 </div>
 
-# APParK - Sistema de Gestión de Parking Inteligente
 
 APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de Grado (TFG) del Grado en Ingeniería Informática. Su objetivo es ofrecer una solución moderna, eficiente y en tiempo real para la gestión de parkings y de reservas de plazas de aparcamiento, proporcionando interfaces dedicadas tanto para usuarios como para administradores.
 
 ## 📑 Tabla de Contenidos
 
-- [🌟 Características Principales](#-características-principales)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [💾 Data Models](#-data-models-sequelize)
-- [📁 Estructura del Proyecto](#-estructura-del-proyecto)
-- [⚙️ Prerrequisitos](#️-prerrequisitos)
-- [🚀 Despliegue y Puesta en Marcha](#-despliegue-y-puesta-en-marcha)
-- [📜 Scripts Disponibles](#-scripts-disponibles)
-- [🌐 API Overview](#-api-overview-endpoints-principales)
-- [🛣️ Roadmap](#️-roadmap-y-futuras-mejoras)
-- [📄 Licencia](#-licencia-y-naturaleza-del-proyecto)
+- [🌟 Características Principales](#caracteristicas-principales)
+- [🛠️ Tech Stack](#tech-stack)
+- [💾 Data Models](#data-models-sequelize)
+- [📁 Estructura del Proyecto](#estructura-del-proyecto)
+- [⚙️ Prerrequisitos](#prerrequisitos)
+- [🚀 Despliegue y Puesta en Marcha](#despliegue-y-puesta-en-marcha)
+- [📜 Scripts Disponibles](#scripts-disponibles)
+- [🌐 API Overview](#api-overview-endpoints-principales)
+- [🛣️ Roadmap](#roadmap-y-futuras-mejoras)
+- [📄 Licencia](#licencia-y-naturaleza-del-proyecto)
+- [📞 Contacto](#contacto)
 
+<a id="caracteristicas-principales"></a>
 ## 🌟 Características Principales
 
 ### Para Usuarios:
@@ -80,6 +87,7 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 
 ---
 
+<a id="tech-stack"></a>
 ## 🛠️ Tech Stack
 
 **Frontend:**
@@ -118,6 +126,7 @@ APParK es una aplicación web full-stack desarrollada como un Trabajo de Fin de 
 
 ---
 
+<a id="data-models-sequelize"></a>
 ## 💾 Data Models (Sequelize)
 
 El backend utiliza Sequelize ORM para mapear los siguientes modelos a tablas en la base de datos MySQL. Cada modelo representa una entidad clave en el sistema:
@@ -154,6 +163,7 @@ Estos modelos están interrelacionados para reflejar la lógica del negocio (ej.
 
 ---
 
+<a id="estructura-del-proyecto"></a>
 ## 📁 Estructura del Proyecto
 El proyecto APParK se organiza en dos componentes principales: `client` (frontend React) y `server` (backend Node.js/Express), junto con archivos de configuración y Docker en la raíz. A continuación, se detalla la estructura de directorios y archivos más relevantes:
 
@@ -213,6 +223,7 @@ APParK/
 
 ---
 
+<a id="prerrequisitos"></a>
 ## ⚙️ Prerrequisitos
 -   **Node.js**: v18.x o superior.
 -   **npm**: v8.x o superior.
@@ -222,6 +233,7 @@ APParK/
 
 ---
 
+<a id="despliegue-y-puesta-en-marcha"></a>
 ## 🚀 Despliegue y Puesta en Marcha
 
 Este proyecto está diseñado para ser desplegado fácilmente usando Docker, pero también puede ser ejecutado en un entorno de desarrollo local.
@@ -323,6 +335,7 @@ Si prefieres no usar Docker para la app, puedes ejecutar el frontend y el backen
 
 ---
 
+<a id="scripts-disponibles"></a>
 ## 📜 Scripts Disponibles
 
 **Servidor (`server/package.json`):**
@@ -339,6 +352,7 @@ Si prefieres no usar Docker para la app, puedes ejecutar el frontend y el backen
 
 ---
 
+<a id="api-overview-endpoints-principales"></a>
 ## 🌐 API Overview (Endpoints Principales)
 
 La API RESTful del backend está organizada por módulos y sigue los prefijos base `/api`.
@@ -413,6 +427,7 @@ El backend utiliza BullMQ con Redis para gestionar colas de tareas asíncronas, 
 
 ---
 
+<a id="roadmap-y-futuras-mejoras"></a>
 ## 🛣️ Roadmap y Futuras Mejoras
 
 Aunque APParK es un proyecto completo para los fines de un TFG, existen diversas vías para su expansión y mejora futura:
@@ -427,16 +442,17 @@ Aunque APParK es un proyecto completo para los fines de un TFG, existen diversas
 
 ---
 
+<a id="licencia-y-naturaleza-del-proyecto"></a>
 ## 📄 Licencia y Naturaleza del Proyecto
-
-> ⚠️ **Importante:** Proyecto académico y ficticio. No es una aplicación comercial ni conecta con sistemas reales. Todos los datos y funcionalidades son simulados para demostración y evaluación académica.
 
 APParK es un Trabajo de Fin de Grado desarrollado con fines educativos. El código fuente se proporciona para evaluación académica y demostración de capacidades técnicas.
 
 ---
 
+<a id="contacto"></a>
+## 📞 Contacto
 <div align="center">
-  <h2>📞 Contacto</h2>
+  
   
   <img src="client/public/android-chrome-192x192.png" alt="APParK Logo" width="48" height="48">
   
@@ -448,7 +464,7 @@ APParK es un Trabajo de Fin de Grado desarrollado con fines educativos. El códi
   [![LinkedIn](https://img.shields.io/badge/💼_LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/davidvrz/)
   [![GitHub](https://img.shields.io/badge/🐱_GitHub-333?style=for-the-badge&logo=github&logoColor=white)](https://github.com/davidvrz)
   
-  <br><br>
+  <br>
   
   **👨‍💻 Autor**: David Álvarez Iglesias  
   **🎓 Institución**: Universidad de Vigo - Escuela de Ingeniería Informática  
